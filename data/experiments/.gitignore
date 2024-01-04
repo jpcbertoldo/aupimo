@@ -2,3 +2,4 @@ ablation/**/curves.pt
 ablation/**/asmaps.pt
 benchmark/**/curves.pt
 benchmark/**/asmaps.pt
+*.zip
