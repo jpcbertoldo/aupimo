@@ -9,6 +9,7 @@ so often times the Tensor arguments will be converted to ndarray and then valida
 from __future__ import annotations
 
 import json
+import logging
 import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -25,6 +26,8 @@ from .utils import StatsOutliersPolicy, StatsRepeatedPolicy
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+logger = logging.getLogger(__name__)
 
 # =========================================== ARGS VALIDATION ===========================================
 
@@ -324,15 +327,17 @@ class AUPIMOResult:
     shared_fpr_metric: str
     fpr_lower_bound: float
     fpr_upper_bound: float
-    num_threshs: int
 
     # data
-    thresh_lower_bound: float = field(repr=False)
-    thresh_upper_bound: float = field(repr=False)
     aupimos: Tensor = field(repr=False)  # shape => (N,)
 
     # optional metadata
+    num_threshs: int | None = field(repr=False, default=None)
     paths: list[str] | None = field(repr=False, default=None)
+
+    # optional data
+    thresh_lower_bound: float | None = field(repr=False, default=None)
+    thresh_upper_bound: float | None = field(repr=False, default=None)
 
     @property
     def num_images(self) -> int:
@@ -375,9 +380,18 @@ class AUPIMOResult:
         """Validate the inputs for the result object are consistent."""
         try:
             _validate.rate_range((self.fpr_lower_bound, self.fpr_upper_bound))
-            _validate.num_threshs(self.num_threshs)
             _validate_aupimos(self.aupimos)
-            _validate.thresh_bounds((self.thresh_lower_bound, self.thresh_upper_bound))
+
+            if self.num_threshs is not None:
+                _validate.num_threshs(self.num_threshs)
+
+            if self.thresh_lower_bound is not None and self.thresh_upper_bound is not None:
+                _validate.thresh_bounds((self.thresh_lower_bound, self.thresh_upper_bound))
+
+            # xor (one is given but the other is missing)
+            elif self.thresh_lower_bound is None != self.thresh_upper_bound is None:
+                msg = "Invalid `thresh_lower_bound` and `thresh_upper_bound` arguments. Only one is given."
+                logger.warning(msg)
 
             if self.paths is not None:
                 _validate_source_images_paths(self.paths, expected_num_paths=self.aupimos.shape[0])
