@@ -103,7 +103,18 @@ DATASETS_PER_COLLECTION = {
 }
 
 # %%
-# Find run dirs (1 model, 1 dataset)
+# Args
+
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--check-paths", action="store_true")
+args = parser.parse_args()
+
+
+# %%
+# Find run dirs (1 model, 1 dataset) and check if they are complete
+
 import pandas as pd
 
 rundirs = pd.DataFrame.from_records(
@@ -226,7 +237,10 @@ if missing_optional_files["num"].sum() > 0:
 
 
 # %%
+# Check content of files
+
 import json
+from functools import partial
 
 import torch
 
@@ -253,36 +267,42 @@ def check_single_value_json(fpath: Path):
     )
 
 
-def check_aupimos(fpath: Path):
+def check_aupimos(fpath: Path, check_paths: bool):
     try:
-        AUPIMOResult.load(fpath)
+        aupimoresult = AUPIMOResult.load(fpath)
     except Exception as ex:
         return (type(ex).__name__, ex)
+    if check_paths and aupimoresult.paths is None:
+        return ("missing-paths", str(fpath))
     return (None, None)
 
 
-def check_curves(fpath: Path):
+def check_curves(fpath: Path, check_paths: bool):
     try:
-        PIMOResult.load(fpath)
+        pimoresult = PIMOResult.load(fpath)
     except Exception as ex:
         return (type(ex).__name__, ex)
+    if check_paths and pimoresult.paths is None:
+        return ("missing-paths", str(fpath))
     return (None, None)
 
 
-def check_asmaps(fpath: Path):
+def check_asmaps(fpath: Path, check_paths: bool):
     try:
         data = torch.load(fpath)
     except Exception as ex:
         return (type(ex).__name__, ex)
     return (
-        ("missing-key", None)
-        if "asmaps" not in data or "paths" not in data
-        else ("wrong-type", None)
-        if (
-            not isinstance(data["asmaps"], torch.Tensor)
-            or not isinstance(data["paths"], list)
-            or not all(isinstance(p, str) for p in data["paths"])
-        )
+        ("missing-key", "asmaps")
+        if "asmaps" not in data
+        else ("missing-key", "paths")
+        if check_paths and "paths" not in data
+        else ("wrong-type", "asmaps")
+        if not isinstance(data["asmaps"], torch.Tensor)
+        else ("wrong-type", "paths")
+        if not isinstance(data["paths"], list)
+        else ("wrong-type", "paths elements")
+        if not all(isinstance(p, str) for p in data["paths"])
         else (None, None)
     )
 
@@ -300,9 +320,9 @@ files_errors = (
             "auroc.json": check_single_value_json,
             "aupr.json": check_single_value_json,
             "aupro.json": check_single_value_json,
-            "aupimo/aupimos.json": check_aupimos,
-            "asmaps.pt": check_asmaps,
-            "aupimo/curves.pt": check_curves,
+            "aupimo/aupimos.json": partial(check_aupimos, check_paths=args.check_paths),
+            "asmaps.pt": partial(check_asmaps, check_paths=args.check_paths),
+            "aupimo/curves.pt": partial(check_curves, check_paths=args.check_paths),
         }[row.name[3]](row.path),
         axis=1,
         result_type="expand",
@@ -315,7 +335,7 @@ files_errors = files_errors[files_errors["error"].notnull()]
 # %%
 if files_errors.empty:
     print("no errors found")
-    
+
 else:
     print(f"found {len(files_errors)} files with errors")
 
@@ -328,11 +348,15 @@ else:
     files_per_rundir["num"] = files_per_rundir["files"].map(len)
     files_per_rundir = files_per_rundir[["num", "files"]]
 
+    summary_fpath = HERE / "files_errors_summary.html"
+    details_fpath = HERE / "files_errors.html"
+    if summary_fpath.exists() or details_fpath.exists():
+        print("overwriting existing error files")
+
     print("report of problematic files per run dir in 'files_errors_summary.html'")
-    files_per_rundir.to_html(HERE / "files_errors_summary.html")
+    files_per_rundir.to_html(summary_fpath)
 
     print("details in 'files_errors.html'")
-    files_errors.to_html(HERE / "files_errors.html")
+    files_errors.to_html(details_fpath)
 
 # %%
-
