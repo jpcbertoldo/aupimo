@@ -3,3 +3,5 @@ ablation/**/asmaps.pt
 benchmark/**/curves.pt
 benchmark/**/asmaps.pt
 *.zip
+files_errors_summary.html
+files_errors.html
