@@ -24,10 +24,12 @@ then
     exit 1
 fi
 
+echo "[debug] EXPERIMENT=${EXPERIMENT}"
+
 ZIP_FNAME="${EXPERIMENT}-scores.zip"
 echo "[debug] ZIP_FNAME=${ZIP_FNAME}"
 
-zip -r ${ZIP_FNAME} ${EXPERIMENT} -i "**/aupr.json" -i "**/auroc.json" -i "**/aupro.json" -i "**/aupimo/aupimos.json"
+zip -q -r ${ZIP_FNAME} ${EXPERIMENT} -i "**/aupr.json" -i "**/auroc.json" -i "**/aupro.json" -i "**/aupimo/aupimos.json"
 ls -hl ${ZIP_FNAME}
 
 echo "Done."

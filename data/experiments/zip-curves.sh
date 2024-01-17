@@ -24,10 +24,12 @@ then
     exit 1
 fi
 
+echo "[debug] EXPERIMENT=${EXPERIMENT}"
+
 ZIP_FNAME="${EXPERIMENT}-curves.zip"
 echo "[debug] ZIP_FNAME=${ZIP_FNAME}"
 
-zip -r ${ZIP_FNAME} ${EXPERIMENT} -i "**/aupimo/curves.pt"
+zip -q -r ${ZIP_FNAME} ${EXPERIMENT} -i "**/aupimo/curves.pt"
 ls -hl ${ZIP_FNAME}
 
 echo "Done."
