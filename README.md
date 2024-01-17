@@ -35,3 +35,23 @@ then run the tests in `tests/` with `pytest`
 ```bash
 pytest tests/
 ```
+
+## Reference
+
+Please cite us as
+
+```tex
+
+@misc{aupimo,
+  title = {{AUPIMO}: Redefining Visual Anomaly Detection Benchmarks with High Speed and Low Tolerance},
+  shorttitle = {{AUPIMO}},
+  author = {Bertoldo, Joao P. C. and
+            Ameln, Dick and
+            Vaidya, Ashwin and
+            Akçay, Samet},
+  year = {2024},
+  eprint = {2401.01984},
+  eprinttype = {arxiv},
+  primaryClass={cs.CV}
+}
+```
