@@ -109,6 +109,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--check-paths", action="store_true")
+parser.add_argument("--check-aupimo-thresh-bounds", action="store_true")
 args = parser.parse_args()
 
 
@@ -267,13 +268,22 @@ def check_single_value_json(fpath: Path):
     )
 
 
-def check_aupimos(fpath: Path, check_paths: bool):
+def check_aupimos(fpath: Path, check_paths: bool, check_thresh_bounds: bool):
     try:
         aupimoresult = AUPIMOResult.load(fpath)
     except Exception as ex:
         return (type(ex).__name__, ex)
     if check_paths and aupimoresult.paths is None:
         return ("missing-paths", str(fpath))
+    if check_thresh_bounds:
+        missing_lower = aupimoresult.thresh_lower_bound is None
+        missing_upper = aupimoresult.thresh_upper_bound is None
+        if missing_lower and missing_upper:
+            return ("missing-thresh-bound", "lower and upper")
+        if missing_lower:
+            return ("missing-thresh-bound", "lower")
+        if missing_upper:
+            return ("missing-thresh-bound", "upper")
     return (None, None)
 
 
@@ -320,7 +330,9 @@ files_errors = (
             "auroc.json": check_single_value_json,
             "aupr.json": check_single_value_json,
             "aupro.json": check_single_value_json,
-            "aupimo/aupimos.json": partial(check_aupimos, check_paths=args.check_paths),
+            "aupimo/aupimos.json": partial(
+                check_aupimos, check_paths=args.check_paths, check_thresh_bounds=args.check_aupimo_thresh_bounds
+            ),
             "asmaps.pt": partial(check_asmaps, check_paths=args.check_paths),
             "aupimo/curves.pt": partial(check_curves, check_paths=args.check_paths),
         }[row.name[3]](row.path),
