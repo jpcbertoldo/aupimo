@@ -117,41 +117,6 @@ def _validate_source_images_paths(paths: Sequence[str], expected_num_paths: int 
         raise ValueError(msg)
 
 
-def duplicate_filename(path: str | Path) -> Path:
-    """Check and duplicate filename.
-
-    This function checks the path and adds a suffix if it already exists on the file system.
-
-    Copied from `anomalib.data.utils.image.duplicate_filename`.
-
-    Args:
-        path (str | Path): Input Path
-
-    Examples:
-        >>> path = Path("datasets/MVTec/bottle/test/broken_large/000.png")
-        >>> path.exists()
-        True
-
-        If we pass this to ``duplicate_filename`` function we would get the following:
-        >>> duplicate_filename(path)
-        PosixPath('datasets/MVTec/bottle/test/broken_large/000_1.png')
-
-    Returns:
-        Path: Duplicated output path.
-    """
-    if isinstance(path, str):
-        path = Path(path)
-
-    i = 0
-    while True:
-        duplicated_path = path if i == 0 else path.parent / (path.stem + f"_{i}" + path.suffix)
-        if not duplicated_path.exists():
-            break
-        i += 1
-
-    return duplicated_path
-
-
 # =========================================== RESULT OBJECT ===========================================
 
 
@@ -283,7 +248,6 @@ class PIMOResult:
                        If the file already exists, a numerical suffix is added to the filename.
         """
         _validate.file_path(file_path, must_exist=False, extension=".pt", pathlib_ok=True)
-        file_path = duplicate_filename(file_path)
         payload = self.to_dict()
         torch.save(payload, file_path)
 
@@ -486,10 +450,8 @@ class AUPIMOResult:
 
         Args:
             file_path: path to the `.json` file where to save the AUPIMO result.
-                       If the file already exists, a numerical suffix is added to the filename.
         """
         _validate.file_path(file_path, must_exist=False, extension=".json", pathlib_ok=True)
-        file_path = duplicate_filename(file_path)
         file_path = Path(file_path)
         payload = self.to_dict()
         aupimos: Tensor = payload["aupimos"]
