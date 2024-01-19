@@ -32,7 +32,7 @@ def set_pandas_print_precision(prec: int = 3):
     pd.set_option("display.precision", prec)
 
 
-ipython_show_all_outputs()
+#ipython_show_all_outputs()
 set_numpy_print_precision(1)
 set_pandas_print_precision(1)
 
