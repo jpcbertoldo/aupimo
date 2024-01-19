@@ -13,7 +13,10 @@ from __future__ import annotations
 
 def ipython_show_all_outputs():
     """Make a cell print all the outputs instead of just the last one"""
-    from IPython.core.interactiveshell import InteractiveShell
+    try:
+        from IPython.core.interactiveshell import InteractiveShell
+    except ImportError:
+        return
 
     InteractiveShell.ast_node_interactivity = "all"
 
@@ -202,6 +205,28 @@ def expected_files_exist(dir: Path):
         # optionals
         "asmaps.pt": (dir / "asmaps.pt").is_file(),
         "aupimo/curves.pt": aupimo_dir.is_dir() and (aupimo_dir / "curves.pt").is_file(),
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # NEXT
+        # MAKE CHECK FOR MODEL FILES
     }
 
 
