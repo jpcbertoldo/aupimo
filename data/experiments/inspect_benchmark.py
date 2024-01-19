@@ -10,39 +10,36 @@ This script is preferably intended to be run as an ipython notebook.
 
 from __future__ import annotations
 
+import argparse
+import json
+import sys
+from functools import partial
+from pathlib import Path
 
-def ipython_show_all_outputs():
-    """Make a cell print all the outputs instead of just the last one"""
-    try:
-        from IPython.core.interactiveshell import InteractiveShell
-    except ImportError:
-        return
+import pandas as pd
+import torch
 
+# is it running as a notebook or as a script?
+if (arg0 := Path(sys.argv[0]).stem) == "ipykernel_launcher":
+    print("running as a notebook")
+    from IPython import get_ipython
+    from IPython.core.interactiveshell import InteractiveShell
+
+    IS_NOTEBOOK = True
+
+    # autoreload modified modules
+    get_ipython().run_line_magic("load_ext", "autoreload")
+    get_ipython().run_line_magic("autoreload", "2")
+    # make a cell print all the outputs instead of just the last one
     InteractiveShell.ast_node_interactivity = "all"
 
+else:
+    IS_NOTEBOOK = False
 
-def set_numpy_print_precision(prec: int = 3):
-    import numpy as np
-
-    print(f"setting numpy print precision to {prec}")
-    np.set_printoptions(floatmode="maxprec", precision=prec, suppress=True)
-
-
-def set_pandas_print_precision(prec: int = 3):
-    import pandas as pd
-
-    print(f"setting pandas print precision to {prec}")
-    pd.set_option("display.precision", prec)
-
-
-ipython_show_all_outputs()
-set_numpy_print_precision(1)
-set_pandas_print_precision(1)
+from aupimo import AUPIMOResult, PIMOResult
 
 # %%
 # Constants
-
-from pathlib import Path
 
 HERE = Path(__file__).parent
 BENCHMARK_ROOT_DIR = HERE / "benchmark"
@@ -108,18 +105,43 @@ DATASETS_PER_COLLECTION = {
 # %%
 # Args
 
-import argparse
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--check-paths", action="store_true")
 parser.add_argument("--check-aupimo-thresh-bounds", action="store_true")
-args = parser.parse_args()
+parser.add_argument(
+    "--check-missing-optional",
+    type=str,
+    action="append",
+    choices=["asmaps.pt", "aupimo/curves.pt", "model"],
+    default=[],
+)
+# "model" (in the choices above) is a bit special; it doesnt have a file extension
+# because some models (efficientad) are saved as a directory with multiple files
 
+if IS_NOTEBOOK:
+    print("argument string")
+    print(
+        argstrs := [
+            string
+            for arg in [
+                "--check-paths",
+                "--check-aupimo-thresh-bounds",
+                "--check-missing-optional asmaps.pt",
+                "--check-missing-optional aupimo/curves.pt",
+                "--check-missing-optional model",
+            ]
+            for string in arg.split(" ")
+        ],
+    )
+    args = parser.parse_args(argstrs)
+
+else:
+    args = parser.parse_args()
+
+print(f"{args=}")
 
 # %%
 # Find run dirs (1 model, 1 dataset) and check if they are complete
-
-import pandas as pd
 
 rundirs = pd.DataFrame.from_records(
     [
@@ -195,86 +217,85 @@ print(f"{len(rundirs)} run dirs are left after filtering data")
 rundirs = rundirs.reset_index(drop=True).set_index(["model", "collection", "dataset"]).sort_index()
 
 
-def expected_files_exist(dir: Path):
-    aupimo_dir = dir / "aupimo"
-    return {
-        "auroc.json": (dir / "auroc.json").is_file(),
-        "aupr.json": (dir / "aupr.json").is_file(),
-        "aupro.json": (dir / "aupro.json").is_file(),
+def expected_files_exist(rundir: Path, model: str, _collection: str, _dataset: str) -> dict[str, bool]:
+    aupimo_dir = rundir / "aupimo"
+    missing = {
+        "auroc.json": (rundir / "auroc.json").is_file(),
+        "aupr.json": (rundir / "aupr.json").is_file(),
+        "aupro.json": (rundir / "aupro.json").is_file(),
         "aupimo/aupimos.json": aupimo_dir.is_dir() and (aupimo_dir / "aupimos.json").is_file(),
         # optionals
-        "asmaps.pt": (dir / "asmaps.pt").is_file(),
+        "asmaps.pt": (rundir / "asmaps.pt").is_file(),
         "aupimo/curves.pt": aupimo_dir.is_dir() and (aupimo_dir / "curves.pt").is_file(),
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # NEXT
-        # MAKE CHECK FOR MODEL FILES
+        # model is special because some models (efficientad) are saved as a directory with multiple files
     }
+
+    if model in ("efficientad_wr101_m_ext", "efficientad_wr101_s_ext"):
+        model_dir = rundir / "model"
+        missing["model"] = (
+            model_dir.is_dir()
+            and (model_dir / "autoencoder.pt").is_file()
+            and (model_dir / "student.pt").is_file()
+            and (model_dir / "teacher.pt").is_file()
+        )
+
+    elif model in ("fastflow_wr50", "patchcore_wr101", "patchcore_wr50", "simplenet_wr50_ext"):
+        missing["model"] = (rundir / "model.pt").is_file()
+
+    return missing
 
 
 FILES_SCORES = ["auroc.json", "aupr.json", "aupro.json", "aupimo/aupimos.json"]
-FILES_OPTIONALS = ["aupimo/curves.pt", "asmaps.pt"]
 
-rundirs_files = (BENCHMARK_ROOT_DIR / rundirs["path"]).apply(expected_files_exist).apply(pd.Series)
+rundirs_files = (
+    (BENCHMARK_ROOT_DIR / rundirs[["path"]])
+    .apply(
+        lambda row: expected_files_exist(row.path, *row.name),
+        axis=1,
+    )
+    .apply(pd.Series)
+)
 rundirs_files.columns.name = "file"
 
-rundirs_files_scores = rundirs_files[FILES_SCORES]
-rundirs_files_optionals = rundirs_files[FILES_OPTIONALS]
-
 # SCORES
+rundirs_files_scores = rundirs_files[FILES_SCORES]
+
 missing_score_files = rundirs_files_scores.apply(
-    lambda row: sorted(row[row == False].index.tolist()),
+    lambda row: sorted(row[row == False].index.tolist()),  # noqa: E712
     axis=1,
 ).to_frame("files")
 missing_score_files["num"] = missing_score_files.map(len)
 
 if missing_score_files["num"].sum() > 0:
     print(f"missing score files: {missing_score_files['num'].sum()}")
+    print(missing_score_files.explode("files").files.value_counts())
     missing_score_files[missing_score_files["num"] > 0]
 
 # OPTIONALS
-missing_optional_files = rundirs_files_optionals.apply(
-    lambda row: sorted(row[row == False].index.tolist()),
-    axis=1,
-).to_frame("files")
-missing_optional_files["num"] = missing_optional_files.map(len)
+if len(args.check_missing_optional) > 0:
+    print(f"checking optional files: {args.check_missing_optional}")
 
-if missing_optional_files["num"].sum() > 0:
-    print(f"missing optional files: {missing_optional_files['num'].sum()}")
-    missing_optional_files[missing_optional_files["num"] > 0]
+    rundirs_files_optionals = rundirs_files[args.check_missing_optional]
+
+    missing_optional_files = rundirs_files_optionals.apply(
+        lambda row: sorted(row[row == False].index.tolist()),  # noqa: E712
+        axis=1,
+    ).to_frame("files")
+    missing_optional_files["num"] = missing_optional_files.map(len)
+
+    if missing_optional_files["num"].sum() > 0:
+        print(f"missing optional files: {missing_optional_files['num'].sum()}")
+        print("per file type:")
+        print(missing_optional_files.explode("files").files.value_counts())
+        missing_optional_files[missing_optional_files["num"] > 0]
 
 
 # %%
 # Check content of files
 
-import json
-from functools import partial
-
-import torch
-
-from aupimo import AUPIMOResult, PIMOResult
-
 # index: (model, collection, dataset, file)
-files = rundirs_files.stack(sort=True)
-files = files[files == True]
+files = rundirs_files.stack(sort=True)  # noqa: PD013
+files = files[files == True]  # noqa: E712
 print(f"found {len(files)} files, now checking their content")
 
 # name[:3] = (model, collection, dataset), name[3] = file
@@ -356,7 +377,9 @@ files_errors = (
             "aupr.json": check_single_value_json,
             "aupro.json": check_single_value_json,
             "aupimo/aupimos.json": partial(
-                check_aupimos, check_paths=args.check_paths, check_thresh_bounds=args.check_aupimo_thresh_bounds
+                check_aupimos,
+                check_paths=args.check_paths,
+                check_thresh_bounds=args.check_aupimo_thresh_bounds,
             ),
             "asmaps.pt": partial(check_asmaps, check_paths=args.check_paths),
             "aupimo/curves.pt": partial(check_curves, check_paths=args.check_paths),
