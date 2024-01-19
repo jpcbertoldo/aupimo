@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import pathlib
 import sys
 import warnings
 from pathlib import Path
@@ -25,7 +24,7 @@ from PIL import Image
 from torch import Tensor
 
 # is it running as a notebook or as a script?
-if (arg0 := pathlib.Path(sys.argv[0]).stem) == "ipykernel_launcher":
+if (arg0 := Path(sys.argv[0]).stem) == "ipykernel_launcher":
     print("running as a notebook")
     from IPython import get_ipython
     from IPython.core.interactiveshell import InteractiveShell
