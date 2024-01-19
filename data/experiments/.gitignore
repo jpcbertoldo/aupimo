@@ -2,6 +2,11 @@ ablation/**/curves.pt
 ablation/**/asmaps.pt
 benchmark/**/curves.pt
 benchmark/**/asmaps.pt
+benchmark/**/model.pt
+# efficientad has multiple .pt for each model
+benchmark/**/model/autoencoder.pt
+benchmark/**/model/student.pt
+benchmark/**/model/teacher.pt
 *.zip
 files_errors_summary.html
 files_errors.html
