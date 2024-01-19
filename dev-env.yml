@@ -1,0 +1,19 @@
+name: aupimo-dev
+
+channels:
+  - defaults
+  - conda-forge
+
+dependencies:
+  - python=3.10
+  - pip=21.0*
+  - conda-forge::ipykernel  # so it can be used in jupyter lab
+  # this version needs to be not 58 becasue it is causing this issue https://github.com/pypa/setuptools/issues/2769
+  # src: https://github.com/tikitu/jsmin/issues/33#issue-989555565
+  - setuptools=57.*
+  - conda-forge::nodejs
+  - pip:
+    - -e .
+    - -r requirements/dev.txt
+    - -r requirements/aupimo-paper.txt
+  
