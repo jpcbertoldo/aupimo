@@ -76,7 +76,7 @@ if IS_NOTEBOOK:
         argstrs := [
             string
             for arg in [
-                "--asmaps ../data/experiments/benchmark/padim_r18/mvtec/bottle/asmaps.pt",
+                "--asmaps ../data/experiments/benchmark/patchcore_wr50/mvtec/bottle/asmaps.pt",
                 "--metrics auroc",
                 "--metrics aupr",
                 "--metrics aupro",
@@ -339,6 +339,23 @@ if AUPIMO in args.metrics:
     pimoresult.save(aupimo_dir / "curves.pt")
     aupimoresult.save(aupimo_dir / "aupimos.json")
 
+
+
+# %%
+# Example
+import matplotlib.pyplot as plt
+
+plt.imshow(asmaps[-1,:,:])
+plt.axis('off')
+plt.show()
+
+
+# %%
+plt.imshow(plt.imread(images_abspaths[-1]))
+plt.axis('off')
+# %%
+plt.imshow(masks[-1])
+plt.axis('off')
 # %%
 # Exit
 

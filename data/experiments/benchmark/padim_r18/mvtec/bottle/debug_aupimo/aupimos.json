@@ -1,0 +1,20 @@
+{
+    "shared_fpr_metric": "mean-per-image-fpr",
+    "fpr_lower_bound": 1e-05,
+    "fpr_upper_bound": 0.0001,
+    "num_threshs": 295,
+    "thresh_lower_bound": 11.887104034423828,
+    "thresh_upper_bound": 12.003728866577148,
+    "aupimos": [
+        NaN,
+        NaN,
+        1.0,
+        0.9796336701313899
+    ],
+    "paths": [
+        "MVTec/bottle/test/good/000.png",
+        "MVTec/bottle/test/good/001.png",
+        "MVTec/bottle/test/broken_large/000.png",
+        "MVTec/bottle/test/broken_large/001.png"
+    ]
+}
