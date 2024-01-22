@@ -358,6 +358,85 @@ plt.imshow(masks[-1])
 plt.axis('off')
 # %%
 # Exit
+#print("exiting")
+#sys.exit(0)
 
-print("exiting")
-sys.exit(0)
+# %%
+#Compute Precision
+from torchmetrics.classification import BinaryPrecision,BinaryRecall
+
+# %%
+def _compute_binary_precision(asmap: Tensor, mask: Tensor) -> float:
+    metric = BinaryPrecision()
+    metric.update(asmap,mask)
+    return metric.compute().item()
+
+def _compute_binary_recall(asmap: Tensor, mask: Tensor) -> float:
+    metric = BinaryRecall()
+    metric.update(asmap,mask)
+    return metric.compute().item()
+
+# %%
+print(asmaps[-1,:,:].min(),asmaps[-1,:,:].max())
+# %%
+STEP=100
+asmap=asmaps[-1]
+mask=masks[-1]
+res=[]
+for i in torch.linspace(asmap.min()+1,asmap.max()-1,STEP):
+    res.append(_compute_binary_precision(asmap>i, mask))
+plt.plot(res)
+
+# %%
+from skimage.morphology import reconstruction,erosion,dilation,square,opening,closing,area_opening,area_closing
+
+# %%
+EXAMPLE=-2
+STEP=5
+STEP2=150
+asmap=asmaps[EXAMPLE].numpy()
+asmap=asmap-np.min(asmap)
+asmap=asmap/np.max(asmap)
+mask=masks[EXAMPLE]
+resdef=[]
+plt.subplot(1,2,1)
+plt.imshow(asmap)
+plt.subplot(1,2,2)
+plt.imshow(mask)
+plt.show()
+
+Z=[]
+for irec in np.linspace(3,50,7):
+    print(irec)
+    K=opening(asmap,square(int(irec)))
+    #M=asmap*(1.1)
+    asmaptemp=K #reconstruction(K,asmap)
+    #asmaptemp=(asmap-asmaptemp)>0
+    asmaptemp=torch.from_numpy(asmaptemp)
+    res=[]
+    resrecall=[]
+    Z.append(asmaptemp)
+    #plt.imshow(asmaptemp)
+    #plt.show()
+    for i in torch.linspace(asmaptemp.min()+0.00001,asmaptemp.max()-.00001,STEP2):
+        res.append(_compute_binary_precision(asmaptemp>i, mask))
+        resrecall.append(_compute_binary_recall(asmaptemp>i, mask))
+        #plt.plot(res)
+    plt.plot(resrecall,res,'.',label=str(irec))
+    #plt.show()
+plt.xlabel('Recall')
+plt.ylabel('Precision')
+plt.xlim([.3,.9])
+plt.ylim([.5,1])
+plt.legend()
+plt.show()
+for i in range(len(Z)):
+    plt.subplot(3,3,i+1)
+    plt.imshow(Z[i])
+    plt.axis('off')
+plt.show()
+
+# %%
+#plt.plot(res,resrecall,'.')
+print(Z[-1].shape)
+# %%
