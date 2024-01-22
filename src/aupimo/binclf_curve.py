@@ -48,6 +48,8 @@ def per_image_binclf_curve(
 ) -> tuple[Tensor, Tensor]:
     """Compute the binary classification matrix of each image in the batch for multiple thresholds (shared).
 
+    TODO update docstring (2d threshs)
+
     ATTENTION: tensors are converted to numpy arrays and then converted back to tensors (same device as `anomaly_maps`).
 
     Args:

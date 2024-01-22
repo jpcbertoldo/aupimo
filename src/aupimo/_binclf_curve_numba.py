@@ -81,7 +81,7 @@ def binclf_one_curve_numba(scores: ndarray, gts: ndarray, threshs: ndarray) -> n
 
 @numba.jit(nopython=True, parallel=True)
 def binclf_multiple_curves_numba(scores_batch: ndarray, gts_batch: ndarray, threshs: ndarray) -> ndarray:
-    """MULTIPLE binary classification matrix at each threshold (NUMBA implementation).
+    """MULTIPLE binary classification matrix at each (cross-instance shared) threshold (NUMBA implementation).
 
     This does the same as `_binclf_multiple_curves_python` but with numba,
     using parallelization and just-in-time compilation.
@@ -106,3 +106,36 @@ def binclf_multiple_curves_numba(scores_batch: ndarray, gts_batch: ndarray, thre
         mask = gts_batch[imgidx]
         ret[imgidx] = binclf_one_curve_numba(scoremap, mask, threshs)
     return ret
+
+
+# TODO test `binclf_multiple_curves_per_instance_threshs_numba`
+# TODO doc `binclf_multiple_curves_per_instance_threshs_numba`
+@numba.jit(nopython=True, parallel=True)
+def binclf_multiple_curves_per_instance_threshs_numba(scores_batch: ndarray, gts_batch: ndarray, threshs_per_instance: ndarray) -> ndarray:
+    """MULTIPLE binary classification matrix at each (instance-specific) threshold (NUMBA implementation).
+
+    This does the same as `_binclf_multiple_curves_per_instance_threshs_python` but with numba,
+    using parallelization and just-in-time compilation.
+
+    ATTENTION: VALIDATION IS NOT DONE HERE. Make sure to validate the arguments before calling this function.
+
+    Args:
+        scores_batch (ndarray): Anomaly scores (N, D,).
+        gts_batch (ndarray): Binary (bool) ground truth of shape (N, D,).
+        threshs_per_instance (ndarray): Sequence of thresholds in ascending order (N, K,).
+
+    Returns:
+        ndarray: Binary classification matrix curves (N, K, 2, 2)
+
+        See docstring of `binclf_multiple_curves_per_instance_threshs` for details.
+    """
+    num_imgs = scores_batch.shape[0]
+    _, num_th = threshs_per_instance.shape
+    ret = np.empty((num_imgs, num_th, 2, 2), dtype=np.int64)
+    for imgidx in numba.prange(num_imgs):
+        scoremap = scores_batch[imgidx]
+        mask = gts_batch[imgidx]
+        threshs = threshs_per_instance[imgidx]
+        ret[imgidx] = binclf_one_curve_numba(scoremap, mask, threshs)
+    return ret
+
