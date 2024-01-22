@@ -43,7 +43,7 @@ pip install -e .  # `-e` is for 'editable' mode
 pip install -r requirements/aupimo-paper.txt
 ```
 
-> **Important:** it is recommended to use a virtual environment to install the dependencies and run the tests. We recommend using `conda`, and an enviroment file `env.yml` is provided at the root of the repository. Install it with `conda env create -f env.yml` and activate it with `conda activate aupimo-dev`.
+> **Important:** it is recommended to use a virtual environment to install the dependencies and run the tests. We recommend using `conda`, and an enviroment file `dev-env.yml` is provided at the root of the repository. Install it with `conda env create -f dev-env.yml` and activate it with `conda activate aupimo-dev`.
 
 ### Data setup
 
@@ -82,7 +82,7 @@ Run the tests in `tests/` locally with `pytest` before opening a Pull Request:
 pytest tests/
 ```
 
-> **Important:** it is recommended to use a virtual environment to install the dependencies and run the tests. We recommend using `conda`, and an enviroment file `env.yml` is provided at the root of the repository. Install it with `conda env create -f env.yml` and activate it with `conda activate aupimo-dev`.
+> **Important:** it is recommended to use a virtual environment to install the dependencies and run the tests. We recommend using `conda`, and an enviroment file `dev-env.yml` is provided at the root of the repository. Install it with `conda env create -f dev-env.yml` and activate it with `conda activate aupimo-dev`.
 
 
 ## Reference
