@@ -26,6 +26,8 @@ cd aupimo
 pip install .
 ```
 
+You can add it to your `requirements.txt` file as `aupimo @ git+https://github.com/jpcbertoldo/aupimo`.
+
 > PYPI package coming up
 
 ## Tutorials
