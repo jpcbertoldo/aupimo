@@ -182,11 +182,9 @@ METRICS_LABELS = {
     'aulogpimo_0001_001': 'AUPIMO',
     "avg_aupimo": "Avg. AUPIMO",
     "std_aupimo": "Std. AUPIMO",
-    "p10_aupimo": "10th percentile AUPIMO",
-    "p25_aupimo": "25th percentile AUPIMO",
-    "p33_aupimo": "33rd percentile AUPIMO",
+    "p33_aupimo": "P33 AUPIMO",
     "med_aupimo": "Median AUPIMO",
-    "avgrank_aupimo": "Avg. rank AUPIMO",
+    "avgrank_aupimo": "Avg. Rank",
 }
 
 MAINTEXT_MODELS = [
