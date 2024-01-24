@@ -559,8 +559,9 @@ def per_image_prec(binclf_curves: ndarray) -> ndarray:
     tps = binclf_curves[..., 1, 1]
     fps = binclf_curves[..., 0, 1]
 
-    # it can be `nan` if no positive is predicted (threshold is too high)
-    return tps.astype(np.float64) / (tps + fps).astype(np.float64)
+    # it can be `nan` if TP=0 and FP=0 (threshold is too high)
+    with np.errstate(divide="ignore"):
+        return tps.astype(np.float64) / (tps + fps).astype(np.float64)
 
 
 def per_image_tfpr(binclf_curves: ndarray) -> ndarray:
@@ -586,7 +587,8 @@ def per_image_tfpr(binclf_curves: ndarray) -> ndarray:
     """
     tps = binclf_curves[..., 1, 1]
     fps = binclf_curves[..., 0, 1]
-    return tps.astype(np.float64) / fps.astype(np.float64)
+    with np.errstate(divide="ignore"):
+        return tps.astype(np.float64) / fps.astype(np.float64)
 
 
 def per_image_iou(binclf_curves: ndarray) -> ndarray:

@@ -194,7 +194,7 @@ def per_image_prec(binclf_curves: Tensor) -> Tensor:
     return torch.from_numpy(precs_array).to(binclf_curves.device)
 
 
-def per_image_tfpr(binclf_curves: Tensor) -> Tensor:
+def per_image_tfprs(binclf_curves: Tensor) -> Tensor:
     """Compute the True-to-False Positive Ratio for each image for each thresh.
     
     TFPR = TP / FP
