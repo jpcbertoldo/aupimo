@@ -1,0 +1,34 @@
+{
+    "seed": 0,
+    "num_anom_to_add_tiny_regions": 4,
+    "idxs_to_add_tiny_regions": [
+        14,
+        13,
+        23,
+        27
+    ],
+    "num_tiny_regions_per_image": [
+        1,
+        2,
+        1,
+        4
+    ],
+    "tiny_region_size_per_image": {
+        "14": [
+            2
+        ],
+        "13": [
+            3,
+            9
+        ],
+        "23": [
+            9
+        ],
+        "27": [
+            16,
+            8,
+            3,
+            8
+        ]
+    }
+}

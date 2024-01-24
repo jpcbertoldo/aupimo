@@ -1,0 +1,1 @@
+Some values in the shared fpr integration range are nan. The AUPIMO will be computed without these values.
