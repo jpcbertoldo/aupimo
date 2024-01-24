@@ -69,6 +69,8 @@ _ = parser.add_argument("--visa-root", type=Path)
 _ = parser.add_argument("--not-debug", dest="debug", action="store_false")
 _ = parser.add_argument("--metrics", "-me", type=str, action="append", choices=METRICS_CHOICES, default=[])
 _ = parser.add_argument("--device", choices=["cpu", "cuda", "gpu"], default="cpu")
+_ = parser.add_argument("--seed", type=int, default=0)
+_ = parser.add_argument("--add-tiny-regions", action="store_true")
 
 if IS_NOTEBOOK:
     print("argument string")
@@ -77,13 +79,14 @@ if IS_NOTEBOOK:
             string
             for arg in [
                 "--asmaps ../data/experiments/benchmark/padim_r18/mvtec/bottle/asmaps.pt",
-                # "--metrics auroc",
-                # "--metrics aupr",
+                "--metrics auroc",
+                "--metrics aupr",
                 "--metrics aupro",
-                # "--metrics aupimo",
+                "--metrics aupimo",
                 "--metrics aupro_05",
                 "--mvtec-root ../data/datasets/MVTec",
                 "--visa-root ../data/datasets/VisA",
+                "--add-tiny-regions",
                 # "--not-debug",
             ]
             for string in arg.split(" ")
@@ -95,6 +98,13 @@ else:
     args = parser.parse_args()
 
 print(f"{args=}")
+
+savedir = args.asmaps.parent
+
+if args.add_tiny_regions:
+    print("modifying savedir to include `synthetic_tiny_regions`")
+    savedir = savedir / "synthetic_tiny_regions"
+    savedir.mkdir(exist_ok=True)
 
 # %%
 # Load `asmaps.pt`
@@ -208,6 +218,90 @@ masks = torch.stack(
 print(f"{masks.shape=}")
 
 # %%
+# Add tiny regions to the masks
+# parameters are based on statistics from VisA 
+
+if args.add_tiny_regions:
+
+    RATIO_IMAGES_WITH_TINY_REGIONS = 0.15
+    RATIO_REGIONS_SIZE_SMALLER_20PCT = 0.80
+    MAX_NUM_ATTEMPTS_TO_PLACE_REGION = 10
+
+    synthetic_tiny_regions_params_dir = savedir / "synthetic_tiny_regions_params"
+    if args.debug:
+        synthetic_tiny_regions_params_dir = synthetic_tiny_regions_params_dir.with_stem("debug_" + synthetic_tiny_regions_params_dir.stem)
+    synthetic_tiny_regions_params_dir.mkdir(exist_ok=True)
+
+    params_fpath = synthetic_tiny_regions_params_dir / f"seed={args.seed}.json"
+    params_dict = {"seed": args.seed}
+
+    generator = torch.Generator().manual_seed(args.seed)
+
+    try:
+        # get the number of images to add tiny regions to
+        images_classes = torch.tensor([abspath is not None for abspath in masks_abspaths])
+        num_anom = images_classes.sum().item()
+        num_anom_to_add_tiny_regions = int(RATIO_IMAGES_WITH_TINY_REGIONS * num_anom)
+        params_dict["num_anom_to_add_tiny_regions"] = num_anom_to_add_tiny_regions
+
+        # randomly which images to add tiny regions to
+        idxs_anom_images = torch.where(images_classes == 1)[0]
+        idxs_to_add_tiny_regions = idxs_anom_images[torch.randperm(len(idxs_anom_images), generator=generator)]
+        idxs_to_add_tiny_regions = idxs_to_add_tiny_regions[:num_anom_to_add_tiny_regions].tolist()
+        params_dict["idxs_to_add_tiny_regions"] = idxs_to_add_tiny_regions
+
+        # how many tiny regions to add to each image
+        num_tiny_regions_per_image = torch.randint(low=1, high=5, size=(num_anom_to_add_tiny_regions,), generator=generator).tolist()
+        params_dict["num_tiny_regions_per_image"] = num_tiny_regions_per_image
+
+        # where to add the tiny regions
+        params_dict[f"tiny_region_size_per_image"] = {}
+        for image_idx, num_tiny_regions in zip(idxs_to_add_tiny_regions, num_tiny_regions_per_image):
+            mask = masks[image_idx].clone()
+            # get the size of the tiny regions
+            # 80% of chance to have size from 1 to 9; 20% of chance to have size from 10 to 19
+            smaller_than_10 = torch.rand(num_tiny_regions, generator=generator) < RATIO_REGIONS_SIZE_SMALLER_20PCT
+            tiny_region_size_smaller_than_10 = torch.randint(low=1, high=10, size=(num_tiny_regions,), generator=generator)
+            tiny_region_size_bigger_than_10 = torch.randint(low=10, high=20, size=(num_tiny_regions,), generator=generator)
+            tiny_region_size = torch.where(smaller_than_10, tiny_region_size_smaller_than_10, tiny_region_size_bigger_than_10).tolist()
+            params_dict[f"tiny_region_size_per_image"][image_idx] = tiny_region_size
+            for abs_region_size in tiny_region_size:
+                # get a random shape for the region
+                square_size = torch.sqrt(torch.tensor(abs_region_size)).ceil().long().item()
+                region = torch.zeros((square_size ** 2))
+                region[:abs_region_size] = 1
+                region = region[torch.randperm(len(region), generator=generator)]
+                region = region.view(square_size, square_size)
+                # get the position of the tiny region
+                # make sure the position chosen is not outside the image
+                not_outside_mask = torch.ones_like(mask)  
+                not_outside_mask[(-square_size):, :] = 0
+                not_outside_mask[:, (-square_size):] = 0
+                possible_positions = torch.tensor(np.where((mask == 0) & not_outside_mask)).T
+                possible_positions = possible_positions[torch.randperm(len(possible_positions), generator=generator)]
+                for position in possible_positions[:MAX_NUM_ATTEMPTS_TO_PLACE_REGION]:
+                    x, y = position
+                    touches_existing_region = (region * mask[x:x+square_size, y:y+square_size]).sum() > 0
+                    if touches_existing_region:
+                        continue
+                    mask[x:x+square_size, y:y+square_size] = region
+                    break
+            
+            print(f"modifying mask {image_idx=}")
+            masks[image_idx] = mask
+
+    except Exception as ex:
+        params_dict["exception"] = str(ex)
+        # save the stack trace as a string in `params_dict`
+        import traceback
+        params_dict["stack_trace"] = traceback.format_exc()
+
+    finally:
+        # save the parameters
+        with params_fpath.open("w") as f:
+            json.dump(params_dict, f, indent=4)
+
+# %%
 # DEBUG: only keep 2 images per class if in debug mode
 if args.debug:
     print("debug mode --> only using 2 images")
@@ -243,6 +337,8 @@ else:
 
 if args.device == "cpu":
     print("using CPU")
+    masks = masks.cpu()
+    asmaps = asmaps.cpu()
 
 elif args.device in ("cuda", "gpu"):
     print("moving data to GPU")
@@ -280,7 +376,7 @@ if METRIC_AUROC in args.metrics:
     print("getting auroc")
     auroc = _compute_auroc(asmaps, masks)
     print(f"{auroc=:.2%}")
-    _save_value(args.asmaps.parent / "auroc.json", auroc, args.debug)
+    _save_value(savedir / "auroc.json", auroc, args.debug)
 
 # %%
 # AUPR
@@ -296,7 +392,7 @@ if METRIC_AUPR in args.metrics:
     print("getting aupr")
     aupr = _compute_aupr(asmaps, masks)
     print(f"{aupr=:.2%}")
-    _save_value(args.asmaps.parent / "aupr.json", aupr, args.debug)
+    _save_value(savedir / "aupr.json", aupr, args.debug)
 
 
 # %%
@@ -313,7 +409,7 @@ if METRIC_AUPRO in args.metrics:
     print("computing aupro")
     aupro = _compute_aupro(asmaps, masks)
     print(f"{aupro=}")
-    _save_value(args.asmaps.parent / "aupro.json", aupro, args.debug)
+    _save_value(savedir / "aupro.json", aupro, args.debug)
 
 
 # %%
@@ -332,7 +428,7 @@ if AUPIMO in args.metrics:
 
     print("saving aupimo")
 
-    aupimo_dir = args.asmaps.parent / "aupimo"
+    aupimo_dir = savedir / "aupimo"
     if args.debug:
         aupimo_dir = aupimo_dir.with_stem("debug_" + aupimo_dir.stem)
     aupimo_dir.mkdir(exist_ok=True)
@@ -352,7 +448,7 @@ if METRIC_AUPRO_05 in args.metrics:
     print("computing aupro_05 (fpr upper bound of 5% instead of 30%)")
     aupro_05 = _compute_aupro_05(asmaps, masks)
     print(f"{aupro_05=}")
-    _save_value(args.asmaps.parent / "aupro_05.json", aupro_05, args.debug)
+    _save_value(savedir / "aupro_05.json", aupro_05, args.debug)
 
 # %%
 # Exit
