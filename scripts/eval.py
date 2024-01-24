@@ -43,7 +43,7 @@ else:
     IS_NOTEBOOK = False
 
 
-from aupimo import aupimo_scores
+from aupimo import aupimo_scores, AUPIMOResult
 
 # %%
 # Args
@@ -60,6 +60,7 @@ METRICS_CHOICES = [
     (METRIC_AUPRO := "aupro"),
     (AUPIMO := "aupimo"),
     (METRIC_AUPRO_05 := "aupro_05"),
+    (METRIC_IOU := "iou"),
 ]
 
 parser = argparse.ArgumentParser()
@@ -84,9 +85,10 @@ if IS_NOTEBOOK:
                 "--metrics aupro",
                 "--metrics aupimo",
                 "--metrics aupro_05",
+                "--metrics iou",
                 "--mvtec-root ../data/datasets/MVTec",
                 "--visa-root ../data/datasets/VisA",
-                "--add-tiny-regions",
+                # "--add-tiny-regions",
                 # "--not-debug",
             ]
             for string in arg.split(" ")
@@ -446,6 +448,8 @@ if AUPIMO in args.metrics:
     pimoresult.save(aupimo_dir / "curves.pt")
     aupimoresult.save(aupimo_dir / "aupimos.json")
 
+# =============================================================================
+# REVIEW
 # %%
 # AUPRO_05
 
@@ -459,6 +463,94 @@ if METRIC_AUPRO_05 in args.metrics:
     aupro_05 = _compute_aupro_05(asmaps, masks)
     print(f"{aupro_05=}")
     _save_value(savedir / "aupro_05.json", aupro_05, args.debug)
+    
+# %%
+# IOU
+
+# TODO clean this up
+from numpy import ndarray
+from aupimo import per_image_binclf_curve, per_image_iou, per_image_fpr
+from aupimo.pimo_numpy import aupimo_normalizing_factor
+
+# def _compute_iou(asmaps: Tensor, masks: Tensor) -> float:
+
+if METRIC_IOU in args.metrics:
+    print("computing iou")
+    
+    # TODO this path reading could be done in a more elegant way
+    assert (aupimo_auc_fpath := savedir / "aupimo" / "aupimos.json").exists(), f"{aupimo_auc_fpath=}"
+    aupimoresult = AUPIMOResult.load(aupimo_auc_fpath)
+    threshs = torch.linspace(*aupimoresult.thresh_bounds, IOU_NUM_THRESHS := 1000)
+    _, binclf_curves = per_image_binclf_curve(
+        anomaly_maps=asmaps,
+        masks=masks,
+        algorithm="numba",
+        threshs_choice="given",
+        threshs_given=threshs,
+    )
+    iou_curves = per_image_iou(binclf_curves)
+        
+    iou_dir = savedir / "iou"
+    if args.debug:
+        iou_dir = iou_dir.with_stem("debug_" + iou_dir.stem)
+    iou_dir.mkdir(exist_ok=True)
+    
+    torch.save(iou_curves, iou_dir / "curves.pt")
+    
+    fprs = per_image_fpr(binclf_curves)
+    images_classes = (masks == 1).any(dim=-1).any(dim=-1).to(torch.bool)
+    # this is already in the AUPIMO's bounds
+    shared_fpr = fprs[images_classes == 0].mean(dim=0)
+    
+    shared_fpr = shared_fpr.cpu().numpy()
+    iou_curves = iou_curves.cpu().numpy()
+    
+    # -------------------------------------------------------------------------    
+    # kind copied from `aupimo_scores`
+
+    # `shared_fpr` is in descending order; `flip()` reverts to ascending order
+    # `iou_curves` have to be flipped as well to match the new `shared_fpr`
+    shared_fpr = np.flip(shared_fpr)
+    iou_curves = np.flip(iou_curves, axis=1)
+
+    # the log's base does not matter because it's a constant factor canceled by normalization factor
+    shared_fpr_log = np.log(shared_fpr)
+
+    # deal with edge cases
+    invalid_shared_fpr = ~np.isfinite(shared_fpr_log)
+
+    if invalid_shared_fpr.all():
+        msg = (
+            "Cannot compute AUPIMO because the shared fpr integration range is invalid). "
+            "Try increasing the number of thresholds."
+        )
+        with (iou_dir / "error-00.txt").open("w") as f:
+            f.write(msg)
+        raise RuntimeError(msg)    
+
+    if invalid_shared_fpr.any():
+        msg = (
+            "Some values in the shared fpr integration range are nan. "
+            "The AUPIMO will be computed without these values."
+        )
+        with (iou_dir / "warning-00.txt").open("w") as f:
+            f.write(msg)
+        warnings.warn(msg, RuntimeWarning, stacklevel=1)
+
+        # get rid of nan values by removing them from the integration range
+        shared_fpr_log = shared_fpr_log[~invalid_shared_fpr]
+        iou_curves = iou_curves[:, ~invalid_shared_fpr]
+
+    num_points_integral = int(shared_fpr_log.shape[0])
+
+    aucs: ndarray = np.trapz(iou_curves, x=shared_fpr_log, axis=1)
+
+    # normalize, then clip(0, 1) makes sure that the values are in [0, 1] in case of numerical errors
+    normalization_factor = aupimo_normalizing_factor(aupimoresult.fpr_bounds)
+    aucs = (aucs / normalization_factor).clip(0, 1)
+
+    _save_value(savedir / "ious.json", aucs.tolist(), args.debug)
+
 
 # %%
 # Exit
