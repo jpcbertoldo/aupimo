@@ -59,6 +59,7 @@ METRICS_CHOICES = [
     (METRIC_AUPR := "aupr"),
     (METRIC_AUPRO := "aupro"),
     (AUPIMO := "aupimo"),
+    (METRIC_AUPRO_05 := "aupro_05"),
 ]
 
 parser = argparse.ArgumentParser()
@@ -76,10 +77,11 @@ if IS_NOTEBOOK:
             string
             for arg in [
                 "--asmaps ../data/experiments/benchmark/padim_r18/mvtec/bottle/asmaps.pt",
-                "--metrics auroc",
-                "--metrics aupr",
+                # "--metrics auroc",
+                # "--metrics aupr",
                 "--metrics aupro",
-                "--metrics aupimo",
+                # "--metrics aupimo",
+                "--metrics aupro_05",
                 "--mvtec-root ../data/datasets/MVTec",
                 "--visa-root ../data/datasets/VisA",
                 # "--not-debug",
@@ -337,6 +339,20 @@ if AUPIMO in args.metrics:
 
     pimoresult.save(aupimo_dir / "curves.pt")
     aupimoresult.save(aupimo_dir / "aupimos.json")
+
+# %%
+# AUPRO_05
+
+def _compute_aupro_05(asmaps: Tensor, masks: Tensor) -> float:
+    metric = AUPRO(fpr_limit=0.05)
+    metric.update(asmaps, masks)
+    return metric.compute().item()
+
+if METRIC_AUPRO_05 in args.metrics:
+    print("computing aupro_05 (fpr upper bound of 5% instead of 30%)")
+    aupro_05 = _compute_aupro_05(asmaps, masks)
+    print(f"{aupro_05=}")
+    _save_value(args.asmaps.parent / "aupro_05.json", aupro_05, args.debug)
 
 # %%
 # Exit
