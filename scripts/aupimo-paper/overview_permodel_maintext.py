@@ -118,18 +118,23 @@ for record in progressbar(records):
 
 
 data = pd.DataFrame.from_records(records)
-data = data.set_index(["model", "dataset", "category"]).sort_index().reset_index()
+data = data.set_index(["model", "dataset", "category"]).sort_index()
 
 print("has any model with any NaN?")
 data.isna().any(axis=1).any()
 
-assert data.shape[0] == 351  # 27 models * 13 datasets 
+assert data.shape[0] == 351  # 27 datasets * 13 models 
+
+print("using only main text models")
+data = data.query("model in @constants.MAINTEXT_MODELS")
+MODELS_LABELS = constants.MODELS_LABELS_MAINTEXT
+
+assert data.shape[0] == 216  # 27 datasets * 8 models
 
 print("df")
 data.head(2)
 
 # %%
-# MAINTEXT DATASETWISE
 
 REPLACE_LABELS = {"model": constants.MODELS_LABELS_MAINTEXT, "dataset": constants.DATASETS_LABELS, "category": constants.CATEGORIES_LABELS}
 MIN_CONFIDENCE = 0.95
@@ -142,51 +147,42 @@ DATASETWISE_RC = {
 }
 
 data["avg_aupimo"] = data["aupimo"].apply(lambda x: np.nanmean(x))
-data["p33_aupimo"] = data["aupimo"].apply(lambda x: np.nanpercentile(x, 33))
-
-df_plot = data.reset_index()
-df_plot = df_plot.set_index("model").loc[constants.MAINTEXT_MODELS].reset_index()
-df_plot = df_plot.set_index(["dataset", "category", "model"]).sort_index()
 
 # models order!!!!
-# (-) sign is because higher is better
 metric = "avg_aupimo"
-pivot = df_plot.pivot_table(index=["dataset", "category"], columns="model", values=metric)
-pivot_ranks = (-pivot).apply(scipy.stats.rankdata, axis=1, result_type="broadcast")
-pivot_ranks_avg = pivot_ranks.mean(axis=0).sort_values().reset_index().rename(columns={0: "avg_rank"})
-models_ordered = pivot_ranks_avg['model'].values.tolist()
+models_ordered = data["avg_aupimo"].groupby("model").mean().sort_values(ascending=False).index.tolist()
 num_models = len(models_ordered)
 
-def get_metric_data(metric):
+
+def get_metric_data(metric, data):
 
     # ====================
     # compute the average of the metric per model
 
     # scatter
-    metric_plotdf = df_plot[metric].reset_index()
+    metric_df = data[metric].reset_index()
 
-    metric_pmodel = metric_plotdf.groupby("model")[metric]
+    metric_pmodel = metric_df.groupby("model")[metric]
     metric_pmodel_avg = metric_pmodel.mean().sort_values().reset_index()
 
-    metric_pmodel_pdataset = metric_plotdf.groupby(["dataset", "model"])[metric]
+    metric_pmodel_pdataset = metric_df.groupby(["dataset", "model"])[metric]
     metric_pmodel_pdataset_avg = metric_pmodel_pdataset.mean().sort_values().reset_index()
 
     # order models
-    metric_plotdf = metric_plotdf.set_index("model").loc[models_ordered].reset_index()
+    metric_df = metric_df.set_index("model").loc[models_ordered].reset_index()
     metric_pmodel_avg = metric_pmodel_avg.set_index("model").loc[models_ordered].reset_index()
     metric_pmodel_pdataset_avg = metric_pmodel_pdataset_avg.set_index("model").loc[models_ordered].reset_index()
 
-    return metric_plotdf, metric_pmodel_avg, metric_pmodel_pdataset_avg
+    return metric_df, metric_pmodel_avg, metric_pmodel_pdataset_avg
 
-auroc_plotdf, auroc_pmodel_avg, auroc_pmodel_pdset_avg = get_metric_data("auroc")
-aupro_plotdf, aupro_pmodel_avg, aupro_pmodel_pdset_avg = get_metric_data("aupro")
-aupimo_avg_plotdf, aupimo_avg_pmodel_avg, aupimo_avg_pmodel_pdset_avg = get_metric_data("avg_aupimo")
-aupimo_p33_plotdf, aupimo_p33_pmodel_avg, aupimo_p33_pmodel_pdset_avg = get_metric_data("p33_aupimo")
+auroc_df, auroc_pmodel_avg, auroc_pmodel_pdset_avg = get_metric_data("auroc", data=data)
+aupro_df, aupro_pmodel_avg, aupro_pmodel_pdset_avg = get_metric_data("aupro", data=data)
+aupimo_avg_df, aupimo_avg_pmodel_avg, aupimo_avg_pmodel_pdset_avg = get_metric_data("avg_aupimo", data=data)
 
 MODEL2Y = dict(map(reversed, enumerate(models_ordered[::-1])))
 
 # auroc_plotdf IS ARBITRARY, JUST TO GET THE UNIQUE DATASET/CATEGORY PAIRS
-unique_dc = auroc_plotdf[["dataset", "category"]].sort_values(by=["dataset", "category"]).drop_duplicates().values
+unique_dc = auroc_df[["dataset", "category"]].sort_values(by=["dataset", "category"]).drop_duplicates().values
 DYS = np.linspace(-(DY := 0.3), DY, len(unique_dc))
 DC2DY = {
     tuple(dc): DYS[dcidx]
@@ -198,27 +194,21 @@ def get_y(dfmetric):
     dys = dfmetric[["dataset", "category"]].apply(lambda row: DC2DY[tuple(row)], axis=1)
     return ys + dys
 
-auroc_plotdf['y'] = get_y(auroc_plotdf)
-aupro_plotdf['y'] = get_y(aupro_plotdf)
-aupimo_avg_plotdf['y'] = get_y(aupimo_avg_plotdf)
-aupimo_p33_plotdf['y'] = get_y(aupimo_p33_plotdf)
+auroc_df['y'] = get_y(auroc_df)
+aupro_df['y'] = get_y(aupro_df)
+aupimo_avg_df['y'] = get_y(aupimo_avg_df)
 
 auroc_pmodel_avg['y'] = auroc_pmodel_avg["model"].map(MODEL2Y)
 aupro_pmodel_avg['y'] = aupro_pmodel_avg["model"].map(MODEL2Y)
 aupimo_avg_pmodel_avg['y'] = aupimo_avg_pmodel_avg["model"].map(MODEL2Y)
-aupimo_p33_pmodel_avg['y'] = aupimo_p33_pmodel_avg["model"].map(MODEL2Y)
 
 auroc_pmodel_pdset_avg['y'] = auroc_pmodel_pdset_avg["model"].map(MODEL2Y)
 aupro_pmodel_pdset_avg['y'] = aupro_pmodel_pdset_avg["model"].map(MODEL2Y)
 aupimo_avg_pmodel_pdset_avg['y'] = aupimo_avg_pmodel_pdset_avg["model"].map(MODEL2Y)
-aupimo_p33_pmodel_pdset_avg['y'] = aupimo_p33_pmodel_pdset_avg["model"].map(MODEL2Y)
-
+# %%
+# triple figure version
 
 DATASET2MARKER = dict(mvtec=".", visa="x")
-
-def get_fig_datasetwise_maintext():
-    return plt.subplots(figsize=(7, 4), dpi=200, layout="constrained",)
-
 
 with mpl.rc_context(rc=DATASETWISE_RC):
 
@@ -265,13 +255,9 @@ with mpl.rc_context(rc=DATASETWISE_RC):
         )
 
     # ================================================================================
-    # AUROC and AUPRO
-    fig_auroc_aupro, ax = get_fig_datasetwise_maintext()
-
-    scatter(ax, auroc_plotdf, "auroc", color="tab:blue")
-    scatter(ax, aupro_plotdf, "aupro", color="tab:red")
-
-    # plot the average of the averages per model
+    # AUROC (blue)
+    fig_auroc, ax = plt.subplots(figsize=(6, 4), dpi=200, layout="constrained",)
+    scatter(ax, auroc_df, "auroc", color="tab:blue")
     _ = ax.scatter(
         auroc_pmodel_avg["auroc"].values,
         auroc_pmodel_avg["y"].values,
@@ -282,6 +268,26 @@ with mpl.rc_context(rc=DATASETWISE_RC):
         s=150,
         zorder=100,
     )
+    _ = ax.set_xlim(0.878, 1.002)
+    _ = ax.set_xlabel(f"{constants.METRICS_LABELS['auroc']}")
+    _ = ax.set_xticks(np.linspace(0.88, 1.0, 7))
+    _ = ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1, decimals=0))
+
+    _ = ax.set_yticks(np.arange(num_models))
+    _ = ax.set_yticklabels([constants.MODELS_LABELS_MAINTEXT[name] for name in models_ordered[::-1]])
+    _ = ax.set_ylim(-DY - (mrgn := 0.4), (num_models - 1) + DY + mrgn)
+    YLIM = ax.get_ylim()
+    _ = ax.set_ylabel(None)
+    _ = ax.tick_params(axis="y", labelrotation=0, which="major")
+    _ = ax.grid(axis="y", linestyle="--", which="major", color="grey", alpha=0.5)
+
+    fig_auroc
+    fig_auroc.savefig(DATASETWISE_MAINTEXT_DIR / "datasetwise_maintext_auroc.pdf", bbox_inches="tight")
+
+    # ================================================================================
+    # AUPROs (default red, 5% purple)
+    fig_aupro, ax = plt.subplots(figsize=(6, 4), dpi=200, layout="constrained",)
+    scatter(ax, aupro_df, "aupro", color="tab:red")
     _ = ax.scatter(
         aupro_pmodel_avg["aupro"].values,
         aupro_pmodel_avg["y"].values,
@@ -292,29 +298,29 @@ with mpl.rc_context(rc=DATASETWISE_RC):
         s=150,
         zorder=100,
     )
+    
+    # TODO add aupro 5%
 
-    _ = ax.set_xlim(0.58, 1.02)
-    _ = ax.set_xlabel(f"{constants.METRICS_LABELS['auroc']} (blue) / {constants.METRICS_LABELS['aupro']} (red)")
-    _ = ax.set_xticks(np.linspace(0.6, 1.0, 5))
+    _ = ax.set_xlim(-.05, 1.05)
+    _ = ax.set_xlabel(f"{constants.METRICS_LABELS['aupro']} (max. FPR 30% in red and 5% in purple)")
+    _ = ax.set_xticks(np.linspace(0., 1.0, 5))
     _ = ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1, decimals=0))
-
+    
     _ = ax.set_yticks(np.arange(num_models))
-    _ = ax.set_yticklabels([constants.MODELS_LABELS_MAINTEXT[name] for name in models_ordered[::-1]])
-    _ = ax.set_ylim(-DY - (mrgn := 0.4), (num_models - 1) + DY + mrgn)
-    YLIM = ax.get_ylim()
+    _ = ax.set_yticklabels([""] * num_models)
+    _ = ax.set_ylim(*YLIM)
     _ = ax.set_ylabel(None)
-    _ = ax.tick_params(axis="y", labelrotation=0, which="major")
-    _ = ax.grid(axis="y", linestyle="--", which="major", color="grey", alpha=0.3)
-
-    fig_auroc_aupro
-    fig_auroc_aupro.savefig(DATASETWISE_MAINTEXT_DIR / "datasetwise_maintext_auroc_aupro.pdf", bbox_inches="tight")
-
+    _ = ax.tick_params(axis="y", labelrotation=0, which="major", length=0)
+    _ = ax.grid(axis="y", linestyle="--", which="major", color="grey", alpha=0.5)
+    
+    fig_aupro
+    fig_aupro.savefig(DATASETWISE_MAINTEXT_DIR / "datasetwise_maintext_aupro.pdf", bbox_inches="tight")
+    
     # ================================================================================
     # AUPIMO
-    fig_aupimo, ax = get_fig_datasetwise_maintext()
+    fig_aupimo, ax = plt.subplots(figsize=(6, 4), dpi=200, layout="constrained",)
 
-    scatter(ax, aupimo_avg_plotdf, "avg_aupimo", color="tab:green")
-    scatter(ax, aupimo_p33_plotdf, "p33_aupimo", color="tab:orange")
+    scatter(ax, aupimo_avg_df, "avg_aupimo", color="tab:green")
 
     _ = ax.scatter(
         aupimo_avg_pmodel_avg["avg_aupimo"].values,
@@ -326,31 +332,139 @@ with mpl.rc_context(rc=DATASETWISE_RC):
         s=150,
         zorder=100,
     )
+    _ = ax.set_xlim(-.05, 1.05)
+    _ = ax.set_xlabel("AUPIMO cross-image average")
+    _ = ax.set_xticks(np.linspace(0, 1.0, 5))
+    _ = ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1, decimals=0))
+
+    _ = ax.set_yticks(np.arange(num_models))
+    _ = ax.set_yticklabels([""] * num_models)
+    _ = ax.set_ylim(*YLIM)
+    _ = ax.set_ylabel(None)
+    _ = ax.tick_params(axis="y", labelrotation=0, which="major", length=0)
+    _ = ax.grid(axis="y", linestyle="--", which="major", color="grey", alpha=0.5)
+
+    fig_aupimo
+    fig_aupimo.savefig(DATASETWISE_MAINTEXT_DIR / "datasetwise_maintext_aupimo.pdf", bbox_inches="tight")
+
+# %%
+# single figure version
+DATASET2MARKER = dict(mvtec=".", visa="x")
+
+fig, axes = plt.subplots(1, 3, figsize=(14, 4), dpi=200, layout="constrained", sharey=True)
+
+with mpl.rc_context(rc=DATASETWISE_RC):
+
+    def scatter(ax, dfmetric, col, **kwargs):
+        mvtec_mask = dfmetric["dataset"] == "mvtec"
+        visa_mask = dfmetric["dataset"] == "visa"
+        _ = ax.scatter(
+            x=dfmetric[col][mvtec_mask].values,
+            y=dfmetric["y"][mvtec_mask].values,
+            marker="^",
+            s=20,
+            alpha=0.6,
+            **kwargs,
+        )
+        _ = ax.scatter(
+            x=dfmetric[col][visa_mask].values,
+            y=dfmetric["y"][visa_mask].values,
+            marker="v",
+            s=20,
+            alpha=0.6,
+            **kwargs,
+        )
+
+    def pdset_avg(ax, metric_pmodel_pdataset_avg, col, **kwargs):
+        mvtec_mask = metric_pmodel_pdataset_avg["dataset"] == "mvtec"
+        visa_mask = metric_pmodel_pdataset_avg["dataset"] == "visa"
+        _ = ax.scatter(
+            metric_pmodel_pdataset_avg[col][mvtec_mask].values,
+            metric_pmodel_pdataset_avg["y"][mvtec_mask].values,
+            marker="^",
+            s=150,
+            edgecolor="black",
+            lw=2,  # border width
+            **kwargs,
+        )
+        _ = ax.scatter(
+            metric_pmodel_pdataset_avg[col][visa_mask].values,
+            metric_pmodel_pdataset_avg["y"][visa_mask].values,
+            marker="v",
+            s=150,
+            lw=2,  # border width
+            edgecolor="black",
+            **kwargs,
+        )
+
+    # ================================================================================
+    # AUROC (blue)
+    ax = axes[0]
+
+    scatter(ax, auroc_df, "auroc", color="tab:blue")
     _ = ax.scatter(
-        aupimo_p33_pmodel_avg["p33_aupimo"].values,
-        aupimo_p33_pmodel_avg["y"].values,
+        auroc_pmodel_avg["auroc"].values,
+        auroc_pmodel_avg["y"].values,
         marker="d",
-        color="tab:orange",
+        color="tab:blue",
         edgecolor="black",
         lw=2,  # border width
         s=150,
         zorder=100,
     )
+    _ = ax.set_xlim(0.878, 1.002)
+    _ = ax.set_xlabel(f"{constants.METRICS_LABELS['auroc']}")
+    _ = ax.set_xticks(np.linspace(0.88, 1.0, 7))
+    _ = ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1, decimals=0))
+
+    # ================================================================================
+    # AUPROs (default red, 5% purple)
+    ax = axes[1]
+    scatter(ax, aupro_df, "aupro", color="tab:red")
+    _ = ax.scatter(
+        aupro_pmodel_avg["aupro"].values,
+        aupro_pmodel_avg["y"].values,
+        marker="d",
+        color="tab:red",
+        edgecolor="black",
+        lw=2,  # border width
+        s=150,
+        zorder=100,
+    )
+    
+    # TODO add aupro 5%
 
     _ = ax.set_xlim(-.05, 1.05)
-    _ = ax.set_xlabel("AUPIMO: Average (green) / P33 (orange)")
+    _ = ax.set_xlabel(f"{constants.METRICS_LABELS['aupro']} (max. FPR 30% in red and 5% in purple)")
+    _ = ax.set_xticks(np.linspace(0., 1.0, 5))
+    _ = ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1, decimals=0))
+    
+    # ================================================================================
+    # AUPIMO
+    ax = axes[2]
+    scatter(ax, aupimo_avg_df, "avg_aupimo", color="tab:green")
+    _ = ax.scatter(
+        aupimo_avg_pmodel_avg["avg_aupimo"].values,
+        aupimo_avg_pmodel_avg["y"].values,
+        marker="d",
+        color="tab:green",
+        edgecolor="black",
+        lw=2,  # border width
+        s=150,
+        zorder=100,
+    )
+    _ = ax.set_xlim(-.05, 1.05)
+    _ = ax.set_xlabel("AUPIMO cross-image average")
     _ = ax.set_xticks(np.linspace(0, 1.0, 5))
     _ = ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1, decimals=0))
 
-    _ = ax.set_yticks(np.arange(num_models))
-    _ = ax.set_yticklabels([constants.MODELS_LABELS_MAINTEXT[name] for name in models_ordered[::-1]])
-    _ = ax.set_ylim(*YLIM)
-    _ = ax.set_ylabel(None)
-    _ = ax.tick_params(axis="y", labelrotation=0, which="major")
-    _ = ax.grid(axis="y", linestyle="--", which="major", color="grey", alpha=0.3)
+    for ax in axes:
+        _ = ax.set_yticks(np.arange(num_models))
+        _ = ax.set_ylim(-DY - (mrgn := 0.4), (num_models - 1) + DY + mrgn)
+        _ = ax.set_ylabel(None)
+        _ = ax.tick_params(axis="y", labelrotation=0, which="major")
+        _ = ax.grid(axis="y", linestyle="--", which="major", color="grey", alpha=0.5)
+    _ = axes[0].set_yticklabels([constants.MODELS_LABELS_MAINTEXT[name] for name in models_ordered[::-1]])
 
-    fig_aupimo
-    fig_aupimo.savefig(DATASETWISE_MAINTEXT_DIR / "datasetwise_maintext_aupimo.pdf", bbox_inches="tight")
-
-
-# %%
+fig
+fig.savefig(DATASETWISE_MAINTEXT_DIR / "datasetwise_maintext.pdf", bbox_inches="tight")
