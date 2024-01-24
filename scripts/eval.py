@@ -418,13 +418,23 @@ if METRIC_AUPRO in args.metrics:
 if AUPIMO in args.metrics:
     print("computing aupimo")
 
-    # TODO retry with increasing number of thresholds (up to 1_000_000)
-    pimoresult, aupimoresult = aupimo_scores(
-        asmaps, masks,
-        fpr_bounds=(1e-5, 1e-4),
-        paths=images_relpaths,  # relative, not absolute paths!
-        num_threshs=30_000,
-    )
+    for num_threshs in [
+        # the number of thsreshs in the AUC cannot be predicted to 
+        # we try different values of threhs in the curve until we find a good one
+        30_000, 100_000, 300_000, 1_000_000,
+    ]:
+        print(f"trying {num_threshs=}")
+        pimoresult, aupimoresult = aupimo_scores(
+            asmaps, masks,
+            fpr_bounds=(1e-5, 1e-4),
+            paths=images_relpaths,  # relative, not absolute paths!
+            num_threshs=num_threshs,
+        )
+        print(f"auc num threshs = {aupimoresult.num_threshs=}")
+        if aupimoresult.num_threshs < 100:
+            print("too few thresholds, trying again with more")
+            continue
+        break
 
     print("saving aupimo")
 
