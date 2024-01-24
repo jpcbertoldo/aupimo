@@ -112,9 +112,10 @@ parser.add_argument(
     "--check-missing-optional",
     type=str,
     action="append",
-    choices=["asmaps.pt", "aupimo/curves.pt", "model"],
+    choices=["asmaps.pt", "aupimo/curves.pt", "model", "iou/curves.pt"],
     default=[],
 )
+parser.add_argument("--check-synthetic-tiny-regions", action="store_true")
 # "model" (in the choices above) is a bit special; it doesnt have a file extension
 # because some models (efficientad) are saved as a directory with multiple files
 
@@ -125,10 +126,13 @@ if IS_NOTEBOOK:
             string
             for arg in [
                 "--check-paths",
-                "--check-aupimo-thresh-bounds",
-                "--check-missing-optional asmaps.pt",
-                "--check-missing-optional aupimo/curves.pt",
-                "--check-missing-optional model",
+                # "--check-aupimo-thresh-bounds",
+                # "--check-missing-optional asmaps.pt",
+                # "--check-missing-optional aupimo/curves.pt",
+                # "--check-missing-optional model",
+                #
+                "--check-missing-optional iou/curves.pt",
+                # "--check-synthetic-tiny-regions",
             ]
             for string in arg.split(" ")
         ],
@@ -216,6 +220,11 @@ print(f"{len(rundirs)} run dirs are left after filtering data")
 # rundirs = rundirs.reset_index(drop=True).sort_values(["model", "collection", "dataset"])
 rundirs = rundirs.reset_index(drop=True).set_index(["model", "collection", "dataset"]).sort_index()
 
+if args.check_synthetic_tiny_regions:
+    print("checking synthetic tiny regions")
+    print("subdir 'synthetic_tiny_regions' will be added to the path of the run dirs")
+    rundirs["path"] = rundirs["path"] / "synthetic_tiny_regions"
+
 
 def expected_files_exist(rundir: Path, model: str, _collection: str, _dataset: str) -> dict[str, bool]:
     aupimo_dir = rundir / "aupimo"
@@ -224,12 +233,18 @@ def expected_files_exist(rundir: Path, model: str, _collection: str, _dataset: s
         "aupr.json": (rundir / "aupr.json").is_file(),
         "aupro.json": (rundir / "aupro.json").is_file(),
         "aupimo/aupimos.json": aupimo_dir.is_dir() and (aupimo_dir / "aupimos.json").is_file(),
+        #
+        "aupro_05.json": (rundir / "aupro_05.json").is_file(),
+        "ious.json": (rundir / "ious.json").is_file(),
+        #
         # optionals
         "asmaps.pt": (rundir / "asmaps.pt").is_file(),
         "aupimo/curves.pt": aupimo_dir.is_dir() and (aupimo_dir / "curves.pt").is_file(),
-        # model is special because some models (efficientad) are saved as a directory with multiple files
+        #
+        "iou/curves.pt": (rundir / "iou/curves.pt").is_file(),
     }
 
+    # model is special because some models (efficientad) are saved as a directory with multiple files
     if model in ("efficientad_wr101_m_ext", "efficientad_wr101_s_ext"):
         model_dir = rundir / "model"
         missing["model"] = (
@@ -245,7 +260,15 @@ def expected_files_exist(rundir: Path, model: str, _collection: str, _dataset: s
     return missing
 
 
-FILES_SCORES = ["auroc.json", "aupr.json", "aupro.json", "aupimo/aupimos.json"]
+FILES_SCORES = [
+    "auroc.json",
+    "aupr.json",
+    "aupro.json",
+    "aupimo/aupimos.json",
+    #
+    "aupro_05.json",
+    "ious.json",
+]
 
 rundirs_files = (
     (BENCHMARK_ROOT_DIR / rundirs[["path"]])
@@ -270,6 +293,28 @@ if missing_score_files["num"].sum() > 0:
     print(f"missing score files: {missing_score_files['num'].sum()}")
     print(missing_score_files.explode("files").files.value_counts())
     missing_score_files[missing_score_files["num"] > 0]
+
+    # kind of transpose the dataframe (who is missing each file)
+    who_is_missing_what = missing_score_files.explode("files").reset_index()
+    who_is_missing_what["run"] = who_is_missing_what.apply(
+        lambda row: f"{row.model}/{row.collection}/{row.dataset}",
+        axis=1,
+    )
+    who_is_missing_what = who_is_missing_what.drop(columns=["model", "collection", "dataset", "num"])
+    who_is_missing_what = who_is_missing_what.groupby("files").run.unique().apply(sorted).to_frame("runs")
+    who_is_missing_what["num"] = who_is_missing_what["runs"].map(len)
+    who_is_missing_what = who_is_missing_what.sort_values("num", ascending=True)
+    who_is_missing_what
+
+    print(
+        "report of missing score files in 'missing_score_files.html' and "
+        "'missing_score_files-who_is_missing_what.html'",
+    )
+    missing_score_files.to_html(HERE / "missing_score_files.html")
+    who_is_missing_what[["runs"]].explode("runs").to_html(
+        HERE / "missing_score_files-who_is_missing_what.html",
+    )
+
 
 # OPTIONALS
 if len(args.check_missing_optional) > 0:
@@ -333,7 +378,7 @@ def check_aupimos(fpath: Path, check_paths: bool, check_thresh_bounds: bool):
     return (None, None)
 
 
-def check_curves(fpath: Path, check_paths: bool):
+def check_pimo_curves(fpath: Path, check_paths: bool):
     try:
         pimoresult = PIMOResult.load(fpath)
     except Exception as ex:
@@ -363,6 +408,42 @@ def check_asmaps(fpath: Path, check_paths: bool):
     )
 
 
+def check_iou_curves(fpath: Path):
+    try:
+        data = torch.load(fpath)
+    except Exception as ex:
+        return (type(ex).__name__, ex)
+
+    if data.ndim != 2:
+        return ("wrong-dim", f"{data.ndim} != 2")
+
+    has_nan = torch.isnan(data).any(dim=1)
+    nan_rows = data[has_nan]
+    nan_rows_are_correct = torch.isnan(nan_rows).all(dim=1)
+
+    if not nan_rows_are_correct.all():
+        return ("incorrect-nan-rows", torch.where(~nan_rows_are_correct)[0].tolist())
+
+    valid_rows = data[~has_nan]
+    valid_rows_are_correct = ((~torch.isnan(valid_rows)) & (valid_rows >= 0)).all(dim=1)
+
+    if not valid_rows_are_correct.all():
+        return ("incorrect-valid-rows", torch.where(~valid_rows_are_correct)[0].tolist())
+
+    return (None, None)
+
+
+def check_ious(fpath: Path):
+    with fpath.open() as f:
+        data = json.load(f)
+    # should be a list containing floats and nans
+    if not isinstance(data, list):
+        return ("wrong-type", f"not a list but {type(data)}")
+    if not all(isinstance(v, (float, int)) or v is None for v in data):
+        return ("wrong-type", "not all elements are floats or None")
+    return (None, None)
+
+
 def dumb_ok(_):
     return (None, None)
 
@@ -382,7 +463,12 @@ files_errors = (
                 check_thresh_bounds=args.check_aupimo_thresh_bounds,
             ),
             "asmaps.pt": partial(check_asmaps, check_paths=args.check_paths),
-            "aupimo/curves.pt": partial(check_curves, check_paths=args.check_paths),
+            "aupimo/curves.pt": partial(check_pimo_curves, check_paths=args.check_paths),
+            #
+            "aupro_05.json": check_single_value_json,
+            # TODO change this?
+            "ious.json": check_ious,
+            "iou/curves.pt": partial(check_iou_curves),
         }[row.name[3]](row.path),
         axis=1,
         result_type="expand",

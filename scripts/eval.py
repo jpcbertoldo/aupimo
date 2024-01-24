@@ -549,6 +549,7 @@ if METRIC_IOU in args.metrics:
     normalization_factor = aupimo_normalizing_factor(aupimoresult.fpr_bounds)
     aucs = (aucs / normalization_factor).clip(0, 1)
 
+    # TODO fix to save inside `iou_dir`
     _save_value(savedir / "ious.json", aucs.tolist(), args.debug)
 
 
