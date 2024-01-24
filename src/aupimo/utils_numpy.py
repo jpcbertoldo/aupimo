@@ -447,7 +447,7 @@ def compare_models_pairwise_wilcoxon(
                     Automatic sorting is from "best to worst" model, which corresponds to ascending average rank
                     along the indices from 0 to `n-1`.
 
-                - confidences: Dictionary of confidence values for each pair of models.
+                - confidences: Dictionary of confidence (on H1) values for each pair of models.
 
                     For all pairs of indices i and j from 0 to `n-1` such that i != j:
                         - key: (models_ordered[i], models_ordered[j])
@@ -481,6 +481,7 @@ def compare_models_pairwise_wilcoxon(
         ).mean(axis=1)
         # ascending order, lower score is better --> best to worst model
         argsort_avg_ranks = avg_ranks.argsort()
+        avg_ranks = avg_ranks[argsort_avg_ranks]
         scores_per_model_nonan = OrderedDict(scores_per_model_nonan_items[idx] for idx in argsort_avg_ranks)
 
     models_ordered = tuple(scores_per_model_nonan.keys())
@@ -502,4 +503,8 @@ def compare_models_pairwise_wilcoxon(
             pvalue = scipy.stats.wilcoxon(diff, alternative=alternative).pvalue
         confidences[(model_i, model_j)] = 1.0 - float(pvalue)
 
-    return models_ordered, confidences
+    # TODO deal better with this
+    try:
+        return models_ordered, avg_ranks, confidences
+    except NameError:
+        return models_ordered, confidences
