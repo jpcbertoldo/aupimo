@@ -23,6 +23,9 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
 from pathlib import Path
+import matplotlib as mpl
+from matplotlib import cm
+from matplotlib import pyplot as plt
 
 # is it running as a notebook or as a script?
 if (arg0 := Path(sys.argv[0]).stem) == "ipykernel_launcher":
@@ -132,12 +135,8 @@ mpl.rcParams.update(RCPARAMS := {
     "xtick.labelsize": 'medium',
     "ytick.labelsize": 'medium',
 })
+
 # %%
-# do the same as the previous cell but the aupro is in the second y axis (in minutes)
-# each metric has its own color
-import matplotlib as mpl
-from matplotlib import cm
-from matplotlib import pyplot as plt
 
 fig, ax = plt.subplots(figsize=np.array((5.5, 3))*1.1, layout="constrained", dpi=150)
 ax2 = ax.twinx()
@@ -189,8 +188,8 @@ ax.grid(axis="y", which="major", alpha=0.8, linestyle="--")
 # make the 2nd y-axis red 
 ax2.set_ylim(0, 25)
 ax2.set_yticks(np.linspace(0, 25, 6))
-ax2.tick_params(axis='y', colors='red')
-ax2.set_ylabel("Execution time (MIN)", color='tab:red')
+ax2.tick_params(axis='y')
+ax2.set_ylabel("Execution time (MIN)")
 
 leg = ax.legend(loc="upper left", ncol=2, framealpha=1, title="In seconds")
 leg2 = ax2.legend(loc="lower right", ncol=1, framealpha=1, title="In minutes")
@@ -199,3 +198,86 @@ _ = fig.savefig(IMG_SAVEDIR / f"execution_time.pdf", bbox_inches="tight", pad_in
 _ = fig.show()
 
 # %%
+
+fig, axes = plt.subplots(
+    2, 1, figsize=np.array((6, 3))*1., 
+    sharex=True, sharey=False, layout="constrained", dpi=150,
+)
+
+ax_top, ax_bottom = axes
+
+marker_of_device = {
+    "cpu": "o",
+    "gpu": "x",
+}
+color_of_metric = {
+    "auroc": "tab:blue",
+    "aupro": "tab:red",
+    "aupimo": "tab:green",
+}
+
+for (metric, device), group in seconds.groupby(["metric", "device",]):
+    
+    if metric == "aupro":
+        ax = ax_top
+    else:
+        ax = ax_bottom    
+    
+    mean = group.reset_index().groupby("num_anom_images")["time_taken"].mean()
+    std = group.reset_index().groupby("num_anom_images")["time_taken"].std()
+        
+    _ = ax.plot(
+        mean.index.values,
+        mean.values,
+        label=f"{metric.upper()} on {device.upper()}",
+        marker=marker_of_device[device],
+        color=color_of_metric[metric],
+    )
+
+  
+# X axis (bottom)
+_ = ax_bottom.set_xlabel("Number of images (normal | anomalous)")
+_ = ax_bottom.set_xlim(33, 127)
+_ = ax_bottom.xaxis.set_ticks(mean.index.values)
+xticks_labels = data[["num_anom_images", "num_norm_images", "num_images"]].drop_duplicates()
+xticks_labels = xticks_labels.sort_values("num_images").reset_index(drop=True)
+xticks_labels = xticks_labels.apply(
+    lambda row: f"{row['num_images']} ({row['num_norm_images']}|{row['num_anom_images']})",
+    axis=1,
+).values
+_ = ax_bottom.xaxis.set_ticklabels(xticks_labels)
+
+# X axis (top)
+ax_top.set_xticks([])
+
+# Y axis 
+
+for ax in axes:
+    ax.grid(axis="y", which="major", alpha=0.8, linestyle="--", color="tab:grey")
+
+# (bottom)
+ax_bottom.set_yticks(np.linspace(0, 25, 6))
+ax_bottom.set_ylim(8, 22)
+
+# (top)
+ax_top.set_yticks([240, 600, 960])
+ax_top.set_ylim(100, 1100)
+
+# make annotations close to the grid lines of the top axis
+# to show the conversion from seconds to minutes
+for sec, min in zip([240, 600, 960], [4, 10, 16]):
+    ax_top.annotate(
+        f"{min} min",
+        xy=(33, sec), xycoords="data",
+        xytext=(4, 1), textcoords="offset points",
+        ha="left", va="bottom", fontsize="x-small",
+        color="tab:grey", alpha=1,
+    )
+
+# set y label in figure
+fig.supylabel("Execution time (SEC)")
+
+leg_bottom = ax_bottom.legend(loc="upper left", ncol=2, fontsize="small")
+leg_top = ax_top.legend(loc="lower right", ncol=1, fontsize="small")
+
+fig.savefig(IMG_SAVEDIR / f"execution_time.pdf", bbox_inches="tight", pad_inches=1e-2)
