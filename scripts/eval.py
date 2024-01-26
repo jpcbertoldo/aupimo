@@ -52,6 +52,7 @@ from aupimo import aupimo_scores
 ACCEPTED_COLLECTIONS = {
     (MVTEC_DIR_NAME := "MVTec"),
     (VISA_DIR_NAME := "VisA"),
+    (UCSD_DIR_NAME := "UCSDped"),
 }
 
 METRICS_CHOICES = [
@@ -65,6 +66,7 @@ parser = argparse.ArgumentParser()
 _ = parser.add_argument("--asmaps", type=Path, required=True)
 _ = parser.add_argument("--mvtec-root", type=Path)
 _ = parser.add_argument("--visa-root", type=Path)
+_ = parser.add_argument("--ucsd_root", type=Path)
 _ = parser.add_argument("--not-debug", dest="debug", action="store_false")
 _ = parser.add_argument("--metrics", "-me", type=str, action="append", choices=METRICS_CHOICES, default=[])
 _ = parser.add_argument("--device", choices=["cpu", "cuda", "gpu"], default="cpu")
@@ -114,7 +116,7 @@ assert isinstance(images_relpaths, list), f"{type(images_relpaths)=}"
 
 assert len(asmaps) == len(images_relpaths), f"{len(asmaps)=}, {len(images_relpaths)=}"
 
-# collection [of datasets] = {mvtec, visa}
+# collection [of datasets] = {mvtec, visa, ucsd}
 collection = {p.split("/")[0] for p in images_relpaths}
 assert collection.issubset(ACCEPTED_COLLECTIONS), f"{collection=}"
 
@@ -127,6 +129,10 @@ if collection == MVTEC_DIR_NAME:
 if collection == VISA_DIR_NAME:
     assert args.visa_root is not None, "please provide the argument `--visa-root`"
     collection_root = args.visa_root
+
+if collection == UCSD_DIR_NAME:
+    assert args.ucsd_root is not None, "please provide the argument `--ucsd-root`"
+    collection_root = args.ucsd_root
 
 assert collection_root.exists(), f"{collection=} {collection_root=!s}"
 
@@ -149,13 +155,21 @@ def _image_path_2_mask_path(image_path: str) -> str | None:
         # there is no mask for the normal images
         return None
 
-    path = Path(image_path.replace("test", "ground_truth"))
+    path = Path(image_path)
 
     if (collection := path.parts[0]) == VISA_DIR_NAME:
+        path = Path(image_path.replace("test", "ground_truth"))
         path = path.with_suffix(".png")
 
     elif collection == MVTEC_DIR_NAME:
+        path = Path(image_path.replace("test", "ground_truth"))
         path = path.with_stem(path.stem + "_mask").with_suffix(".png")
+
+    elif collection == UCSD_DIR_NAME:
+        if path.parent.name in ["Test006", "Test009", "Test012"]:
+            path = path.parent / ("frame" + path.name)
+        path = path.parent.with_name(path.parent.name + "_gt") / path.name
+        path = path.with_suffix(".bmp")
 
     else:
         msg = f"Unknown collection: {collection=}"
@@ -322,7 +336,8 @@ if AUPIMO in args.metrics:
 
     # TODO retry with increasing number of thresholds (up to 1_000_000)
     pimoresult, aupimoresult = aupimo_scores(
-        asmaps, masks,
+        asmaps,
+        masks,
         fpr_bounds=(1e-5, 1e-4),
         paths=images_relpaths,  # relative, not absolute paths!
         num_threshs=30_000,
