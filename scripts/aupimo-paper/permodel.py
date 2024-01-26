@@ -15,20 +15,11 @@ import warnings
 from pathlib import Path
 
 import pandas as pd
-from pathlib import Path
 from progressbar import progressbar
 import json
 import numpy as np
-
-import numpy as np
-import pandas as pd
-import torch
-from anomalib.metrics import AUPR, AUPRO, AUROC
-from PIL import Image
-from torch import Tensor
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import scipy.stats
 
 # is it running as a notebook or as a script?
 if (arg0 := Path(sys.argv[0]).stem) == "ipykernel_launcher":
@@ -58,14 +49,10 @@ import constants
 from aupimo import AUPIMOResult
 
 
-from aupimo.utils_numpy import compare_models_pairwise_ttest_rel, compare_models_pairwise_wilcoxon
 from aupimo import AUPIMOResult
 
 import constants
-from rank_diagram_display import RankDiagramDisplay
 from boxplot_display import BoxplotDisplay
-
-
 
 # %%
 # Args
@@ -88,7 +75,7 @@ if IS_NOTEBOOK:
                 "--mvtec-root ../data/datasets/MVTec",
                 "--visa-root ../data/datasets/VisA",
                 "--where maintext",
-                # "--model patchcore_wr101"
+                "--model patchcore_wr101"
             ]
             for string in arg.split(" ")
         ],
@@ -140,7 +127,7 @@ for record in progressbar(records):
     for m in [
         "auroc", "aupro",
         # "aupr",
-        # "aupro_05",
+        "aupro_05",
     ]:
         try:
             record[m] = json.loads((d / f"{m}.json").read_text())['value']
@@ -196,6 +183,7 @@ data.sort_values(["dataset", "category"], inplace=True)
 data = data.set_index(["model", "dataset", "category"])
 
 aupros = data["aupro"].values.astype(float)
+aupros05 = data["aupro_05"].values.astype(float)
 aurocs = data["auroc"].values.astype(float)
 
 aupimos = data["aupimo"].map(lambda arr: arr[~np.isnan(arr)])
@@ -205,13 +193,14 @@ avg_aupimos = aupimos.apply(np.nanmean).values.astype(float)
 # TODO CSVS
 
 # %%
-RCPARAMS = {
+mpl.rcParams.update(RCPARAMS := {
     "font.family": "sans-serif",
     "axes.titlesize": "xx-large",
     "axes.labelsize": 'large',
     "xtick.labelsize": 'large',
     "ytick.labelsize": 'large',
-}
+})
+# set the rc params with the dict above
 
 # %%
 # BOXPLOTS
@@ -249,6 +238,17 @@ with mpl.rc_context(rc=RCPARAMS):
     )
     
     scat = ax.scatter(
+        aupros05,
+        np.arange(1, len(aupros) + 1),
+        marker="|",
+        color=(aupro05_color := "tab:purple"),
+        linewidths=3,
+        zorder=5,  # between boxplot (10) and grid (-10)
+        s=100,
+        label="AUPRO 5%",
+    )
+    
+    scat = ax.scatter(
         aurocs,
         np.arange(1, len(aurocs) + 1),
         marker="|",
@@ -261,7 +261,7 @@ with mpl.rc_context(rc=RCPARAMS):
     
     # TODO add aupro 5%
     
-    _ = ax.set_xlabel("AUROC (blue) / AUPRO (red) / AUPIMO (boxplot)")
+    _ = ax.set_xlabel("AUROC (blue) / AUPRO (30% red, 5% purple)\nAUPIMO (boxplot)")
     
     fig_boxplot
     if args.model == "best":
