@@ -15,13 +15,66 @@ import argparse
 import json
 import sys
 import warnings
+from collections import namedtuple
+from functools import wraps
 from pathlib import Path
+from time import time
+from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
 from anomalib.metrics import AUPR, AUPRO, AUROC
 from PIL import Image
 from torch import Tensor
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aupimo.pimo import AUPIMOResult, PIMOResult
+
+
+Sample = namedtuple("Sample", ["asmaps", "masks", "image_relpath", "image_abspath", "mask_abspath"])
+
+
+def timeit(parent_path: Path) -> Callable[[Callable], Callable]:
+    """Save the time elapsed to a JSON file."""
+
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(*args, **kwargs) -> float:
+            exception_occured = False
+            exception_value = None
+            start = time()
+            try:
+                result = func(*args, **kwargs)
+            except Exception as e:  # noqa: BLE001
+                print(f"Error in {func.__name__}: {e}")
+                exception_occured = True
+                exception_value = e
+            end = time()
+            print(f"Time elapsed: {end - start}")
+
+            parent_path.mkdir(exist_ok=True, parents=True)
+            out_path = Path(parent_path / f"{func.__name__.split('_')[-1]}_time.json")
+            if out_path.exists():
+                with out_path.open("r") as f:
+                    data = json.load(f)
+                    data["time_taken"].append(end - start)
+                with out_path.open("w") as f:
+                    json.dump(data, f, indent=4)
+            else:
+                with Path(out_path).open("w") as f:
+                    json.dump({"time_taken": [end - start]}, f, indent=4)
+            print(f"Written to {out_path}")
+            if exception_occured:
+                msg = "Error in {func.__name__}"
+                raise Exception(msg) from exception_value  # noqa: TRY002
+            return result
+
+        return wrapper
+
+    return decorator
+
 
 # is it running as a notebook or as a script?
 if (arg0 := Path(sys.argv[0]).stem) == "ipykernel_launcher":
@@ -66,8 +119,9 @@ _ = parser.add_argument("--asmaps", type=Path, required=True)
 _ = parser.add_argument("--mvtec-root", type=Path)
 _ = parser.add_argument("--visa-root", type=Path)
 _ = parser.add_argument("--not-debug", dest="debug", action="store_false")
-_ = parser.add_argument("--metrics", "-me", type=str, action="append", choices=METRICS_CHOICES, default=[])
-_ = parser.add_argument("--device", choices=["cpu", "cuda", "gpu"], default="cpu")
+_ = parser.add_argument("--metrics", "-me", type=str, action="append", choices=METRICS_CHOICES, default=METRICS_CHOICES)
+_ = parser.add_argument("--device", choices=["cpu", "cuda", "gpu"], default="cuda")
+parser.add_argument("--anomalous_images", type=int, default=2)
 
 if IS_NOTEBOOK:
     print("argument string")
@@ -205,19 +259,56 @@ masks = torch.stack(
 )
 print(f"{masks.shape=}")
 
-# %%
-# DEBUG: only keep 2 images per class if in debug mode
-if args.debug:
-    print("debug mode --> only using 2 images")
+
+def subsample_dataset(
+    masks: Tensor,
+    asmaps: Tensor,
+    images_relpaths: list[str],
+    images_abspaths: list[str],
+    masks_abspaths: list[str],
+    num_anamolous: int,
+    num_normal: int | None = None,
+) -> Sample:
     imgclass = (masks == 1).any(dim=-1).any(dim=-1).to(torch.bool)
-    some_norm = torch.where(imgclass == 0)[0][:2]
-    some_anom = torch.where(imgclass == 1)[0][:2]
+    some_norm = torch.where(imgclass == 0)[0]
+    if num_normal is not None:
+        some_norm = some_norm[:num_normal]
+    some_anom = torch.where(imgclass == 1)[0][:num_anamolous]
     some_imgs = torch.cat([some_norm, some_anom])
     asmaps = asmaps[some_imgs]
     masks = masks[some_imgs]
     images_relpaths = [images_relpaths[i] for i in some_imgs]
     images_abspaths = [images_abspaths[i] for i in some_imgs]
     masks_abspaths = [masks_abspaths[i] for i in some_imgs]
+    print(f"Normal: {len(some_norm)} | Anomalous: {len(some_anom)}")
+    return Sample(asmaps, masks, images_relpaths, images_abspaths, masks_abspaths)
+
+
+# %%
+# DEBUG: only keep 2 images per class if in debug mode
+if args.debug:
+    print("debug mode --> only using 2 images")
+    result = subsample_dataset(
+        masks=masks,
+        asmaps=asmaps,
+        images_relpaths=images_relpaths,
+        images_abspaths=images_abspaths,
+        masks_abspaths=masks_abspaths,
+        num_anamolous=2,
+        num_normal=2,
+    )
+else:
+    result = subsample_dataset(
+        asmaps=asmaps,
+        masks=masks,
+        images_relpaths=images_relpaths,
+        images_abspaths=images_abspaths,
+        masks_abspaths=masks_abspaths,
+        num_anamolous=args.anomalous_images,
+    )
+
+asmaps, masks, images_relpaths, images_abspaths, masks_abspaths = result
+
 
 # %%
 # Resize asmaps to match the resolution of the masks
@@ -268,6 +359,7 @@ def _save_value(jsonpath: Path, value: float, debug: bool) -> None:
 # AUROC
 
 
+@timeit(parent_path=args.asmaps.parent / str(args.device) / str(args.anomalous_images))
 def _compute_auroc(asmaps: Tensor, masks: Tensor) -> float:
     metric = AUROC()
     metric.update(asmaps, masks)
@@ -284,6 +376,7 @@ if METRIC_AUROC in args.metrics:
 # AUPR
 
 
+@timeit(parent_path=args.asmaps.parent / str(args.device) / str(args.anomalous_images))
 def _compute_aupr(asmaps: Tensor, masks: Tensor) -> float:
     metric = AUPR()
     metric.update(asmaps, masks)
@@ -301,8 +394,9 @@ if METRIC_AUPR in args.metrics:
 # AUPRO
 
 
+@timeit(parent_path=args.asmaps.parent / str(args.device) / str(args.anomalous_images))
 def _compute_aupro(asmaps: Tensor, masks: Tensor) -> float:
-    metric = AUPRO()
+    metric = AUPRO().to(asmaps.device)
     metric.update(asmaps, masks)
     return metric.compute().item()
 
@@ -316,17 +410,23 @@ if METRIC_AUPRO in args.metrics:
 
 # %%
 # AUPIMO
+@timeit(parent_path=args.asmaps.parent / str(args.device) / str(args.anomalous_images))
+def _compute_aupimo(asmaps: Tensor, masks: Tensor) -> tuple[PIMOResult, AUPIMOResult]:
+    pimoresult, aupimoresult = aupimo_scores(
+        asmaps,
+        masks,
+        fpr_bounds=(1e-5, 1e-4),
+        paths=images_relpaths,  # relative, not absolute paths!
+        num_threshs=300_000,
+    )
+    return pimoresult, aupimoresult
+
 
 if AUPIMO in args.metrics:
     print("computing aupimo")
 
     # TODO retry with increasing number of thresholds (up to 1_000_000)
-    pimoresult, aupimoresult = aupimo_scores(
-        asmaps, masks,
-        fpr_bounds=(1e-5, 1e-4),
-        paths=images_relpaths,  # relative, not absolute paths!
-        num_threshs=30_000,
-    )
+    pimoresult, aupimoresult = _compute_aupimo(asmaps, masks)
 
     print("saving aupimo")
 
