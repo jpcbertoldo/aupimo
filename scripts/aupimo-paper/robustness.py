@@ -172,6 +172,8 @@ diff_stats["avg_sem_str"] = diff_stats.apply(
         f"{row['mean']:.1%} ± {row['sem']:.1%}"
         if row.name in ("aupro", "aupro5",) else
         f"{row['mean']:.2%} ± {row['sem']:.2%}"
+        if row.name in ("aupimo",) else
+        f"{row['mean']:.2%} ± {row['sem']:.1%}"
     ),
     axis=1,
 )
@@ -187,7 +189,7 @@ mpl.rcParams.update(RCPARAMS := {
     "ytick.labelsize": 'large',
 })
 
-fig, ax = plt.subplots(figsize=np.array((5.5, 2.5))*1.3, layout="constrained", dpi=150)
+fig, ax = plt.subplots(figsize=np.array((6, 2.5))*1.2, layout="constrained", dpi=150)
 for metric in diff_all_confounded.index.unique():
     _ = ax.hist(
         diff_all_confounded[metric], bins=10, 
@@ -208,10 +210,19 @@ _ = ax.set_ylabel("Frequency (log)")
 _ = ax.set_xlim(-.02, .27)
 _ = ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1, decimals=0))
 
+_ = ax.yaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
+_ = ax.yaxis.set_minor_locator(mpl.ticker.NullLocator())
+_ = ax.set_ylim(1, 4e2)
+
 fig.legend(
     loc="upper right", bbox_to_anchor=(1, 1), bbox_transform=ax.transAxes, ncol=2,
-    title="Metric (abs. diff. mean ± SEM)",
+    title="Metric (avg. absolute difference ± SEM)",
+    fontsize=11.5,
+# reduce space between the legend columns
+    columnspacing=0.5,
 )
+
+
 fig.tight_layout()
 fig.savefig(IMG_SAVEDIR / "robustness.pdf", bbox_inches="tight", pad_inches=0.01)
 
