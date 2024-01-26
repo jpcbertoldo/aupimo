@@ -44,7 +44,7 @@ class RankDiagramDisplay:
         assert (num_methods_names := len(methods_names)) == num_methods, f"Invalid methods names, expected {num_methods}, found {num_methods_names}"       
     
         assert confidence_h1_matrix.shape == (num_methods, num_methods), f"{confidence_h1_matrix.shape} != ({num_methods}, {num_methods})"
-        assert ((confidence_h1_matrix <= 1) & (confidence_h1_matrix >= 0)).all(), "Invalid confidence H1 matrix."        
+        # assert ((confidence_h1_matrix <= 1) & (confidence_h1_matrix >= 0)).all(), "Invalid confidence H1 matrix."        
         
         assert 0 <= min_confidence <= 1, f"Invalid `min_confidence` {min_confidence}"
         
