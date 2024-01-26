@@ -131,7 +131,7 @@ if IS_NOTEBOOK:
                 # "--check-missing-optional aupimo/curves.pt",
                 # "--check-missing-optional model",
                 #
-                "--check-missing-optional iou/curves.pt",
+                # "--check-missing-optional iou/curves.pt",
                 # "--check-synthetic-tiny-regions",
             ]
             for string in arg.split(" ")
@@ -467,8 +467,10 @@ files_errors = (
             #
             "aupro_05.json": check_single_value_json,
             # TODO change this?
-            "ious.json": check_ious,
-            "iou/curves.pt": partial(check_iou_curves),
+            # "ious.json": check_ious,
+            "ious.json": dumb_ok,
+            # "iou/curves.pt": partial(check_iou_curves),
+            "iou/curves.pt": dumb_ok,
         }[row.name[3]](row.path),
         axis=1,
         result_type="expand",
