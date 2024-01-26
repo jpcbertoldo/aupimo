@@ -178,6 +178,7 @@ METRICS_LABELS = {
     'aupr': "AUPR",
     'aupro': 'AUPRO',
     "aupro_05": "AUPRO 5%",
+    "aupro5": "AUPRO 5%",
     "avg_aupimo": "Avg. AUPIMO",
     "std_aupimo": "Std. AUPIMO",
     "p33_aupimo": "P33 AUPIMO",
@@ -189,6 +190,8 @@ METRICS_COLORS = {
     "auroc": "tab:blue",
     "aupro": "tab:red",
     "aupro5": "tab:purple",
+    "aupimo": "tab:green",
+    "avg_aupimo": "tab:green",
 }
 
 MAINTEXT_MODELS = [
