@@ -177,9 +177,7 @@ METRICS_LABELS = {
     'auroc': "AUROC",
     'aupr': "AUPR",
     'aupro': 'AUPRO',
-    'aulogpimo': 'AUPIMO',
-    'aulogpimo_001_01': 'AUPIMO',
-    'aulogpimo_0001_001': 'AUPIMO',
+    "aupro_05": "AUPRO 5%",
     "avg_aupimo": "Avg. AUPIMO",
     "std_aupimo": "Std. AUPIMO",
     "p33_aupimo": "P33 AUPIMO",
@@ -187,9 +185,15 @@ METRICS_LABELS = {
     "avgrank_aupimo": "Avg. Rank",
 }
 
+METRICS_COLORS = {
+    "auroc": "tab:blue",
+    "aupro": "tab:red",
+    "aupro5": "tab:purple",
+}
+
 MAINTEXT_MODELS = [
-    # "padim_r18",
-    "padim_wr50",
+    "padim_r18",
+    # "padim_wr50",
     # "patchcore_wr50",
     "patchcore_wr101",
     # "fastflow_wr50",
