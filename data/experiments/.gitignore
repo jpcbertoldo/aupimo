@@ -3,6 +3,8 @@ ablation/**/asmaps.pt
 benchmark/**/curves.pt
 benchmark/**/asmaps.pt
 benchmark/**/model.pt
+video/**/asmaps.pt
+video/**/curves.pt
 # efficientad has multiple .pt for each model
 benchmark/**/model/autoencoder.pt
 benchmark/**/model/student.pt
