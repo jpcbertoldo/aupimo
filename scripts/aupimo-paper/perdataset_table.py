@@ -101,10 +101,6 @@ assert (FIG_SAVEDIR := ROOT_SAVEDIR / "fig").exists()
 assert (PERDATASET_SAVEDIR := Path(IMG_SAVEDIR / "perdataset")).exists()
 assert (PERDATASET_CSVS_DIR := Path(IMG_SAVEDIR / "perdataset_csvs")).exists()
 assert (PERDATASET_MAINTEXT_SAVEDIR := Path(IMG_SAVEDIR / "perdataset_maintext")).exists()
-assert (PERDATASET_MAINTEXT_CSVS_DIR := Path(IMG_SAVEDIR / "perdataset_maintext_csvs")).exists()
-assert (HEATMAPS_SAVEDIR := IMG_SAVEDIR / "heatmaps").exists()
-# TODO refactor move to fig folder
-assert (PERDATASET_FIGS_SAVEDIR := IMG_SAVEDIR / "perdataset_figs").exists()
 
 # %%
 # Load data
@@ -137,6 +133,7 @@ for record in progressbar(records):
         "auroc", "aupro",
         # "aupr",
         "aupro_05",
+        "ious",
     ]:
         try:
             record[m] = json.loads((d / f"{m}.json").read_text())['value']
@@ -157,6 +154,10 @@ data = data.set_index(["dataset", "category"])
 data = data.loc[(args.dataset, args.category)].reset_index(drop=True)
 data = data.set_index(["model"]).sort_index()
 
+# rename ious to iou
+data = data.rename(columns={"ious": "iou"})
+data["iou"] = data["iou"].apply(lambda x: np.asarray(x))
+
 print(f"has any model with any NaN? {data.isna().any(axis=1).any()}")
 assert data.shape[0] == 13  # 13 models
 
@@ -170,8 +171,17 @@ data.head(2)
 dcidx = constants.DS_CAT_COMBINATIONS.index((args.dataset, args.category))
 
 # %%
-# AVG AUPIMO
-data["avg_aupimo"] = data["aupimo"].apply(lambda x: np.nanmean(x))
+# AVG AUPIMO AND IOU
+
+is_anomalous_mask = ~np.isnan(data["aupimo"].iloc[0])
+
+data["avg_aupimo"] = data["aupimo"].apply(
+    lambda x: np.mean(x[is_anomalous_mask])
+)
+
+data["avg_iou"] = data["iou"].apply(
+    lambda x: np.mean(x[is_anomalous_mask])
+)
 
 # %%
 # RANK DATA
@@ -197,6 +207,7 @@ avg_aupimos = aupimos.apply(np.nanmean).values.astype(float)
 std_aupimos = aupimos.apply(np.nanstd).values.astype(float)
 p33_aupimos = aupimos.apply(lambda x: np.nanpercentile(x, 33)).values.astype(float)
 rank_avgs_ndarray = np.asarray(rank_avgs)
+avg_iou = data.loc[models_ordered, "avg_iou"].values.astype(float)
 
 # %%
 mpl.rcParams.update(RCPARAMS := {
@@ -257,6 +268,7 @@ cells = np.concatenate([
     std_values2str(std_aupimos)[None, :],
     score_values2str(p33_aupimos)[None, :],
     rank_values2str(rank_avgs_ndarray)[None, :],
+    score_values2str(avg_iou)[None, :],
     cells,
 ], axis=0)
 cells_num = np.concatenate([
@@ -267,6 +279,7 @@ cells_num = np.concatenate([
     std_aupimos[None, :],
     p33_aupimos[None, :],
     rank_avgs_ndarray[None, :],
+    avg_iou[None, :],
     cells_num,
 ], axis=0)
 table_index_metrics_csv = [
@@ -277,6 +290,7 @@ table_index_metrics_csv = [
     "std_aupimo",
     "p33_aupimo",
     "avgrank_aupimo",
+    "avg_iou",
 ]
 table_index_csv = table_index_metrics_csv + table_index_csv
 table_index_metrics = [constants.METRICS_LABELS[metric] for metric in table_index_metrics_csv] 
@@ -314,15 +328,24 @@ table = ax.table(
 # paint auroc cells in blue and aupro cells in red
 for colidx in np.arange(-1, len(aurocs)):
     # auroc
-    table.get_celld()[(1, colidx)].set_text_props(color=constants.METRICS_COLORS["auroc"], fontweight="bold")
+    table.get_celld()[(1, colidx)].set_text_props(
+        color=constants.METRICS_COLORS["auroc"], fontweight="bold"
+    )
     # aupro and aupro5
-    table.get_celld()[(2, colidx)].set_text_props(color=constants.METRICS_COLORS["aupro"], fontweight="bold")
-    table.get_celld()[(3, colidx)].set_text_props(color=constants.METRICS_COLORS["aupro5"], fontweight="bold")
+    table.get_celld()[(2, colidx)].set_text_props(
+        color=constants.METRICS_COLORS["aupro"], fontweight="bold"
+    )
+    table.get_celld()[(3, colidx)].set_text_props(
+        color=constants.METRICS_COLORS["aupro5"], fontweight="bold"
+    )
     # avg/std/p33 aupimo/avgrank
     table.get_celld()[(4, colidx)].set_text_props(fontweight="bold")
     table.get_celld()[(5, colidx)].set_text_props(fontweight="bold")
     table.get_celld()[(6, colidx)].set_text_props(fontweight="bold")
     table.get_celld()[(7, colidx)].set_text_props(fontweight="bold")
+    table.get_celld()[(8, colidx)].set_text_props(
+        fontweight="bold", color=constants.METRICS_COLORS["avg_iou"]
+    )
 
 low_confidence_cells = np.asarray(list(zip(*np.where(cells_num < MIN_CONFIDENCE))))
 if len(low_confidence_cells) > 0:
@@ -337,3 +360,4 @@ fig_tabl
 _ = fig_tabl.savefig(PERDATASET_SAVEDIR / f"perdataset_{dcidx:03}_table.pdf", bbox_inches="tight")
 
 # %%
+7

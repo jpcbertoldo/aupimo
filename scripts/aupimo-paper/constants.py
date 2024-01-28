@@ -184,6 +184,7 @@ METRICS_LABELS = {
     "p33_aupimo": "P33 AUPIMO",
     "med_aupimo": "Median AUPIMO",
     "avgrank_aupimo": "Avg. Rank",
+    "avg_iou": "Avg. IoU",
 }
 
 METRICS_COLORS = {
@@ -192,6 +193,7 @@ METRICS_COLORS = {
     "aupro5": "tab:purple",
     "aupimo": "tab:green",
     "avg_aupimo": "tab:green",
+    "avg_iou": "tab:orange",
 }
 
 MAINTEXT_MODELS = [

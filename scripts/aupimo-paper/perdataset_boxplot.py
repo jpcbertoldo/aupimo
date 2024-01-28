@@ -136,6 +136,7 @@ for record in progressbar(records):
         "auroc", "aupro",
         # "aupr",
         "aupro_05",
+        "ious",
     ]:
         try:
             record[m] = json.loads((d / f"{m}.json").read_text())['value']
@@ -156,14 +157,14 @@ data = data.set_index(["dataset", "category"])
 data = data.loc[(args.dataset, args.category)].reset_index(drop=True)
 data = data.set_index(["model"]).sort_index()
 
+# rename ious to iou
+data = data.rename(columns={"ious": "iou"})
+data["iou"] = data["iou"].apply(lambda x: np.asarray(x))
+
 print(f"has any model with any NaN? {data.isna().any(axis=1).any()}")
 assert data.shape[0] == 13  # 13 models
 print("df")
 data.head(2)
-
-# %%
-# load table
-
 
 # %%
 # maintext or suppmat
@@ -188,9 +189,17 @@ elif args.where == WHERE_MAINTEXT:
     table = table.loc[keep_row, keep_col]
 
 # %%
-# DATA
+# AVG AUPIMO AND IOU
 
-data["avg_aupimo"] = data["aupimo"].apply(lambda x: np.nanmean(x))
+is_anomalous_mask = ~np.isnan(data["aupimo"].iloc[0])
+
+data["avg_aupimo"] = data["aupimo"].apply(
+    lambda x: np.mean(x[is_anomalous_mask])
+)
+
+data["avg_iou"] = data["iou"].apply(
+    lambda x: np.mean(x[is_anomalous_mask])
+)
 
 # best to worst (lowest to highest rank)
 models_ordered = table.columns.tolist()[::-1]
@@ -218,6 +227,7 @@ avg_aupimos = aupimos.apply(np.nanmean).values.astype(float)
 std_aupimos = aupimos.apply(np.nanstd).values.astype(float)
 p33_aupimos = aupimos.apply(lambda x: np.nanpercentile(x, 33)).values.astype(float)
 rank_avgs_ndarray = np.asarray(avgrank_aupimo)
+avg_iou = data.loc[models_ordered, "avg_iou"].values.astype(float)
 
 # %%
 # AUPIMO CSV
@@ -245,7 +255,7 @@ mpl.rcParams.update(RCPARAMS := {
     "ytick.labelsize": 'large',
 })
 
-figsize = (7, 4) if args.where == WHERE_SUPPMAT else (7, 3)
+figsize = np.array((7, 4)) * 1.15 if args.where == WHERE_SUPPMAT else np.array((7, 3)) * 1.15
 fig_boxplot, ax = plt.subplots(figsize=figsize, dpi=200, layout="constrained")
 
 BoxplotDisplay.plot_horizontal_functional(
@@ -282,14 +292,27 @@ scat = ax.scatter(
     aurocs,
     np.arange(1, len(aurocs) + 1),
     marker="|",
-    color=(auroc_color := "tab:blue"),
+    color=(auroc_color := "tab:blue"),  # TODO get from constants
     linewidths=3,
     zorder=5,  # between boxplot (10) and grid (-10)
     s=200,
     label="AUROC",
 )
 
-_ = ax.set_xlabel("AUROC (blue) / AUPRO (30% red, 5% purple) / AUPIMO (boxplot)")
+
+scat = ax.scatter(
+    avg_iou,
+    np.arange(1, len(avg_iou) + 1),
+    marker="|",
+    color=constants.METRICS_COLORS["avg_iou"],
+    linewidths=3,
+    zorder=5,  # between boxplot (10) and grid (-10)
+    s=200,
+    label="IoU",
+)
+
+
+_ = ax.set_xlabel("AUROC (blue) / AUPRO (30% red, 5% purple) / AUPIMO (boxplot) / IoU (orange)")
 
 fig_boxplot.savefig(
     PERDATASET_SAVEDIR / f"perdataset_{dcidx:03}_boxplot.pdf", 
