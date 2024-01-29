@@ -235,20 +235,18 @@ for (metric, device), group in seconds.groupby(["metric", "device",]):
     )
 
   
-# X axis (bottom)
+# X axis (shared)
 _ = ax_bottom.set_xlabel("Number of images (normal | anomalous)")
 _ = ax_bottom.set_xlim(33, 127)
 _ = ax_bottom.xaxis.set_ticks(mean.index.values)
 xticks_labels = data[["num_anom_images", "num_norm_images", "num_images"]].drop_duplicates()
 xticks_labels = xticks_labels.sort_values("num_images").reset_index(drop=True)
 xticks_labels = xticks_labels.apply(
-    lambda row: f"{row['num_images']} ({row['num_norm_images']}|{row['num_anom_images']})",
+    # lambda row: f"{row['num_images']} ({row['num_norm_images']}|{row['num_anom_images']})",
+    lambda row: f"{row['num_images']}",
     axis=1,
 ).values
 _ = ax_bottom.xaxis.set_ticklabels(xticks_labels)
-
-# X axis (top)
-ax_top.set_xticks([])
 
 # Y axis 
 
@@ -281,3 +279,5 @@ leg_bottom = ax_bottom.legend(loc="upper left", ncol=2, fontsize="small")
 leg_top = ax_top.legend(loc="lower right", ncol=1, fontsize="small")
 
 fig.savefig(IMG_SAVEDIR / f"execution_time.pdf", bbox_inches="tight", pad_inches=1e-2)
+
+# %%
