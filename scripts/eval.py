@@ -379,9 +379,26 @@ def _compute_binary_recall(asmap: Tensor, mask: Tensor) -> float:
 # %%
 print(asmaps[-1,:,:].min(),asmaps[-1,:,:].max())
 # %%
+#Visualization Data
+EXAMPLE=3
+asmap=asmaps[EXAMPLE]
+mask=masks[EXAMPLE]
+I=(plt.imread(images_abspaths[EXAMPLE]))
+print(I.shape)
+plt.figure(figsize=(24,24))
+plt.subplot(1,3,1)
+plt.imshow(asmap)
+plt.axis('off')
+plt.subplot(1,3,2)
+plt.imshow(mask)
+plt.axis('off')
+plt.subplot(1,3,3)
+plt.imshow(I)
+plt.axis('off')
+plt.show()
+
+# %%
 STEP=100
-asmap=asmaps[-1]
-mask=masks[-1]
 res=[]
 for i in torch.linspace(asmap.min()+1,asmap.max()-1,STEP):
     res.append(_compute_binary_precision(asmap>i, mask))
@@ -440,3 +457,5 @@ plt.show()
 #plt.plot(res,resrecall,'.')
 print(Z[-1].shape)
 # %%
+plt.imshow(plt.imread(images_abspaths[-1]))
+plt.axis('off')
