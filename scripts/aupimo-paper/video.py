@@ -15,6 +15,7 @@ import skimage
 from PIL import Image
 from matplotlib import pyplot as plt
 import matplotlib as mpl
+from anomalib.data import UCSDped
 
 # is it running as a notebook or as a script?
 if (arg0 := Path(sys.argv[0]).stem) == "ipykernel_launcher":
@@ -36,6 +37,17 @@ else:
     IS_NOTEBOOK = False
 
 from aupimo import AUPIMOResult
+
+RCPARAMS = {
+    "font.family": "sans-serif", "text.usetex": True,
+    "axes.titlesize": "xx-large", "axes.labelsize": "x-large",
+    "ytick.labelsize": "x-large", "xtick.labelsize": "x-large",
+    "legend.fontsize": "x-large", "legend.title_fontsize": "x-large",
+    'text.latex.preamble': r'\usepackage{lmodern}',
+}
+plt.rcParams.update(RCPARAMS)
+
+
 
 # %%
 def load_data(asmaps_fpath: Path):
@@ -178,11 +190,19 @@ def load_aupimos(aupimos_fpath: Path):
     assert aupimos_fpath.exists(), str(aupimos_fpath)
     return AUPIMOResult.load(aupimos_fpath)
 
+def load_aupimo_thresh_bounds(aupimos_fpath: Path):
+    assert aupimos_fpath.exists(), str(aupimos_fpath)
+    return AUPIMOResult.load(aupimos_fpath).thresh_bounds
+
 aupimos = load_aupimos(
     Path.home() / "repos/aupimo/data/experiments/video/patchcore_wr50_every_2_frames/ucsdped/ucsdped2/aupimo/aupimos.json"
 )
 aupimos.aupimos.shape
     
+# %%
+aupimo_thresh_bounds = load_aupimo_thresh_bounds(
+    Path.home() / "repos/aupimo/data/experiments/video/patchcore_wr50_every_2_frames/ucsdped/ucsdped2/aupimo/aupimos.json"
+)
 # %%
 frames = [
     {
@@ -203,6 +223,63 @@ frames["has_anomaly"] = frames["aupimo"].map(lambda x: int(not pd.isna(x)))
 videos_keys = frames.index.unique().tolist()
 max_frame_idx = frames["frame_idx"].max()
 
+
+
+# %%
+
+images_relpaths = [p.split("/datasets/")[-1] for p in images_abspaths]
+
+video_frames = frames.loc["Test006"].reset_index(drop=True).set_index("frame_idx")
+aupimos = video_frames["aupimo"].values
+video_frames_idxs_in_images = [images_relpaths.index(str(p)) for p in video_frames["path"]]
+video_asmaps = asmaps[video_frames_idxs_in_images]
+
+ascore_norm_min, ascore_norm_max = np.percentile(video_asmaps, [5, 95])
+
+selection_frames_idxs = [11, 61, 121, 175]
+assert set(selection_frames_idxs).issubset(video_frames.index.values)
+
+frame_shape = images.shape[:2][::-1]  # [H, W] --> [W, H]
+
+#%%
+
+fig_frames, axes = plt.subplots(
+    2, 2, figsize=np.array((10.6, 1)) * np.array(frame_shape) * 8e-3, dpi=150, 
+    sharex=True, sharey=True, layout="constrained",
+)
+axes = axes.flatten()
+
+for frame_idx, ax in zip(selection_frames_idxs, axes):
+    frame_relpath = str(video_frames.loc[frame_idx, "path"])
+    frame_idx_in_images = images_relpaths.index(frame_relpath)
+    frame = images[frame_idx_in_images]
+    ground_truth = masks[frame_idx_in_images]
+    asmap = asmaps[frame_idx_in_images]
+    vasmap = asmap.copy()
+    vasmap[vasmap <= aupimo_thresh_bounds[-1]] = np.nan
+    local_norm_min, local_norm_max = np.percentile(asmap, [5, 95])
+    img_class = ground_truth.sum() > 0
+    _ = ax.imshow(frame)
+    _ = ax.contour(ground_truth, [0.5], colors="white", linewidths=3)
+    jet_transparent = mpl.cm.get_cmap("jet")
+    jet_transparent.set_bad(alpha=0)
+    _ = ax.imshow(
+        vasmap, cmap=jet_transparent, alpha=0.5,
+        # vmin=ascore_norm_min, vmax=ascore_norm_max, 
+        # vmin=local_norm_min, vmax=local_norm_max,
+    )
+    _ = ax.contour(asmap, [aupimo_thresh_bounds[-1]], colors="black", linewidths=1)
+    _ = ax.set_title(f"Frame {frame_idx} ({'anomalous' if img_class else 'normal'})")
+    _ = ax.axis("off")
+    _ = ax.set_ylim(240 - 30, 0 + 80)
+    
+(SAVEDIR := Path("/home/jcasagrandebertoldo/repos/anomalib-workspace/adhoc/4200-gsoc-paper/latex-project/src/img/video")).mkdir(exist_ok=True, parents=True)
+
+fig_frames.savefig(SAVEDIR / "frames.pdf", bbox_inches="tight", pad_inches=0.01)
+
+# %%
+# 
+ax.get_ylim()[0]
 # %%
 from skimage.morphology import label
 
@@ -210,7 +287,7 @@ from skimage.morphology import label
 # ax = axes[0, 0]
 
 fig, axes = plt.subplots(
-    3, 4, figsize=(4 * 2.2, 3 * 2.2), dpi=150, 
+    3, 4, figsize=(4 * 4, 1.5 * 4), dpi=150, 
     sharex=True, sharey=True, layout="constrained",
 )
 
@@ -231,6 +308,10 @@ for idx, vk in enumerate(videos_keys):
         video_frames["frame_idx"], video_frames["aupimo"],
         color="black", linewidth=1, label="AUPIMO",
     )
+    
+    if vk == "Test006":
+        for frame_idx in selection_frames_idxs:
+            _ = ax.axvline(frame_idx, color="black", linestyle="--", linewidth=1)
 
     num_frames = len(video_frames)
     with_anomaly_segments = label(video_frames["has_anomaly"].values.astype(int))
@@ -284,34 +365,9 @@ for ax in axes[:, 0]:
 for ax in axes.flatten():
     _ = ax.yaxis.grid(True, linestyle="--", linewidth=1, alpha=0.3, zorder=10, color="black")
     
-# get legend handles and labels from axes[1, 0]
-# then plot the legend in axes[0, 0]
-handles, labels = axes[1, 0].get_legend_handles_labels()
-_ = axes[0, 0].legend(handles, labels, loc="upper left",)
+# # get legend handles and labels from axes[1, 0]
+# # then plot the legend in axes[0, 0]
+# handles, labels = axes[1, 0].get_legend_handles_labels()
+# _ = axes[0, 0].legend(handles, labels, loc="upper left",)
 
-(SAVEDIR := Path("/home/jcasagrandebertoldo/repos/anomalib-workspace/adhoc/4200-gsoc-paper/latex-project/src/img/video")).mkdir(exist_ok=True, parents=True)
 fig.savefig(SAVEDIR / "aupimo-vs-time.pdf", bbox_inches="tight", pad_inches=0.01)
-
-# %%
-s.plot?
-# %%
-from anomalib.data import UCSDped
-from anomalib.data.utils.transforms import InputNormalizationMethod
-# %%
-datamodule = UCSDped(
-    root=Path.home() / "data/datasets/UCSDped",
-    category="UCSDped2",
-    normalization=InputNormalizationMethod.NONE,
-)
-datamodule.prepare_data()
-datamodule.setup()
-# %%
-RCPARAMS = {
-    "font.family": "sans-serif", "text.usetex": True,
-    "axes.titlesize": "xx-large", "axes.labelsize": "x-large",
-    "ytick.labelsize": "x-large", "xtick.labelsize": "x-large",
-    "legend.fontsize": "x-large", "legend.title_fontsize": "x-large",
-    'text.latex.preamble': r'\usepackage{lmodern}',
-}
-plt.rcParams.update(RCPARAMS)
-
