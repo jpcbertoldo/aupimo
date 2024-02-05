@@ -200,7 +200,7 @@ _ = fig.show()
 # %%
 
 fig, axes = plt.subplots(
-    2, 1, figsize=np.array((6, 3))*1., 
+    2, 1, figsize=np.array((5, 2.3))*1.1, 
     sharex=True, sharey=False, layout="constrained", dpi=150,
 )
 
@@ -236,7 +236,7 @@ for (metric, device), group in seconds.groupby(["metric", "device",]):
 
   
 # X axis (shared)
-_ = ax_bottom.set_xlabel("Number of images (normal | anomalous)")
+_ = ax_bottom.set_xlabel("Number of images")
 _ = ax_bottom.set_xlim(33, 127)
 _ = ax_bottom.xaxis.set_ticks(mean.index.values)
 xticks_labels = data[["num_anom_images", "num_norm_images", "num_images"]].drop_duplicates()
@@ -247,6 +247,11 @@ xticks_labels = xticks_labels.apply(
     axis=1,
 ).values
 _ = ax_bottom.xaxis.set_ticklabels(xticks_labels)
+
+# don't show the top x axis
+ax_top.xaxis.set_visible(False)
+fig.set_constrained_layout_pads(h_pad=0)
+fig.subplots_adjust(hspace=0)  # Remove vertical space between subplots
 
 # Y axis 
 

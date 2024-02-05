@@ -167,6 +167,16 @@ diff_stats["sem"] = diff_stats.apply(
     lambda row: row["std"] / np.sqrt(row["count"]),
     axis=1,
 )
+diff_stats["avg_str"] = diff_stats.apply(
+    lambda row: (
+        f"{row['mean']:.1%}"
+        if row.name in ("aupro", "aupro5",) else
+        f"{row['mean']:.2%}"
+        if row.name in ("aupimo",) else
+        f"{row['mean']:.2%}"
+    ),
+    axis=1,
+)
 diff_stats["avg_sem_str"] = diff_stats.apply(
     lambda row: (
         f"{row['mean']:.1%} ± {row['sem']:.1%}"
@@ -189,18 +199,19 @@ mpl.rcParams.update(RCPARAMS := {
     "ytick.labelsize": 'large',
 })
 
-fig, ax = plt.subplots(figsize=np.array((6, 2.5))*1.2, layout="constrained", dpi=150)
+fig, ax = plt.subplots(figsize=np.array((5.75, 1.75))*1.2, layout="constrained", dpi=150)
 for metric in diff_all_confounded.index.unique():
     _ = ax.hist(
         diff_all_confounded[metric], bins=10, 
-        label=f"{constants.METRICS_LABELS[metric]} ({diff_stats.loc[metric, 'avg_sem_str']})", 
-        alpha=.3, density=False, cumulative=False, log=True,
+        # label=f"{constants.METRICS_LABELS[metric]} ({diff_stats.loc[metric, 'avg_str']})", 
+        label=f"{constants.METRICS_LABELS[metric]}", 
+        alpha=.4, density=False, cumulative=False, log=True,
         color=constants.METRICS_COLORS[metric],
     )
     _ = ax.hist(
         diff_all_confounded[metric], bins=10, 
-        alpha=1, density=False, cumulative=False, log=True,
-        histtype="step", linewidth=2,
+        alpha=.4, density=False, cumulative=False, log=True,
+        histtype="step", linewidth=2, 
         color=constants.METRICS_COLORS[metric],
     )
 
@@ -212,11 +223,19 @@ _ = ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1, decimals=0)
 
 _ = ax.yaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
 _ = ax.yaxis.set_minor_locator(mpl.ticker.NullLocator())
-_ = ax.set_ylim(1, 4e2)
+_ = ax.set_ylim(1, 3e2)
+
+handles, labels = ax.get_legend_handles_labels()
+
+for handle, metric in zip(handles, diff_all_confounded.index.unique()):
+    handle.set_edgecolor(constants.METRICS_COLORS[metric])
+    handle.set_linewidth(1.5)
 
 fig.legend(
-    loc="upper right", bbox_to_anchor=(1, 1), bbox_transform=ax.transAxes, ncol=2,
-    title="Metric (avg. absolute difference ± SEM)",
+    loc="upper right", bbox_to_anchor=(1, 1), 
+    bbox_transform=ax.transAxes, 
+    ncol=4,
+    # title="Metric (avg. absolute difference)",
     fontsize=11.5,
 # reduce space between the legend columns
     columnspacing=0.5,
@@ -225,5 +244,7 @@ fig.legend(
 
 fig.tight_layout()
 fig.savefig(IMG_SAVEDIR / "robustness.pdf", bbox_inches="tight", pad_inches=0.01)
+
+# %%
 
 # %%
