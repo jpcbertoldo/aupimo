@@ -14,3 +14,6 @@ files_errors_summary.html
 files_errors.html
 missing_score_files-who_is_missing_what.html
 missing_score_files.html
+
+# tmp
+benchmark/**/aupro_05.json
