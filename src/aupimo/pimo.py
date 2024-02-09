@@ -44,27 +44,27 @@ def _images_classes_from_masks(masks: Tensor) -> Tensor:
 
 def _validate_anomaly_maps(anomaly_maps: Tensor) -> None:
     _validate.is_tensor(anomaly_maps, argname="anomaly_maps")
-    _validate.anomaly_maps(anomaly_maps.numpy())
+    _validate.anomaly_maps(anomaly_maps.cpu().numpy())
 
 
 def _validate_masks(masks: Tensor) -> None:
     _validate.is_tensor(masks, argname="masks")
-    _validate.masks(masks.numpy())
+    _validate.masks(masks.cpu().numpy())
 
 
 def _validate_threshs(threshs: Tensor) -> None:
     _validate.is_tensor(threshs, argname="threshs")
-    _validate.threshs(threshs.numpy())
+    _validate.threshs(threshs.cpu().numpy())
 
 
 def _validate_shared_fpr(shared_fpr: Tensor, nan_allowed: bool = False, decreasing: bool = True) -> None:
     _validate.is_tensor(shared_fpr, argname="shared_fpr")
-    _validate.rate_curve(shared_fpr.numpy(), nan_allowed=nan_allowed, decreasing=decreasing)
+    _validate.rate_curve(shared_fpr.cpu().numpy(), nan_allowed=nan_allowed, decreasing=decreasing)
 
 
 def _validate_image_classes(image_classes: Tensor) -> None:
     _validate.is_tensor(image_classes, argname="image_classes")
-    _validate.images_classes(image_classes.numpy())
+    _validate.images_classes(image_classes.cpu().numpy())
 
 
 def _validate_per_image_tprs(per_image_tprs: Tensor, image_classes: Tensor) -> None:
@@ -73,14 +73,14 @@ def _validate_per_image_tprs(per_image_tprs: Tensor, image_classes: Tensor) -> N
 
     # general validations
     _validate.per_image_rate_curves(
-        per_image_tprs.numpy(),
+        per_image_tprs.cpu().numpy(),
         nan_allowed=True,  # normal images have NaN TPRs
         decreasing=None,  # not checked here
     )
 
     # specific to anomalous images
     _validate.per_image_rate_curves(
-        per_image_tprs[image_classes == 1].numpy(),
+        per_image_tprs[image_classes == 1].cpu().numpy(),
         nan_allowed=False,
         decreasing=True,
     )
@@ -94,7 +94,7 @@ def _validate_per_image_tprs(per_image_tprs: Tensor, image_classes: Tensor) -> N
 
 def _validate_aupimos(aupimos: Tensor) -> None:
     _validate.is_tensor(aupimos, argname="aupimos")
-    _validate.rates(aupimos.numpy(), nan_allowed=True)
+    _validate.rates(aupimos.cpu().numpy(), nan_allowed=True)
 
 
 def _validate_source_images_paths(paths: Sequence[str], expected_num_paths: int | None) -> None:
@@ -213,8 +213,8 @@ class PIMOResult:
                 [2] the actual shared FPR value at the returned threshold
         """
         return pimo_numpy.thresh_at_shared_fpr_level(
-            self.threshs.numpy(),
-            self.shared_fpr.numpy(),
+            self.threshs.cpu().numpy(),
+            self.shared_fpr.cpu().numpy(),
             fpr_level,
         )
 
@@ -455,7 +455,7 @@ class AUPIMOResult:
         file_path = Path(file_path)
         payload = self.to_dict()
         aupimos: Tensor = payload["aupimos"]
-        payload["aupimos"] = aupimos.numpy().tolist()
+        payload["aupimos"] = aupimos.cpu().numpy().tolist()
         with file_path.open("w") as f:
             json.dump(payload, f, indent=4)
 
