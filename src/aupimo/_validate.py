@@ -173,6 +173,32 @@ def threshs(threshs: ndarray) -> None:
         raise ValueError(msg)
 
 
+def threshs_per_instance(threshs: ndarray) -> None:
+    """Validate that the thresholds are valid and monotonically increasing."""
+    if not isinstance(threshs, ndarray):
+        msg = f"Expected thresholds to be an ndarray, but got {type(threshs)}"
+        raise TypeError(msg)
+
+    if threshs.ndim != 2:
+        msg = f"Expected thresholds to be 2D, but got {threshs.ndim}"
+        raise ValueError(msg)
+
+    if threshs.dtype.kind != "f":
+        msg = f"Expected thresholds to be of float type, but got ndarray with dtype {threshs.dtype}"
+        raise TypeError(msg)
+
+    # make sure they are strictly increasing for each instance
+    thresh_diff = np.diff(threshs, axis=1)
+    is_strictly_increasing = np.all(thresh_diff > 0, axis=1)
+    if not np.all(is_strictly_increasing):
+        problematic_instances = np.sort(np.where(~is_strictly_increasing)[0])
+        msg = (
+            "Expected thresholds to be strictly increasing for each instance, but it is not. "
+            f"Problematic instances (indexes in axis 0): {problematic_instances}"
+        )
+        raise ValueError(msg)
+
+
 def thresh_bounds(thresh_bounds: tuple[float, float]) -> None:
     if not isinstance(thresh_bounds, tuple):
         msg = f"Expected threshold bounds to be a tuple, but got {type(thresh_bounds)}."

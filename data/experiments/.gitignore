@@ -1,5 +1,7 @@
+# ablation
 ablation/**/curves.pt
 ablation/**/asmaps.pt
+# benchmark
 benchmark/**/curves.pt
 benchmark/**/asmaps.pt
 benchmark/**/model.pt
@@ -7,6 +9,13 @@ benchmark/**/model.pt
 benchmark/**/model/autoencoder.pt
 benchmark/**/model/student.pt
 benchmark/**/model/teacher.pt
+# video
+video/**/asmaps.pt
+video/**/model.pt
+video/**/curves.pt
+# misc
 *.zip
 files_errors_summary.html
 files_errors.html
+missing_score_files-who_is_missing_what.html
+missing_score_files.html

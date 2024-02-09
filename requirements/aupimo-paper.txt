@@ -1,1 +1,2 @@
-anomalib @ git+https://github.com/openvinotoolkit/anomalib@v1
+anomalib @ git+https://github.com/openvinotoolkit/anomalib
+progressbar2

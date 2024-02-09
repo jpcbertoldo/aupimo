@@ -49,6 +49,7 @@ class BinclfThreshsChoice:
     """Sequence of thresholds to use."""
 
     GIVEN: ClassVar[str] = "given"
+    GIVEN_PER_IMAGE: ClassVar[str] = "given-per-image"
     MINMAX_LINSPACE: ClassVar[str] = "minmax-linspace"
     MEAN_FPR_OPTIMIZED: ClassVar[str] = "mean-fpr-optimized"
     CHOICES: ClassVar[tuple[str, ...]] = (GIVEN, MINMAX_LINSPACE, MEAN_FPR_OPTIMIZED)
@@ -177,6 +178,13 @@ MULTIPLE binary classification matrix at each threshold (PYTHON implementation).
 vectorized version of `_binclf_one_curve_python` (see above)
 """
 
+# TODO: test `_binclf_multiple_curves_per_instance_threshs_python`
+# TODO: doc `_binclf_multiple_curves_per_instance_threshs_python`
+_binclf_multiple_curves_per_instance_threshs_python = np.vectorize(
+    _binclf_one_curve_python,
+    signature="(n),(n),(n,k)->(k,2,2)",
+)
+
 # =========================================== INTERFACE ===========================================
 
 
@@ -245,6 +253,82 @@ def binclf_multiple_curves(
     raise NotImplementedError(msg)
 
 
+# TODO test `binclf_multiple_curves_per_instance_threshs`
+def binclf_multiple_curves_per_instance_threshs(
+    scores_batch: ndarray,
+    gts_batch: ndarray,
+    threshs: ndarray,
+    algorithm: str = BinclfAlgorithm.NUMBA,
+) -> ndarray:
+    """Multiple binary classification matrix (per-instance scope) at each threshold (shared).
+
+    This is a wrapper around `_binclf_multiple_curves_python` and `_binclf_multiple_curves_numba`.
+    Validation of the arguments is done here (not in the actual implementation functions).
+
+    Note: predicted as positive condition is `score >= thresh`.
+
+    Args:
+        scores_batch (ndarray): Anomaly scores (N, D,).
+        gts_batch (ndarray): Binary (bool) ground truth of shape (N, D,).
+        threshs (ndarray): Sequence of thresholds in ascending order for each instance (N, K,).
+                           Each row is a sequence of thresholds for each instance.
+        algorithm (str, optional): Algorithm to use. Defaults to ALGORITHM_NUMBA.
+
+    Returns:
+        ndarray: Binary classification matrix curves (N, K, 2, 2)
+
+        The last two dimensions are the confusion matrix (ground truth, predictions)
+        So for each thresh it gives:
+            - `tp`: `[... , 1, 1]`
+            - `fp`: `[... , 0, 1]`
+            - `fn`: `[... , 1, 0]`
+            - `tn`: `[... , 0, 0]`
+
+        `t` is for `true` and `f` is for `false`, `p` is for `positive` and `n` is for `negative`, so:
+            - `tp` stands for `true positive`
+            - `fp` stands for `false positive`
+            - `fn` stands for `false negative`
+            - `tn` stands for `true negative`
+
+        The numbers in each confusion matrix are the counts (not the ratios).
+
+        Counts are relative to each instance (i.e. from 0 to D, e.g. the total is the number of pixels in the image).
+
+        IMPORTANT: difference with `binclf_multiple_curves`:
+        
+        Thresholds are NOT shared across all instances. Each instance has its own thresholds sequence.
+        However, all sequences have the same length (K).
+
+        Thresholds are sorted in ascending order.
+    """
+    BinclfAlgorithm.validate(algorithm)
+    _validate_scores_batch(scores_batch)
+    _validate_gts_batch(gts_batch)
+    _validate.same_shape(scores_batch, gts_batch)
+    _validate.threshs_per_instance(threshs)  # 2D threshs, each row is a sequence of thresholds
+    num_instances = scores_batch.shape[0]
+    if threshs.shape[0] != num_instances:
+        msg = (
+            "Expected `threshs` to have the same number of instances as `scores_batch` in axis 0, "
+            f"but got {threshs.shape[0]} (found) and {num_instances} (expected, from `scores_batch`)"
+        )
+        raise ValueError(msg)
+
+    if algorithm == BinclfAlgorithm.PYTHON:
+        return _binclf_multiple_curves_per_instance_threshs_python(scores_batch, gts_batch, threshs)
+
+    if algorithm == BinclfAlgorithm.NUMBA:
+        if not HAS_NUMBA:
+            logger.warning(
+                "Algorithm 'numba' was selected, but numba is not installed. Fallback to 'python' algorithm.",
+            )
+            return _binclf_multiple_curves_per_instance_threshs_python(scores_batch, gts_batch, threshs)
+        return _binclf_curve_numba.binclf_multiple_curves_per_instance_threshs_numba(scores_batch, gts_batch, threshs)
+
+    msg = f"Expected `algorithm` to be one of {BinclfAlgorithm.ALGORITHMS}, but got {algorithm}"
+    raise NotImplementedError(msg)
+
+
 # ========================================= PER-IMAGE BINCLF CURVE =========================================
 
 
@@ -270,6 +354,8 @@ def per_image_binclf_curve(
     num_threshs: int | None = None,
 ) -> tuple[ndarray, ndarray]:
     """Compute the binary classification matrix of each image in the batch for multiple thresholds (shared).
+    
+    TODO update docstring (2d threshs)
 
     Args:
         anomaly_maps (ndarray): Anomaly score maps of shape (N, H, W)
@@ -308,7 +394,8 @@ def per_image_binclf_curve(
                 - `tn` stands for `true negative`
 
             The numbers in each confusion matrix are the counts of pixels in the image (not the ratios).
-
+                     
+                             (!) update
             Thresholds are shared across all images, so all confusion matrices, for instance,
             at position [:, 0, :, :] are relative to the 1st threshold in `threshs`.
 
@@ -324,6 +411,15 @@ def per_image_binclf_curve(
     if threshs_choice == BinclfThreshsChoice.GIVEN:
         assert threshs_given is not None
         _validate.threshs(threshs_given)
+        if num_threshs is not None:
+            logger.warning(
+                f"Argument `num_threshs` was given, but it is ignored because `threshs_choice` is {threshs_choice}.",
+            )
+        threshs = threshs_given.astype(anomaly_maps.dtype)
+
+    elif threshs_choice == BinclfThreshsChoice.GIVEN_PER_IMAGE:
+        assert threshs_given is not None
+        _validate.threshs_per_instance(threshs_given)
         if num_threshs is not None:
             logger.warning(
                 f"Argument `num_threshs` was given, but it is ignored because `threshs_choice` is {threshs_choice}.",
@@ -350,12 +446,22 @@ def per_image_binclf_curve(
     scores_batch = anomaly_maps.reshape(anomaly_maps.shape[0], -1)
     gts_batch = masks.reshape(masks.shape[0], -1).astype(bool)  # make sure it is boolean
 
-    binclf_curves = binclf_multiple_curves(scores_batch, gts_batch, threshs, algorithm=algorithm)
+    
+    if threshs.ndim == 1:
+        binclf_curves = binclf_multiple_curves(scores_batch, gts_batch, threshs, algorithm=algorithm)
+        
+    elif threshs.ndim == 2:
+        binclf_curves = binclf_multiple_curves_per_instance_threshs(scores_batch, gts_batch, threshs, algorithm=algorithm)
+    
+    else:
+        msg = f"Expected `threshs` to be 1D or 2D, but got {threshs.ndim}"
+        raise ValueError(msg)
 
     num_images = anomaly_maps.shape[0]
 
     try:
-        _validate.binclf_curves(binclf_curves, valid_threshs=threshs)
+        # TODO review with 2D threshs
+        # _validate.binclf_curves(binclf_curves, valid_threshs=threshs)  
 
         # these two validations cannot be done in `_validate.binclf_curves` because it does not have access to the
         # original shapes of `anomaly_maps`
@@ -428,3 +534,59 @@ def per_image_fpr(binclf_curves: ndarray) -> ndarray:
 
     # it can be `nan` if an anomalous image is fully covered by the mask
     return fps.astype(np.float64) / neg.astype(np.float64)
+
+
+def per_image_prec(binclf_curves: ndarray) -> ndarray:
+    """Precision for each image for each thresh.
+
+    PREC = TP / (TP + FP) = TP / P
+
+    TP: true positives
+    FP: false positives
+    P: positives (TP + FP)
+
+    Args:
+        binclf_curves (ndarray): Binary classification matrix curves (N, K, 2, 2). See `per_image_binclf_curve`.
+
+    Returns:
+        ndarray: shape (N, K), dtype float64
+        N: number of images
+        K: number of thresholds
+
+        Thresholds are sorted in ascending order, but nothing can be said about the order of the precisions.
+    """
+    # shape: (num images, num threshs)
+    tps = binclf_curves[..., 1, 1]
+    fps = binclf_curves[..., 0, 1]
+
+    # it can be `nan` if TP=0 and FP=0 (threshold is too high)
+    with np.errstate(divide="ignore"):
+        return tps.astype(np.float64) / (tps + fps).astype(np.float64)
+
+
+def per_image_iou(binclf_curves: ndarray) -> ndarray:
+    """Intersection over Union (IoU) for each image for each thresh.
+
+    IoU = TP / (TP + FP + FN)
+
+    TP: true positives
+    FP: false positives
+    FN: false negatives
+
+    Args:
+        binclf_curves (ndarray): Binary classification matrix curves (N, K, 2, 2). See `per_image_binclf_curve`.
+
+    Returns:
+        ndarray: shape (N, K), dtype float64
+        N: number of images
+        K: number of thresholds
+
+        Thresholds are sorted in ascending order, but nothing can be said about the order of the IoU.
+    """
+    # shape: (num images, num threshs)
+    tps = binclf_curves[..., 1, 1]
+    fps = binclf_curves[..., 0, 1]
+    fns = binclf_curves[..., 1, 0]
+
+    # always defined and in [0, 1]
+    return tps.astype(np.float64) / (tps + fps + fns).astype(np.float64)

@@ -22,7 +22,7 @@ from .binclf_curve_numpy import BinclfAlgorithm, BinclfThreshsChoice
 
 def _validate_threshs(threshs: Tensor) -> None:
     _validate.is_tensor(threshs, argname="threshs")
-    _validate.threshs(threshs.numpy())
+    _validate.threshs(threshs.cpu().numpy())
 
 
 def _validate_binclf_curves(binclf_curves: Tensor, valid_threshs: Tensor | None = None) -> None:
@@ -31,7 +31,7 @@ def _validate_binclf_curves(binclf_curves: Tensor, valid_threshs: Tensor | None 
         _validate_threshs(valid_threshs)
     _validate.binclf_curves(
         binclf_curves.detach().cpu().numpy(),
-        valid_threshs=valid_threshs.numpy() if valid_threshs is not None else None,
+        valid_threshs=valid_threshs.cpu().numpy() if valid_threshs is not None else None,
     )
 
 
@@ -47,6 +47,8 @@ def per_image_binclf_curve(
     num_threshs: int | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Compute the binary classification matrix of each image in the batch for multiple thresholds (shared).
+
+    TODO update docstring (2d threshs)
 
     ATTENTION: tensors are converted to numpy arrays and then converted back to tensors (same device as `anomaly_maps`).
 
@@ -165,3 +167,53 @@ def per_image_fpr(binclf_curves: Tensor) -> Tensor:
     binclf_curves_array = binclf_curves.detach().cpu().numpy()
     fprs_array = binclf_curve_numpy.per_image_fpr(binclf_curves_array)
     return torch.from_numpy(fprs_array).to(binclf_curves.device)
+
+
+def per_image_prec(binclf_curves: Tensor) -> Tensor:
+    """Compute the precision for each image for each thresh.
+
+    PREC = TP / (TP + FP) = TP / P
+
+    TP: true positives
+    FP: false positives
+    P: positives (TP + FP)
+
+    Args:
+        binclf_curves (Tensor): Binary classification matrix curves (N, K, 2, 2). See `per_image_binclf_curve`.
+
+    Returns:
+        Tensor: shape (N, K), dtype float64
+        N: number of images
+        K: number of thresholds
+
+        Thresholds are sorted in ascending order, but nothing can be said about the order of the precisions.
+    """
+    _validate_binclf_curves(binclf_curves)
+    binclf_curves_array = binclf_curves.detach().cpu().numpy()
+    precs_array = binclf_curve_numpy.per_image_prec(binclf_curves_array)
+    return torch.from_numpy(precs_array).to(binclf_curves.device)
+
+
+def per_image_iou(binclf_curves: Tensor) -> Tensor:
+    """Compute the intersection over union (IoU) for each image for each thresh.
+
+    IoU = TP / (TP + FP + FN)
+
+    TP: true positives
+    FP: false positives
+    FN: false negatives
+
+    Args:
+        binclf_curves (Tensor): Binary classification matrix curves (N, K, 2, 2). See `per_image_binclf_curve`.
+
+    Returns:
+        Tensor: shape (N, K), dtype float64
+        N: number of images
+        K: number of thresholds
+
+        Thresholds are sorted in ascending order, but nothing can be said about the order of the IoUs.
+    """
+    _validate_binclf_curves(binclf_curves)
+    binclf_curves_array = binclf_curves.detach().cpu().numpy()
+    ious_array = binclf_curve_numpy.per_image_iou(binclf_curves_array)
+    return torch.from_numpy(ious_array).to(binclf_curves.device)
