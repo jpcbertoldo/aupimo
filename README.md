@@ -6,9 +6,9 @@ Official implementation of the paper **AUPIMO: Redefining Visual Anomaly Detecti
 
 arXiv: <https://arxiv.org/abs/2401.01984>
 
-Papers With Code: <https://paperswithcode.com/paper/aupimo-redefining-visual-anomaly-detection>
+Medium post: <https://medium.com/p/c653ac30e802>
 
-Medium post: COMING UP
+Papers With Code: <https://paperswithcode.com/paper/aupimo-redefining-visual-anomaly-detection>
 
 This research has been conducted during Google Summer of Code 2023 (GSoC 2023) at OpenVINO (Intel).
 
