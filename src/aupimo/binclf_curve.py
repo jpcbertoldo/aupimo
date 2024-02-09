@@ -194,33 +194,6 @@ def per_image_prec(binclf_curves: Tensor) -> Tensor:
     return torch.from_numpy(precs_array).to(binclf_curves.device)
 
 
-def per_image_tfprs(binclf_curves: Tensor) -> Tensor:
-    """Compute the True-to-False Positive Ratio for each image for each thresh.
-    
-    TFPR = TP / FP
-    
-    TP: true positives
-    FP: false positives
-    
-    TFPR = 1 / (1 / PREC - 1)  |   1   10   100    1k
-    PREC = 1 / (1 / TFPR + 1)  |  50%  91%   99%  99.9%
-    
-    Args:
-        binclf_curves (Tensor): Binary classification matrix curves (N, K, 2, 2). See `per_image_binclf_curve`.
-
-    Returns:
-        Tensor: shape (N, K), dtype float64
-        N: number of images
-        K: number of thresholds
-        
-        Thresholds are sorted in ascending order, but nothing can be said about the order of the precisions.
-    """
-    _validate_binclf_curves(binclf_curves)
-    binclf_curves_array = binclf_curves.detach().cpu().numpy()
-    tfprs_array = binclf_curve_numpy.per_image_tfpr(binclf_curves_array)
-    return torch.from_numpy(tfprs_array).to(binclf_curves.device)
-
-
 def per_image_iou(binclf_curves: Tensor) -> Tensor:
     """Compute the intersection over union (IoU) for each image for each thresh.
 

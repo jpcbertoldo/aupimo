@@ -564,33 +564,6 @@ def per_image_prec(binclf_curves: ndarray) -> ndarray:
         return tps.astype(np.float64) / (tps + fps).astype(np.float64)
 
 
-def per_image_tfpr(binclf_curves: ndarray) -> ndarray:
-    """True-to-False Positive Ratio for each image for each thresh.
-    
-    TFPR = TP / FP
-    
-    TP: true positives
-    FP: false positives
-    
-    TFPR = 1 / (1 / PREC - 1)  |   1   10   100    1k
-    PREC = 1 / (1 / TFPR + 1)  |  50%  91%   99%  99.9%
-    
-    Args:
-        binclf_curves (ndarray): Binary classification matrix curves (N, K, 2, 2). See `per_image_binclf_curve`.
-        
-    Returns:
-        ndarray: shape (N, K), dtype float64
-        N: number of images
-        K: number of thresholds
-        
-        Thresholds are sorted in ascending order, but nothing can be said about the order of the precisions.
-    """
-    tps = binclf_curves[..., 1, 1]
-    fps = binclf_curves[..., 0, 1]
-    with np.errstate(divide="ignore"):
-        return tps.astype(np.float64) / fps.astype(np.float64)
-
-
 def per_image_iou(binclf_curves: ndarray) -> ndarray:
     """Intersection over Union (IoU) for each image for each thresh.
 
