@@ -43,7 +43,7 @@ else:
     IS_NOTEBOOK = False
 
 
-from aupimo import aupimo_scores
+from aupimo import aupimo_scores, AUPIMOResult
 
 # %%
 # Args
@@ -76,10 +76,10 @@ if IS_NOTEBOOK:
             string
             for arg in [
                 "--asmaps ../data/experiments/benchmark/patchcore_wr50/mvtec/metal_nut/asmaps.pt",
-                "--metrics auroc",
-                "--metrics aupr",
-                "--metrics aupro",
-                "--metrics aupimo",
+                # "--metrics auroc",
+                # "--metrics aupr",
+                # "--metrics aupro",
+                # "--metrics aupimo",
                 "--mvtec-root ../data/datasets/MVTec",
                 "--visa-root ../data/datasets/VisA",
                 # "--not-debug",
@@ -343,11 +343,53 @@ if AUPIMO in args.metrics:
     aupimoresult.save(aupimo_dir / "aupimos.json")
 
 # %%
-from matplotlib import pyplot as plt
+# ================================================================================================================
+# new stuff (not in aupimo paper)
 
-image_idx = -1
+try:
+    asmaps_tensor  # type: ignore
+except NameError:
+    asmaps_tensor = asmaps
+    masks_tensor = masks
+
+# %%
+
+asmaps = asmaps_tensor.numpy()
+masks = masks_tensor.numpy()
+
+from aupimo.utils_numpy import valid_anomaly_score_maps
+
+def _get_aupimo_thresh_upper_bound(aupimoresult_fpath: Path) -> float:
+    aupimoresult = AUPIMOResult.load(aupimoresult_fpath)
+    aupimo_thresh_upper_bound = aupimoresult.thresh_bounds[1]
+    return aupimo_thresh_upper_bound
+
+vasmaps = torch.from_numpy(valid_anomaly_score_maps(
+    asmaps, _get_aupimo_thresh_upper_bound(args.asmaps.parent / "aupimo" / "aupimos.json")
+))
+
+# get gray cmap and make nan values gray
+from matplotlib import pyplot as plt
+VASMAPS_CMAP = plt.cm.get_cmap("gray")
+VASMAPS_CMAP.set_bad("gray")
+
+def _plot_gt_contour(ax, mask, **kwargs):
+    kwargs = {**dict(colors="magenta", linewidths=(lw := 0.8)), **kwargs}
+    ax.contour(mask, levels=[0.5], **kwargs)
+
+# %%
+# viz an anomalous image and its asmap
+from matplotlib import pyplot as plt
+from aupimo.pimo_numpy import _images_classes_from_masks
+
+image_classes = _images_classes_from_masks(masks)
+
+# get the first anomalous image
+image_idx = np.where(image_classes == 1)[0][0]
 asmap = asmaps[image_idx]
+vasmap = vasmaps[image_idx]
 mask = masks[image_idx]
+
 img = plt.imread(images_abspaths[image_idx])
 fig, axrow = plt.subplots(1, 3, figsize=(12, 4))
 axrow[0].imshow(img)
@@ -357,135 +399,61 @@ axrow[2].imshow(asmap)
 aupimoresult_fpath = savedir / "aupimo" / "aupimos.json"
 from aupimo import AUPIMOResult
 
-aupimoresult_loaded = AUPIMOResult.load(aupimoresult_fpath)
-aupimo_thresh_upper_bound = aupimoresult_loaded.thresh_bounds[1]
-print(f"{aupimo_thresh_upper_bound=}")
-# %%
-from functools import partial
-
-
-def _asmap2vasmap(asmap: Tensor, min_valid_score: float) -> Tensor:
-    """`vasmap` stands for `valid anomaly score map`."""
-    vasmap = asmap.clone()
-    vasmap[vasmap < min_valid_score] = torch.nan
-    return vasmap
-
-
-_asmap2vasmap_aupimo_bounded = partial(_asmap2vasmap, min_valid_score=aupimo_thresh_upper_bound)
-
-fig, axrow = plt.subplots(1, 3, figsize=(12, 4))
-axrow[0].imshow(img)
-axrow[1].imshow(mask)
-axrow[2].imshow(_asmap2vasmap_aupimo_bounded(asmap))
+fig, axrow = plt.subplots(1, 2, figsize=(8, 4), sharex=True, sharey=True, constrained_layout=True)
+_ = axrow[0].imshow(img)
+_plot_gt_contour(axrow[0], mask)
+_ = axrow[1].imshow(vasmap, cmap=VASMAPS_CMAP)
+_plot_gt_contour(axrow[1], mask)
 
 # %%
-# precision curves (naive)  COMMENTED OUT BECAUSE IT IS SLOW
+# TFPR
 
-# from torchmetrics.classification import BinaryPrecision
+from aupimo.oracles_numpy import per_image_tfpr_curves
 
-# def compute_precision(pred_mask: Tensor, target_mask: Tensor) -> float:
-#     metric = BinaryPrecision()
-#     metric.update(pred_mask, target_mask)
-#     return metric.compute().item()
-
-
-# def compute_precision_curve(
-#     asmap: Tensor,
-#     mask: Tensor,
-#     min_thresh: float | None = None,
-#     num_thresh: int = 50,
-# ) -> Tensor:
-#     if (mask == 0).all():
-#         return torch.full((2, num_thresh), np.nan)
-#     thresh_lower_bound = asmap.min() if min_thresh is None else min_thresh
-#     thresh_upper_bound = asmap.max()
-#     threshs = torch.linspace(thresh_lower_bound, thresh_upper_bound, num_thresh)
-#     precisions = torch.tensor([compute_precision(asmap >= thresh, mask) for thresh in threshs])
-#     curve = torch.stack([threshs, precisions], dim=0)
-#     return curve
-
-
-# curve = compute_precision_curve(asmap, mask)
-# curve.shape
-
-# def compute_precision_curves(
-#     asmaps: Tensor,
-#     masks: Tensor,
-#     min_threshs: float | list[float | None] | None = None,
-# ) -> Tensor:
-#     min_threshs = (
-#         [min_threshs] * len(asmaps)
-#         if isinstance(min_threshs, float)
-#         else [None] * len(asmaps)
-#         if min_threshs is None
-#         else min_threshs
-#     )
-#     return torch.stack(
-#         [
-#             compute_precision_curve(asmap, mask, min_thresh)
-#             for asmap, mask, min_thresh in zip(
-#                 asmaps,
-#                 masks,
-#                 min_threshs,
-#                 strict=False,
-#             )
-#         ],
-#         dim=0,
-#     )
-
-# precision_curves = compute_precision_curves(asmaps, masks, min_threshs=aupimo_thresh_upper_bound)
-# thrsh_idx = torch.arange(precision_curves.shape[2])
-
-# %%
-# precision curves (per-image binclf)
-
-from aupimo import per_image_binclf_curve, per_image_prec, per_image_tfpr
-
-threshs_per_image = torch.stack([
-    torch.linspace(
-        aupimo_thresh_upper_bound,
-        aupimo_thresh_upper_bound * 1.01
-        if (
-            asmap.isnan().all() 
-            or (in_image_max := asmap.max()) <= aupimo_thresh_upper_bound
-        ) else
-        in_image_max,
-        1000, 
-    )   
-    for asmap in asmaps
-], dim=0)
-
-_, per_image_binclfs = per_image_binclf_curve(
-    asmaps,
-    masks,
-    algorithm="numba",
-    threshs_choice="given-per-image",
-    threshs_given=threshs_per_image,
+per_image_threshs, per_image_tfprs = per_image_tfpr_curves(
+    asmaps, masks,
+    min_valid_score=_get_aupimo_thresh_upper_bound(args.asmaps.parent / "aupimo" / "aupimos.json"),
+    num_threshs=1000,
 )
 
-per_image_prec_values = per_image_prec(per_image_binclfs)
-per_image_tfpr_values = per_image_tfpr(per_image_binclfs)
-
-precision_curves = torch.stack([threshs_per_image, per_image_prec_values], dim=1)
-tfpr_curves = torch.stack([threshs_per_image, per_image_tfpr_values], dim=1)
-
 # %%
-import numpy as np
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# MAKE A FUNCTION TO FIND APPROXIMATIONS TO PIVOT POINTS IN THE CURVE
+# AND PUT IT INT utils_numpy.py
 
-# fig, ax = plt.subplots(1, 1, figsize=(6, 6))
-# ax.plot(thrsh_idx, precision_curves[:, 1].T, label=np.arange(len(precision_curves)))
-# ax.set_xlabel("threshold index")
-# ax.set_ylabel("precision")
+# ideas to place somewhere 
+# 1) avalanche
+# 2) watershed on the image gradient with markers from the asmap's maxima 
 
-fig, ax = plt.subplots(1, 1, figsize=(6, 6))
-_ = ax.plot(precision_curves[:, 0].T, precision_curves[:, 1].T, label=np.arange(len(precision_curves)))
-ax.set_xlabel("threshold")
-ax.set_ylabel("precision")
-
-# %%
-
-# tfpr_curves = 1 / ((1 / precision_curves[:, 1]) - 1)
-# tfpr_curves = torch.stack([precision_curves[:, 0], tfpr_curves], dim=1)
+# first approximation for the superpixel selection: exclude all superpixels touching the border
 
 is_anom = ~tfpr_curves.isnan().all(dim=-1).all(dim=-1)
 
@@ -656,31 +624,31 @@ def get_contour_mask(mask, type="inner"):
         return skm.binary_dilation(mask, skm.square(3)) * (~mask)  # contour of class 1 (anomalous)
     raise ValueError(f"{type=}")
 
-def saturate_distance_map(distance_map, mask, OUTTER_INNER_MAX_RATIO = 1): 
+def saturate_distance_map(distance_map, mask, OUTTER_INNER_MAX_RATIO = 1):
 
     max_inner_distance = distance_map[mask].max()
     max_outter_distance = distance_map[~mask].max()
-    
+
     # deal with edge cases
     if max_inner_distance == 0:
         max_inner_distance = 1
-        
+
     if max_outter_distance == 0:
         max_outter_distance = 1
 
     if max_inner_distance > (max_outter_distance * OUTTER_INNER_MAX_RATIO):
         saturation_distance = max_outter_distance * OUTTER_INNER_MAX_RATIO
-        
+
     elif max_outter_distance > (max_inner_distance * OUTTER_INNER_MAX_RATIO):
         saturation_distance = max_inner_distance * OUTTER_INNER_MAX_RATIO
-        
+
     else:
         saturation_distance = max(max_inner_distance, max_outter_distance)
 
     return np.clip(
         distance_map, a_min=None, a_max=saturation_distance
     ), saturation_distance
-    
+
 # =============================================================================
 # (PRED --> REF) NOPE!!!
 
@@ -765,7 +733,7 @@ _ = axrow[2].set_title(f"avg norm distance: {avg_norm_distance_on_line:.0%}")
 
 _ = fig.suptitle("contour distance from REF --> PRED")
 
-# %% 
+# %%
 %%time
 # avg contour distance curve
 
@@ -803,7 +771,7 @@ def compute_avg_contour_distance_curve(
         compute_avg_contour_distance(
             (asmap >= thresh).numpy().astype(bool),
             mask.numpy().astype(bool),
-        ) 
+        )
         for thresh in threshs
     ]) if not mask.sum() == 0 else torch.full_like(threshs, np.nan)
 
@@ -841,7 +809,7 @@ avg_contour_distance_curves = torch.stack([
 
 avg_cont_dist_global_minima_idx = torch.argmin(avg_contour_distance_curves[:, 1], dim=1)
 avg_cont_dist_global_minima = avg_contour_distance_curves[:, 1][
-    torch.arange(len(avg_contour_distance_curves)), 
+    torch.arange(len(avg_contour_distance_curves)),
     avg_cont_dist_global_minima_idx
 ]
 avg_cont_dist_global_minima_threshs = avg_contour_distance_curves[:, 0][
@@ -851,8 +819,8 @@ avg_cont_dist_global_minima_threshs = avg_contour_distance_curves[:, 0][
 
 fig, ax = plt.subplots(1, 1, figsize=(6, 6))
 _ = ax.plot(
-    avg_contour_distance_curves[:, 0].T, 
-    avg_contour_distance_curves[:, 1].T, 
+    avg_contour_distance_curves[:, 0].T,
+    avg_contour_distance_curves[:, 1].T,
     label=np.arange(len(avg_contour_distance_curves))
 )
 _ = ax.scatter(avg_cont_dist_global_minima_threshs, avg_cont_dist_global_minima, s=50, c='red')
@@ -956,7 +924,7 @@ segments_slic = slic(
 segments_quick = quickshift(
     img,
     # gaussian kernel used for smoothing the sample density
-    kernel_size=3, 
+    kernel_size=3,
     # preprocessing blur smoothing
     sigma=0,  # deactivated
     # cut off point for the neighborhood in the mean-shift procedure (not sure?)
@@ -969,16 +937,16 @@ segments_quick = quickshift(
 )
 
 segments_watershed = watershed(
-    (gradient := sobel(rgb2gray(img))), 
-    markers=2500, 
+    (gradient := sobel(rgb2gray(img))),
+    markers=2500,
     # makes it harder for markers to flood faraway pixels --> regions more regularly shaped
     compactness=0.001
 )
 
 segments_watershed_in_vasmap_mask = watershed(
-    (gradient := sobel(rgb2gray(img))), 
-    # markers=2500, 
-    markers=(vasmap_mask := ~vasmap.isnan().numpy()).sum() / 100, 
+    (gradient := sobel(rgb2gray(img))),
+    # markers=2500,
+    markers=(vasmap_mask := ~vasmap.isnan().numpy()).sum() / 100,
     # makes it harder for markers to flood faraway pixels --> regions more regularly shaped
     # compactness=0.001,  # from the example
     compactness=3e-4,
@@ -1025,12 +993,12 @@ mask = masks[image_idx]
 img = plt.imread(images_abspaths[image_idx])
 threshs = tfpr_pivots_thresh[image_idx]
 
-# resolution of the original image 
+# resolution of the original image
 # each superpixel is a zone with an unique value, like a semantic segmentation
 segments = watershed(
-    (gradient := sobel(rgb2gray(img))), 
-    # markers=2500, 
-    markers=(vasmap_mask := ~vasmap.isnan().numpy()).sum() / 100, 
+    (gradient := sobel(rgb2gray(img))),
+    # markers=2500,
+    markers=(vasmap_mask := ~vasmap.isnan().numpy()).sum() / 100,
     # makes it harder for markers to flood faraway pixels --> regions more regularly shaped
     # compactness=0.001,  # from the example
     compactness=3e-4,
@@ -1079,11 +1047,11 @@ for segment_value in selected_segments:
 # 2 means "available"
 for segment_value in available_segments:
     segments_selection_viz[segments == segment_value] = 2
-    
+
 # 3 means "outside"
 for segment_value in segments_outside_mask:
     segments_selection_viz[segments == segment_value] = 3
-    
+
 current_segmentation = segments_selection_viz == 1
 
 def iou_of_segmentation(segmentation: ndarray, mask: ndarray) -> float:
@@ -1140,9 +1108,9 @@ history = [
 while _available:
     # find the segment that maximizes the iou of the current segmentation
     best_segment = max(
-        _available, 
+        _available,
         key=lambda segment_value: iou_of_segmentation(
-            _current_segmentation | (segments == segment_value), 
+            _current_segmentation | (segments == segment_value),
             mask.numpy()
         )
     )
@@ -1168,7 +1136,7 @@ best_selection = best_dict["selected"]
 best_segmentation = np.zeros_like(segments, dtype=bool)
 for segment_value in best_selection:
     best_segmentation[segments == segment_value] = True
-    
+
 iou_of_best = iou_of_segmentation(best_segmentation, mask.numpy())
 avg_cont_dist_of_best = compute_avg_contour_distance(best_segmentation, mask.numpy())
 
