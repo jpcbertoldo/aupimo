@@ -17,3 +17,4 @@ missing_score_files.html
 
 # tmp
 benchmark/**/aupro_05.json
+benchmark/**/ious.json
