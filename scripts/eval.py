@@ -94,6 +94,8 @@ else:
 
 print(f"{args=}")
 
+savedir = args.asmaps.parent
+
 # %%
 # Load `asmaps.pt`
 
@@ -279,7 +281,7 @@ if METRIC_AUROC in args.metrics:
     print("getting auroc")
     auroc = _compute_auroc(asmaps, masks)
     print(f"{auroc=:.2%}")
-    _save_value(args.asmaps.parent / "auroc.json", auroc, args.debug)
+    _save_value(savedir / "auroc.json", auroc, args.debug)
 
 # %%
 # AUPR
@@ -295,7 +297,7 @@ if METRIC_AUPR in args.metrics:
     print("getting aupr")
     aupr = _compute_aupr(asmaps, masks)
     print(f"{aupr=:.2%}")
-    _save_value(args.asmaps.parent / "aupr.json", aupr, args.debug)
+    _save_value(savedir / "aupr.json", aupr, args.debug)
 
 
 # %%
@@ -312,7 +314,7 @@ if METRIC_AUPRO in args.metrics:
     print("computing aupro")
     aupro = _compute_aupro(asmaps, masks)
     print(f"{aupro=}")
-    _save_value(args.asmaps.parent / "aupro.json", aupro, args.debug)
+    _save_value(savedir / "aupro.json", aupro, args.debug)
 
 
 # %%
@@ -332,7 +334,7 @@ if AUPIMO in args.metrics:
 
     print("saving aupimo")
 
-    aupimo_dir = args.asmaps.parent / "aupimo"
+    aupimo_dir = savedir / "aupimo"
     if args.debug:
         aupimo_dir = aupimo_dir.with_stem("debug_" + aupimo_dir.stem)
     aupimo_dir.mkdir(exist_ok=True)
@@ -352,7 +354,7 @@ axrow[0].imshow(img)
 axrow[1].imshow(mask)
 axrow[2].imshow(asmap)
 # %%
-aupimoresult_fpath = args.asmaps.parent / "aupimo" / "aupimos.json"
+aupimoresult_fpath = savedir / "aupimo" / "aupimos.json"
 from aupimo import AUPIMOResult
 
 aupimoresult_loaded = AUPIMOResult.load(aupimoresult_fpath)

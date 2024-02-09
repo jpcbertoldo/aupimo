@@ -4,6 +4,7 @@ from __future__ import annotations
 import itertools
 from collections import OrderedDict
 from typing import ClassVar
+import warnings
 
 import matplotlib as mpl
 import numpy as np
@@ -362,7 +363,7 @@ def compare_models_pairwise_ttest_rel(
                         - `higher_is_better=False` ==> ascending score order
                     along the indices from 0 to `n-1`.
 
-                - confidences: Dictionary of confidence values for each pair of models.
+                - confidences: Dictionary of confidence (on H1) values for each pair of models.
 
                     For all pairs of indices i and j from 0 to `n-1` such that i != j:
                         - key: (models_ordered[i], models_ordered[j])
@@ -412,7 +413,8 @@ def compare_models_pairwise_wilcoxon(
     alternative: str,
     higher_is_better: bool,
     atol: float | None = 1e-3,
-) -> tuple[tuple[str, ...], dict[tuple[str, str], float]]:
+    return_avg_ranks: bool = False,
+) -> tuple[tuple[str, ...], dict[tuple[str, str], float]] | tuple[tuple[str, ...], ndarray, dict[tuple[str, str], float]]:
     """Compare all pairs of models using the Wilcoxon signed-rank test (non-parametric).
 
     Each comparison of two models is a Wilcoxon signed-rank test (null hypothesis is that they are equal).
@@ -439,6 +441,8 @@ def compare_models_pairwise_wilcoxon(
         atol: Absolute tolerance used to consider two scores as equal. Defaults to 1e-3 (0.1%).
               When doing a paired test, if the difference between two scores is below `atol`, the difference is
               truncated to 0. If `atol` is None, no truncation is done.
+        return_avg_ranks: Whether to return the average ranks of the models. Defaults to False.
+                          Ignored if the input is an ordered dictionary.
 
     Returns:
             (models_ordered, test_results):
@@ -447,7 +451,7 @@ def compare_models_pairwise_wilcoxon(
                     Automatic sorting is from "best to worst" model, which corresponds to ascending average rank
                     along the indices from 0 to `n-1`.
 
-                - confidences: Dictionary of confidence values for each pair of models.
+                - confidences: Dictionary of confidence (on H1) values for each pair of models.
 
                     For all pairs of indices i and j from 0 to `n-1` such that i != j:
                         - key: (models_ordered[i], models_ordered[j])
@@ -469,8 +473,11 @@ def compare_models_pairwise_wilcoxon(
 
     # sort models by average value if not an ordered dictionary
     # position 0 is assumed the best model
-    if isinstance(scores_per_model, OrderedDict):
+    if (is_pre_ordered := isinstance(scores_per_model, OrderedDict)):
         scores_per_model_nonan = OrderedDict(scores_per_model_nonan_items)
+        if return_avg_ranks:
+            msg = "The `return_avg_ranks` argument is ignored because the input is an ordered dictionary."
+            warnings.warn(msg, UserWarning)
     else:
         # these average ranks will NOT consider `atol` because we want to rank the models anyway
         scores_nonan = np.stack([v for _, v in scores_per_model_nonan_items], axis=0)
@@ -481,6 +488,7 @@ def compare_models_pairwise_wilcoxon(
         ).mean(axis=1)
         # ascending order, lower score is better --> best to worst model
         argsort_avg_ranks = avg_ranks.argsort()
+        avg_ranks = avg_ranks[argsort_avg_ranks]
         scores_per_model_nonan = OrderedDict(scores_per_model_nonan_items[idx] for idx in argsort_avg_ranks)
 
     models_ordered = tuple(scores_per_model_nonan.keys())
@@ -502,4 +510,6 @@ def compare_models_pairwise_wilcoxon(
             pvalue = scipy.stats.wilcoxon(diff, alternative=alternative).pvalue
         confidences[(model_i, model_j)] = 1.0 - float(pvalue)
 
+    if not is_pre_ordered and return_avg_ranks:
+        return models_ordered, avg_ranks, confidences
     return models_ordered, confidences

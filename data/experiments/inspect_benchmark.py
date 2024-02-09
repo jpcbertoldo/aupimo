@@ -271,6 +271,27 @@ if missing_score_files["num"].sum() > 0:
     print(missing_score_files.explode("files").files.value_counts())
     missing_score_files[missing_score_files["num"] > 0]
 
+    # kind of transpose the dataframe (who is missing each file)
+    who_is_missing_what = missing_score_files.explode("files").reset_index()
+    who_is_missing_what["run"] = who_is_missing_what.apply(
+        lambda row: f"{row.model}/{row.collection}/{row.dataset}",
+        axis=1,
+    )
+    who_is_missing_what = who_is_missing_what.drop(columns=["model", "collection", "dataset", "num"])
+    who_is_missing_what = who_is_missing_what.groupby("files").run.unique().apply(sorted).to_frame("runs")
+    who_is_missing_what["num"] = who_is_missing_what["runs"].map(len)
+    who_is_missing_what = who_is_missing_what.sort_values("num", ascending=True)
+    who_is_missing_what
+
+    print(
+        "report of missing score files in 'missing_score_files.html' and "
+        "'missing_score_files-who_is_missing_what.html'",
+    )
+    missing_score_files.to_html(HERE / "missing_score_files.html")
+    who_is_missing_what[["runs"]].explode("runs").to_html(
+        HERE / "missing_score_files-who_is_missing_what.html",
+    )
+
 # OPTIONALS
 if len(args.check_missing_optional) > 0:
     print(f"checking optional files: {args.check_missing_optional}")
