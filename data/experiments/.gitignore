@@ -18,3 +18,5 @@ missing_score_files.html
 # tmp
 benchmark/**/aupro_05.json
 benchmark/**/ious.json
+benchmark/**/synthetic_tiny_regions
+benchmark/**/*_time.json
