@@ -14,7 +14,7 @@ This research has been conducted during Google Summer of Code 2023 (GSoC 2023) a
 
 GSoC 2023 page: <https://summerofcode.withgoogle.com/archive/2023/projects/SPMopugd>
 
-Integration with [`anomalib`](https://github.com/openvinotoolkit/anomalib) is COMING UP: https://github.com/openvinotoolkit/anomalib/pull/1557
+Integration with [`anomalib`](https://github.com/openvinotoolkit/anomalib) is COMING UP: https://github.com/openvinotoolkit/anomalib/pull/1726
 
 ## Installation
 
