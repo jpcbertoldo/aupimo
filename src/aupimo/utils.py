@@ -401,3 +401,11 @@ def format_pairwise_tests_results(
     # now it is a square dataframe with models as index and columns, and confidence as values
     confdf = confdf.sort_index(axis=0, ascending=top_to_bottom)
     return confdf.sort_index(axis=1, ascending=left_to_right)
+
+
+def valid_anomaly_score_maps(
+    anomaly_score_maps: Tensor,
+    min_valid_score: float,
+) -> Tensor:
+    # TODO: implement `valid_anomaly_score_maps()` in `utils.py`
+    raise NotImplementedError("This function is not implemented yet.")

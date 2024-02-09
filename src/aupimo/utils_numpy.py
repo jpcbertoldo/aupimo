@@ -513,3 +513,23 @@ def compare_models_pairwise_wilcoxon(
     if not is_pre_ordered and return_avg_ranks:
         return models_ordered, avg_ranks, confidences
     return models_ordered, confidences
+
+
+def valid_anomaly_score_maps(anomaly_maps: ndarray, min_valid_score: float) -> ndarray:
+    """Set to nan all values below `min_valid_score`.
+
+    TODO test `valid_anomaly_score_maps()`
+
+    Args:
+        anomaly_maps (ndarray): Anomaly score maps of shape (num_images, height, width).
+        min_valid_score (float): Minimum valid anomaly score.
+
+    Returns:
+        ndarray: Valid anomaly score maps of shape (num_images, height, width).
+    """
+    _validate.anomaly_maps(anomaly_maps)
+    # TODO: validate `min_valid_score`
+    # `vasmaps` stands for `valid asmaps`; `asmaps` stands for `anomaly score maps`
+    valid_anomaly_maps = anomaly_maps.copy()
+    valid_anomaly_maps[valid_anomaly_maps < min_valid_score] = np.nan
+    return valid_anomaly_maps
