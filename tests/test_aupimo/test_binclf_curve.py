@@ -219,6 +219,27 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
             2 * threshs,
             binclf_curves,
         ),
+        # `threshs_choice` = 'minmax-linspace-per-image'"
+        (
+            preds,
+            gts,
+            "minmax-linspace-per-image",
+            None,
+            len(threshs),
+            # repeat the same threshs for each image
+            np.repeat(threshs[None, ...], preds.shape[0], axis=0),
+            binclf_curves,
+        ),
+        (
+            3 * preds,
+            gts,
+            "minmax-linspace-per-image",
+            None,
+            len(threshs),
+            # repeat the same threshs for each image
+            3 * np.repeat(threshs[None, ...], preds.shape[0], axis=0),
+            binclf_curves,
+        ),
     ]
 
     if metafunc.function is test_per_image_binclf_curve_numpy:
@@ -512,7 +533,7 @@ def test_per_image_binclf_curve_torch(
 
     # threshs
     assert computed_threshs.shape == expected_threshs.shape
-    assert computed_threshs.dtype == computed_threshs.dtype
+    assert computed_threshs.dtype == expected_threshs.dtype
     assert (computed_threshs == expected_threshs).all()
 
     # binclf_curves

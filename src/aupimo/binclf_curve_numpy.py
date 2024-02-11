@@ -51,6 +51,7 @@ class BinclfThreshsChoice:
     GIVEN: ClassVar[str] = "given"
     GIVEN_PER_IMAGE: ClassVar[str] = "given-per-image"
     MINMAX_LINSPACE: ClassVar[str] = "minmax-linspace"
+    MINMAX_LINSPACE_PER_IMAGE: ClassVar[str] = "minmax-linspace-per-image"
     MEAN_FPR_OPTIMIZED: ClassVar[str] = "mean-fpr-optimized"
     CHOICES: ClassVar[tuple[str, ...]] = (GIVEN, MINMAX_LINSPACE, MEAN_FPR_OPTIMIZED)
 
@@ -178,12 +179,33 @@ MULTIPLE binary classification matrix at each threshold (PYTHON implementation).
 vectorized version of `_binclf_one_curve_python` (see above)
 """
 
-# TODO: test `_binclf_multiple_curves_per_instance_threshs_python`
-# TODO: doc `_binclf_multiple_curves_per_instance_threshs_python`
-_binclf_multiple_curves_per_instance_threshs_python = np.vectorize(
-    _binclf_one_curve_python,
-    signature="(n),(n),(n,k)->(k,2,2)",
-)
+def _binclf_multiple_curves_per_instance_threshs_python(
+    scores_batch: ndarray,
+    gts_batch: ndarray,
+    threshs: ndarray,
+) -> ndarray:
+    """MULTIPLE binary classification matrix at each threshold (PYTHON implementation) with thresholds per image.
+
+    Like a vectorized version of `_binclf_one_curve_python` (see above), but for multiple instances, each with its own
+    sequence of thresholds.
+
+    For some reason `np.vectorize` did not work so this is a 'manual' implementation.
+
+    Args:
+        scores_batch (ndarray): Anomaly scores (N, D,).
+        gts_batch (ndarray): Binary (bool) ground truth of shape (N, D,).
+        threshs (ndarray): Sequence of thresholds in ascending order for each instance (N, K,).
+                           Each row is a sequence of thresholds for each instance.
+
+    Returns:
+        ndarray: Binary classification matrix curves (N, K, 2, 2)
+
+        See docstring of `binclf_multiple_curves` for details.
+    """
+    return np.stack([
+        _binclf_one_curve_python(scores, gts, threshs_row)
+        for scores, gts, threshs_row in zip(scores_batch, gts_batch, threshs, strict=True)
+    ], axis=0)
 
 # =========================================== INTERFACE ===========================================
 
@@ -295,7 +317,7 @@ def binclf_multiple_curves_per_instance_threshs(
         Counts are relative to each instance (i.e. from 0 to D, e.g. the total is the number of pixels in the image).
 
         IMPORTANT: difference with `binclf_multiple_curves`:
-        
+
         Thresholds are NOT shared across all instances. Each instance has its own thresholds sequence.
         However, all sequences have the same length (K).
 
@@ -345,6 +367,39 @@ def _get_threshs_minmax_linspace(anomaly_maps: ndarray, num_threshs: int) -> nda
     return np.linspace(thresh_low, thresh_high, num_threshs, dtype=anomaly_maps.dtype)
 
 
+def _get_threshs_minmax_linspace_per_image(
+    anomaly_maps: ndarray,
+    masks: ndarray,
+    num_threshs: int,
+) -> ndarray:
+    """TODO write docstring.
+
+    linearly spaced threshold sequence between min/max score value
+    of each anomaly map (i.e. each image has a different sequence)
+    """
+    _validate.anomaly_maps(anomaly_maps)
+    _validate.masks(masks)
+    _validate.num_threshs(num_threshs)
+
+    threshs = []
+    for anomaly_map in anomaly_maps:
+        thresh_low, thresh_high = thresh_bounds = (anomaly_map.min().item(), anomaly_map.max().item())
+        try:
+            _validate.thresh_bounds(thresh_bounds)
+        except ValueError as ex:
+            msg = f"Invalid threshold bounds computed from the given anomaly maps. Cause: {ex}"
+            raise ValueError(msg) from ex
+        threshs.append(
+            np.linspace(
+                thresh_low,
+                thresh_high,
+                num_threshs,
+                dtype=anomaly_maps.dtype,
+            ),
+        )
+    return np.stack(threshs, axis=0)
+
+
 def per_image_binclf_curve(
     anomaly_maps: ndarray,
     masks: ndarray,
@@ -354,8 +409,8 @@ def per_image_binclf_curve(
     num_threshs: int | None = None,
 ) -> tuple[ndarray, ndarray]:
     """Compute the binary classification matrix of each image in the batch for multiple thresholds (shared).
-    
-    TODO update docstring (2d threshs)
+
+    TODO(jpcbertoldo): update docstring (2d threshs)
 
     Args:
         anomaly_maps (ndarray): Anomaly score maps of shape (N, H, W)
@@ -394,7 +449,7 @@ def per_image_binclf_curve(
                 - `tn` stands for `true negative`
 
             The numbers in each confusion matrix are the counts of pixels in the image (not the ratios).
-                     
+
                              (!) update
             Thresholds are shared across all images, so all confusion matrices, for instance,
             at position [:, 0, :, :] are relative to the 1st threshold in `threshs`.
@@ -409,7 +464,7 @@ def per_image_binclf_curve(
     threshs: ndarray
 
     if threshs_choice == BinclfThreshsChoice.GIVEN:
-        assert threshs_given is not None
+        assert threshs_given is not None  # TODO(jpcbertoldo): replace assert by error  # noqa: TD003
         _validate.threshs(threshs_given)
         if num_threshs is not None:
             logger.warning(
@@ -418,7 +473,7 @@ def per_image_binclf_curve(
         threshs = threshs_given.astype(anomaly_maps.dtype)
 
     elif threshs_choice == BinclfThreshsChoice.GIVEN_PER_IMAGE:
-        assert threshs_given is not None
+        assert threshs_given is not None  # TODO(jpcbertoldo): replace assert by error  # noqa: TD003
         _validate.threshs_per_instance(threshs_given)
         if num_threshs is not None:
             logger.warning(
@@ -427,13 +482,22 @@ def per_image_binclf_curve(
         threshs = threshs_given.astype(anomaly_maps.dtype)
 
     elif threshs_choice == BinclfThreshsChoice.MINMAX_LINSPACE:
-        assert num_threshs is not None
+        assert num_threshs is not None  # TODO(jpcbertoldo): replace assert by error  # noqa: TD003
         if threshs_given is not None:
             logger.warning(
                 f"Argument `threshs_given` was given, but it is ignored because `threshs_choice` is {threshs_choice}.",
             )
         # `num_threshs` is validated in the function below
         threshs = _get_threshs_minmax_linspace(anomaly_maps, num_threshs)
+
+    elif threshs_choice == BinclfThreshsChoice.MINMAX_LINSPACE_PER_IMAGE:
+        assert num_threshs is not None  # TODO(jpcbertoldo): replace assert by error  # noqa: TD003
+        if threshs_given is not None:
+            logger.warning(
+                f"Argument `threshs_given` was given, but it is ignored because `threshs_choice` is {threshs_choice}.",
+            )
+        # `num_threshs` is validated in the function below
+        threshs = _get_threshs_minmax_linspace_per_image(anomaly_maps, masks, num_threshs)
 
     elif threshs_choice == BinclfThreshsChoice.MEAN_FPR_OPTIMIZED:
         raise NotImplementedError(f"TODO implement {threshs_choice}")  # noqa: EM102
@@ -446,13 +510,14 @@ def per_image_binclf_curve(
     scores_batch = anomaly_maps.reshape(anomaly_maps.shape[0], -1)
     gts_batch = masks.reshape(masks.shape[0], -1).astype(bool)  # make sure it is boolean
 
-    
     if threshs.ndim == 1:
         binclf_curves = binclf_multiple_curves(scores_batch, gts_batch, threshs, algorithm=algorithm)
-        
+
     elif threshs.ndim == 2:
-        binclf_curves = binclf_multiple_curves_per_instance_threshs(scores_batch, gts_batch, threshs, algorithm=algorithm)
-    
+        binclf_curves = binclf_multiple_curves_per_instance_threshs(
+            scores_batch, gts_batch, threshs, algorithm=algorithm,
+        )
+
     else:
         msg = f"Expected `threshs` to be 1D or 2D, but got {threshs.ndim}"
         raise ValueError(msg)
@@ -460,8 +525,8 @@ def per_image_binclf_curve(
     num_images = anomaly_maps.shape[0]
 
     try:
-        # TODO review with 2D threshs
-        # _validate.binclf_curves(binclf_curves, valid_threshs=threshs)  
+        # TODO(jpcbertoldo): review with 2D threshs
+        # _validate.binclf_curves(binclf_curves, valid_threshs=threshs)
 
         # these two validations cannot be done in `_validate.binclf_curves` because it does not have access to the
         # original shapes of `anomaly_maps`
