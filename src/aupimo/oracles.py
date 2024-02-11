@@ -18,7 +18,7 @@ from torch import Tensor
 
 from aupimo import _validate, _validate_tensor
 
-from . import oracles_numpy, utils
+from . import oracles_numpy
 from .binclf_curve_numpy import BinclfAlgorithm
 
 if TYPE_CHECKING:
@@ -52,7 +52,7 @@ def _validate_per_image_ious(per_image_ious: Tensor, image_classes: Tensor) -> N
 
 
 @dataclass
-class IOUCurves:
+class IOUCurvesResult:
     """TODO(jpcbertoldo): doc IOUCurves.
 
     Notation:
@@ -62,6 +62,10 @@ class IOUCurves:
         - TPR: True Positive Rate
     """
 
+    # metadata
+    common_threshs: bool  # whether the thresholds are common to all images or per image
+
+    # data
     threshs: Tensor = field(repr=False)  # shape => (K,) or (N, K)
     per_image_ious: Tensor = field(repr=False)  # shape => (N, K)
 
@@ -71,7 +75,7 @@ class IOUCurves:
     @property
     def num_threshs(self) -> int:
         """Number of thresholds."""
-        return self.threshs.shape[0]
+        return self.threshs.shape[-1]
 
     @property
     def num_images(self) -> int:
@@ -90,7 +94,10 @@ class IOUCurves:
     def __post_init__(self) -> None:
         """Validate the inputs for the result object are consistent."""
         try:
-            _validate_tensor.threshs(self.threshs)
+            if self.common_threshs:
+                _validate_tensor.threshs(self.threshs)
+            else:
+                _validate_tensor.threshs_per_instance(self.threshs)
             _validate_per_image_ious(self.per_image_ious, self.image_classes)
 
             if self.paths is not None:
@@ -100,22 +107,29 @@ class IOUCurves:
             msg = f"Invalid inputs for {self.__class__.__name__} object. Cause: {ex}."
             raise TypeError(msg) from ex
 
-        if self.threshs.shape[0] != self.per_image_ious.shape[1]:
+        if self.common_threshs and self.threshs.shape[0] != self.per_image_ious.shape[1]:
             msg = (
                 f"Invalid {self.__class__.__name__} object. Attributes have inconsistent shapes: "
-                f"{self.threshs.shape[0]=} != {self.per_image_tprs.shape[1]=}."
+                f"{self.threshs.shape[0]=} != {self.per_image_ious.shape[1]=}."
+            )
+            raise TypeError(msg)
+
+        if not self.common_threshs and self.threshs.shape != self.per_image_ious.shape:
+            msg = (
+                f"Invalid {self.__class__.__name__} object. Attributes have inconsistent shapes: "
+                f"{self.threshs.shape=} != {self.per_image_ious.shape=}."
             )
             raise TypeError(msg)
 
     def to_dict(self) -> dict[str, Tensor | str]:
         """Return a dictionary with the result object's attributes."""
-        dic = {"threshs": self.threshs, "ious": self.per_image_ious}
+        dic = {"threshs": self.threshs, "per_image_ious": self.per_image_ious, "common_threshs": self.common_threshs}
         if self.paths is not None:
             dic["paths"] = self.paths
         return dic
 
     @classmethod
-    def from_dict(cls: type[IOUCurves], dic: dict[str, Tensor | str | list[str]]) -> IOUCurves:
+    def from_dict(cls: type[IOUCurvesResult], dic: dict[str, Tensor | str | list[str]]) -> IOUCurvesResult:
         """Return a result object from a dictionary."""
         try:
             return cls(**dic)  # type: ignore[arg-type]
@@ -135,7 +149,7 @@ class IOUCurves:
         torch.save(payload, file_path)
 
     @classmethod
-    def load(cls: type[IOUCurves], file_path: str | Path) -> IOUCurves:
+    def load(cls: type[IOUCurvesResult], file_path: str | Path) -> IOUCurvesResult:
         """Load from a `.pt` file.
 
         Args:
@@ -160,14 +174,14 @@ def per_image_iou_curves(
     common_threshs: bool,
     binclf_algorithm: str = BinclfAlgorithm.NUMBA,
     paths: list[str] | None = None,
-) -> IOUCurves:
+) -> IOUCurvesResult:
     """TODO write docstring of `per_image_iou_curves`.
 
     TODO(jpcbertoldo): make it possible to compute the `min_valid_score` automatically
     it will require adding more args to manage the parameters...
     """
-    anomaly_maps_array = utils.safe_tensor_to_numpy(anomaly_maps, argname="anomaly_maps")
-    masks_array = utils.safe_tensor_to_numpy(masks, argname="masks")
+    anomaly_maps_array = _validate_tensor.safe_tensor_to_numpy(anomaly_maps, argname="anomaly_maps")
+    masks_array = _validate_tensor.safe_tensor_to_numpy(masks, argname="masks")
     # validations happen in the numpy code
 
     if paths is not None:
@@ -187,4 +201,4 @@ def per_image_iou_curves(
     # the shape is (N, K)
     ious = torch.from_numpy(ious_array).to(device)
 
-    return IOUCurves(threshs=threshs, per_image_ious=ious, paths=paths)
+    return IOUCurvesResult(common_threshs=common_threshs, threshs=threshs, per_image_ious=ious, paths=paths)

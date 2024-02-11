@@ -2,6 +2,7 @@
 
 from .binclf_curve import per_image_binclf_curve, per_image_fpr, per_image_iou, per_image_prec, per_image_tpr
 from .binclf_curve_numpy import BinclfAlgorithm, BinclfThreshsChoice
+from .oracles import IOUCurvesResult, per_image_iou_curves
 from .pimo import AUPIMO, PIMO, AUPIMOResult, PIMOResult, aupimo_scores, pimo_curves
 from .pimo_numpy import PIMOSharedFPRMetric
 from .utils import (
@@ -22,6 +23,7 @@ __all__ = [
     # result classes
     "PIMOResult",
     "AUPIMOResult",
+    "IOUCurvesResult",
     # functional interfaces
     "per_image_binclf_curve",
     "per_image_fpr",
@@ -30,6 +32,7 @@ __all__ = [
     "per_image_iou",
     "pimo_curves",
     "aupimo_scores",
+    "per_image_iou_curves",
     # torchmetrics interfaces
     "PIMO",
     "AUPIMO",

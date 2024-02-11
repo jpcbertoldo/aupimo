@@ -33,6 +33,9 @@ def threshs(threshs: Tensor) -> None:
     _validate.threshs(safe_tensor_to_numpy(threshs, argname="threshs"))
 
 
+def threshs_per_instance(threshs_per_instance: Tensor) -> None:
+    _validate.threshs_per_instance(safe_tensor_to_numpy(threshs_per_instance, argname="threshs_per_instance"))
+
 def anomaly_maps(anomaly_maps: Tensor) -> None:
     _validate.anomaly_maps(safe_tensor_to_numpy(anomaly_maps, argname="anomaly_maps"))
 

@@ -34,6 +34,7 @@ def per_image_iou_curves(
         threshs_choice=(
             BinclfThreshsChoice.MINMAX_LINSPACE if common_threshs else BinclfThreshsChoice.MINMAX_LINSPACE_PER_IMAGE
         ),
+        num_threshs=num_threshs,
     )
 
     ious = per_image_iou(binclfs)
