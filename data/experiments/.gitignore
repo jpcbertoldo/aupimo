@@ -5,6 +5,8 @@ ablation/**/asmaps.pt
 benchmark/**/curves.pt
 benchmark/**/asmaps.pt
 benchmark/**/model.pt
+benchmark/**/ioucurves_global_threshs.pt
+benchmark/**/ioucurves_local_threshs.pt
 # efficientad has multiple .pt for each model
 benchmark/**/model/autoencoder.pt
 benchmark/**/model/student.pt

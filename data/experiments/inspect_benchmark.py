@@ -19,6 +19,8 @@ from pathlib import Path
 import pandas as pd
 import torch
 
+from aupimo.oracles import IOUCurvesResult
+
 # is it running as a notebook or as a script?
 if (arg0 := Path(sys.argv[0]).stem) == "ipykernel_launcher":
     print("running as a notebook")
@@ -112,8 +114,21 @@ parser.add_argument(
     "--check-missing-optional",
     type=str,
     action="append",
-    choices=["asmaps.pt", "aupimo/curves.pt", "model"],
+    choices=[
+        "asmaps.pt",
+        "aupimo/curves.pt",
+        "model",
+        "ioucurves_global_threshs.pt",
+        "ioucurves_local_threshs.pt",
+    ],
     default=[],
+)
+parser.add_argument(
+    "--models",
+    type=str,
+    nargs="+",
+    choices=MODELS,
+    default=MODELS,
 )
 # "model" (in the choices above) is a bit special; it doesnt have a file extension
 # because some models (efficientad) are saved as a directory with multiple files
@@ -125,10 +140,12 @@ if IS_NOTEBOOK:
             string
             for arg in [
                 "--check-paths",
-                "--check-aupimo-thresh-bounds",
-                "--check-missing-optional asmaps.pt",
-                "--check-missing-optional aupimo/curves.pt",
-                "--check-missing-optional model",
+                # "--check-aupimo-thresh-bounds",
+                # "--check-missing-optional asmaps.pt",
+                # "--check-missing-optional aupimo/curves.pt",
+                # "--check-missing-optional model",
+                "--check-missing-optional ioucurves_global_threshs.pt",
+                "--check-missing-optional ioucurves_local_threshs.pt",
             ]
             for string in arg.split(" ")
         ],
@@ -166,14 +183,14 @@ rundirs["dataset"] = rundirs.dataset.astype("category")
 print(f"found {len(rundirs)} run dirs")
 
 models_found = sorted(rundirs.model.unique().tolist())
-unexpected_models = sorted(set(models_found) - set(MODELS))
+unexpected_models = sorted(set(models_found) - set(args.models))
 
 if unexpected_models:
     print(f"unexpected models found: {len(unexpected_models)} (will be ignored)")
     sorted(unexpected_models)
-    rundirs = rundirs[rundirs.model.isin(MODELS)]
+    rundirs = rundirs[rundirs.model.isin(args.models)]
 
-missing_models = sorted(set(MODELS) - set(models_found))
+missing_models = sorted(set(args.models) - set(models_found))
 if missing_models:
     print(f"missing models: {len(missing_models)}")
     sorted(missing_models)
@@ -228,6 +245,8 @@ def expected_files_exist(rundir: Path, model: str, _collection: str, _dataset: s
         "asmaps.pt": (rundir / "asmaps.pt").is_file(),
         "aupimo/curves.pt": aupimo_dir.is_dir() and (aupimo_dir / "curves.pt").is_file(),
         # model is special because some models (efficientad) are saved as a directory with multiple files
+        "ioucurves_global_threshs.pt": (rundir / "ioucurves_global_threshs.pt").is_file(),
+        "ioucurves_local_threshs.pt": (rundir / "ioucurves_local_threshs.pt").is_file(),
     }
 
     if model in ("efficientad_wr101_m_ext", "efficientad_wr101_s_ext"):
@@ -384,6 +403,16 @@ def check_asmaps(fpath: Path, check_paths: bool):
     )
 
 
+def check_ioucurves(fpath: Path, check_paths: bool):
+    try:
+        ioucurves_result = IOUCurvesResult.load(fpath)
+    except Exception as ex:
+        return (type(ex).__name__, ex)
+    if check_paths and ioucurves_result.paths is None:
+        return ("missing-paths", str(fpath))
+    return (None, None)
+
+
 def dumb_ok(_):
     return (None, None)
 
@@ -404,6 +433,9 @@ files_errors = (
             ),
             "asmaps.pt": partial(check_asmaps, check_paths=args.check_paths),
             "aupimo/curves.pt": partial(check_curves, check_paths=args.check_paths),
+            # ==========================================================================
+            "ioucurves_global_threshs.pt": partial(check_ioucurves, check_paths=args.check_paths),
+            "ioucurves_local_threshs.pt": partial(check_ioucurves, check_paths=args.check_paths),
         }[row.name[3]](row.path),
         axis=1,
         result_type="expand",
