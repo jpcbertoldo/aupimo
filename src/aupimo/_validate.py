@@ -6,21 +6,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy import ndarray
 
-
-def is_tensor(tensor: Any, argname: str | None = None) -> None:  # noqa: ANN401
-    """Validate that `tensor` is a `torch.Tensor`."""
-    from torch import Tensor
-
-    argname = f"'{argname}'" if argname is not None else "argument"
-
-    if not isinstance(tensor, Tensor):
-        msg = f"Expected {argname} to be a tensor, but got {type(tensor)}"
-        raise TypeError(msg)
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def num_threshs(num_threshs: int) -> None:
@@ -151,6 +143,26 @@ def file_paths(file_paths: list[str | Path], must_exist: bool, extension: str | 
 
         except ValueError as ex:
             raise ValueError(msg) from ex
+
+
+def source_images_paths(paths: Sequence[str], expected_num_paths: int | None) -> None:
+    file_paths(
+        paths,  # type: ignore[arg-type]
+        # not necessary to exist because the metric can be computed
+        # directly from the anomaly maps and masks, without the images
+        must_exist=False,
+        # this will eventually be serialized to a file, so we don't want pathlib objects keep it simple
+        pathlib_ok=False,
+        # not enforcing the image type (e.g. png, jpg, etc.)
+        extension=None,
+    )
+
+    if expected_num_paths is None:
+        return
+
+    if len(paths) != expected_num_paths:
+        msg = f"Invalid `paths` argument. Expected {expected_num_paths} paths, but got {len(paths)} instead."
+        raise ValueError(msg)
 
 
 def threshs(threshs: ndarray) -> None:

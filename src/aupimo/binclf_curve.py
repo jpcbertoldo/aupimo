@@ -14,26 +14,8 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
-from . import _validate, binclf_curve_numpy
+from . import _validate_tensor, binclf_curve_numpy
 from .binclf_curve_numpy import BinclfAlgorithm, BinclfThreshsChoice
-
-# =========================================== ARGS VALIDATION ===========================================
-
-
-def _validate_threshs(threshs: Tensor) -> None:
-    _validate.is_tensor(threshs, argname="threshs")
-    _validate.threshs(threshs.cpu().numpy())
-
-
-def _validate_binclf_curves(binclf_curves: Tensor, valid_threshs: Tensor | None = None) -> None:
-    _validate.is_tensor(binclf_curves, argname="binclf_curves")
-    if valid_threshs is not None:
-        _validate_threshs(valid_threshs)
-    _validate.binclf_curves(
-        binclf_curves.detach().cpu().numpy(),
-        valid_threshs=valid_threshs.cpu().numpy() if valid_threshs is not None else None,
-    )
-
 
 # =========================================== FUNCTIONAL ===========================================
 
@@ -96,15 +78,12 @@ def per_image_binclf_curve(
 
             Thresholds are sorted in ascending order.
     """
-    _validate.is_tensor(anomaly_maps, argname="anomaly_maps")
-    anomaly_maps_array = anomaly_maps.detach().cpu().numpy()
+    anomaly_maps_array = _validate_tensor.safe_tensor_to_numpy(anomaly_maps, argname="anomaly_maps")
 
-    _validate.is_tensor(masks, argname="masks")
-    masks_array = masks.detach().cpu().numpy()
+    masks_array = _validate_tensor.safe_tensor_to_numpy(masks, argname="masks")
 
     if threshs_given is not None:
-        _validate.is_tensor(threshs_given, argname="threshs_given")
-        threshs_given_array = threshs_given.detach().cpu().numpy()
+        threshs_given_array = _validate_tensor.safe_tensor_to_numpy(threshs_given, argname="threshs_given")
     else:
         threshs_given_array = None
 
@@ -141,8 +120,7 @@ def per_image_tpr(binclf_curves: Tensor) -> Tensor:
 
             Thresholds are sorted in ascending order, so TPR is in descending order.
     """
-    _validate_binclf_curves(binclf_curves)
-    binclf_curves_array = binclf_curves.detach().cpu().numpy()
+    binclf_curves_array = _validate_tensor.safe_tensor_to_numpy(binclf_curves, argname="binclf_curves")
     tprs_array = binclf_curve_numpy.per_image_tpr(binclf_curves_array)
     return torch.from_numpy(tprs_array).to(binclf_curves.device)
 
@@ -163,8 +141,7 @@ def per_image_fpr(binclf_curves: Tensor) -> Tensor:
 
             Thresholds are sorted in ascending order, so FPR is in descending order.
     """
-    _validate_binclf_curves(binclf_curves)
-    binclf_curves_array = binclf_curves.detach().cpu().numpy()
+    binclf_curves_array = _validate_tensor.safe_tensor_to_numpy(binclf_curves, argname="binclf_curves")
     fprs_array = binclf_curve_numpy.per_image_fpr(binclf_curves_array)
     return torch.from_numpy(fprs_array).to(binclf_curves.device)
 
@@ -188,8 +165,7 @@ def per_image_prec(binclf_curves: Tensor) -> Tensor:
 
         Thresholds are sorted in ascending order, but nothing can be said about the order of the precisions.
     """
-    _validate_binclf_curves(binclf_curves)
-    binclf_curves_array = binclf_curves.detach().cpu().numpy()
+    binclf_curves_array = _validate_tensor.safe_tensor_to_numpy(binclf_curves, argname="binclf_curves")
     precs_array = binclf_curve_numpy.per_image_prec(binclf_curves_array)
     return torch.from_numpy(precs_array).to(binclf_curves.device)
 
@@ -213,7 +189,6 @@ def per_image_iou(binclf_curves: Tensor) -> Tensor:
 
         Thresholds are sorted in ascending order, but nothing can be said about the order of the IoUs.
     """
-    _validate_binclf_curves(binclf_curves)
-    binclf_curves_array = binclf_curves.detach().cpu().numpy()
+    binclf_curves_array = _validate_tensor.safe_tensor_to_numpy(binclf_curves, argname="binclf_curves")
     ious_array = binclf_curve_numpy.per_image_iou(binclf_curves_array)
     return torch.from_numpy(ious_array).to(binclf_curves.device)

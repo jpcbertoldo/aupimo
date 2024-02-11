@@ -12,7 +12,7 @@ import torch
 from pandas import DataFrame
 from torch import Tensor
 
-from . import _validate, utils_numpy
+from . import _validate_tensor, utils_numpy
 from .utils_numpy import StatsOutliersPolicy, StatsRepeatedPolicy
 
 if TYPE_CHECKING:
@@ -111,12 +111,10 @@ def per_image_scores_stats(
 
     {docstring}
     """
-    _validate.is_tensor(per_image_scores, "per_image_scores")
-    per_image_scores_array = per_image_scores.detach().cpu().numpy()
+    per_image_scores_array = _validate_tensor.safe_tensor_to_numpy(per_image_scores, argname="per_image_scores")
 
     if images_classes is not None:
-        _validate.is_tensor(images_classes, "images_classes")
-        images_classes_array = images_classes.detach().cpu().numpy()
+        images_classes_array = _validate_tensor.safe_tensor_to_numpy(images_classes, argname="images_classes")
 
     else:
         images_classes_array = None
@@ -283,11 +281,16 @@ def compare_models_pairwise_ttest_rel(
 
     {docstring}
     """
+    # it has to be imported here to avoid circular imports
+    from .pimo import AUPIMOResult
+
     _validate_scores_per_model(scores_per_model)
     scores_per_model_items = [
         (
             model_name,
-            (scores if isinstance(scores, Tensor) else scores.aupimos).detach().cpu().numpy(),
+            _validate_tensor.safe_tensor_to_numpy(
+                scores.aupimos if isinstance(scores, AUPIMOResult) else scores,
+            ),
         )
         for model_name, scores in scores_per_model.items()
     ]
@@ -317,11 +320,16 @@ def compare_models_pairwise_wilcoxon(
 
     {docstring}
     """
+    # it has to be imported here to avoid circular imports
+    from .pimo import AUPIMOResult
+
     _validate_scores_per_model(scores_per_model)
     scores_per_model_items = [
         (
             model_name,
-            (scores if isinstance(scores, Tensor) else scores.aupimos).detach().cpu().numpy(),
+            _validate_tensor.safe_tensor_to_numpy(
+                scores.aupimos if isinstance(scores, AUPIMOResult) else scores,
+            ),
         )
         for model_name, scores in scores_per_model.items()
     ]
@@ -407,5 +415,10 @@ def valid_anomaly_score_maps(
     anomaly_score_maps: Tensor,
     min_valid_score: float,
 ) -> Tensor:
-    # TODO: implement `valid_anomaly_score_maps()` in `utils.py`
-    raise NotImplementedError("This function is not implemented yet.")
+    """TODO(jpcbertoldo): write docstring of `valid_anomaly_score_maps`."""
+    anomaly_score_maps_array = _validate_tensor.safe_tensor_to_numpy(anomaly_score_maps, argname="anomaly_score_maps")
+    valid_anomaly_score_maps_array = utils_numpy.valid_anomaly_score_maps(
+        anomaly_score_maps_array,
+        min_valid_score,
+    )
+    return torch.from_numpy(valid_anomaly_score_maps_array).to(anomaly_score_maps.device)

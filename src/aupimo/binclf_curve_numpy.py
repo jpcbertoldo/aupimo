@@ -501,6 +501,7 @@ def per_image_tpr(binclf_curves: ndarray) -> ndarray:
 
         Thresholds are sorted in ascending order, so TPR is in descending order.
     """
+    _validate.binclf_curves(binclf_curves, valid_threshs=None)
     # shape: (num images, num threshs)
     tps = binclf_curves[..., 1, 1]
     pos = binclf_curves[..., 1, :].sum(axis=2)  # 2 was the 3 originally
@@ -528,6 +529,7 @@ def per_image_fpr(binclf_curves: ndarray) -> ndarray:
 
         Thresholds are sorted in ascending order, so FPR is in descending order.
     """
+    _validate.binclf_curves(binclf_curves, valid_threshs=None)
     # shape: (num images, num threshs)
     fps = binclf_curves[..., 0, 1]
     neg = binclf_curves[..., 0, :].sum(axis=2)  # 2 was the 3 originally
@@ -555,6 +557,7 @@ def per_image_prec(binclf_curves: ndarray) -> ndarray:
 
         Thresholds are sorted in ascending order, but nothing can be said about the order of the precisions.
     """
+    _validate.binclf_curves(binclf_curves, valid_threshs=None)
     # shape: (num images, num threshs)
     tps = binclf_curves[..., 1, 1]
     fps = binclf_curves[..., 0, 1]
@@ -583,10 +586,17 @@ def per_image_iou(binclf_curves: ndarray) -> ndarray:
 
         Thresholds are sorted in ascending order, but nothing can be said about the order of the IoU.
     """
+    _validate.binclf_curves(binclf_curves, valid_threshs=None)
     # shape: (num images, num threshs)
     tps = binclf_curves[..., 1, 1]
     fps = binclf_curves[..., 0, 1]
     fns = binclf_curves[..., 1, 0]
-
-    # always defined and in [0, 1]
-    return tps.astype(np.float64) / (tps + fps + fns).astype(np.float64)
+    union = tps + fps + fns
+    pos = tps + fns
+    # hide RuntimeWarning: invalid value encountered in divide
+    # it happens for normal images when the threshold is higher than the max score
+    # ie. all pixels are normal and predicted as normal, so TP=0, FP=0, FN=0 so IoU=0/0
+    with np.errstate(invalid="ignore"):
+        ious = tps.astype(np.float64) / union.astype(np.float64)
+    ious[pos == 0] = np.nan
+    return ious

@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import itertools
+import warnings
 from collections import OrderedDict
 from typing import ClassVar
-import warnings
 
 import matplotlib as mpl
 import numpy as np
@@ -414,7 +414,9 @@ def compare_models_pairwise_wilcoxon(
     higher_is_better: bool,
     atol: float | None = 1e-3,
     return_avg_ranks: bool = False,
-) -> tuple[tuple[str, ...], dict[tuple[str, str], float]] | tuple[tuple[str, ...], ndarray, dict[tuple[str, str], float]]:
+) -> (
+    tuple[tuple[str, ...], dict[tuple[str, str], float]] | tuple[tuple[str, ...], ndarray, dict[tuple[str, str], float]]
+):
     """Compare all pairs of models using the Wilcoxon signed-rank test (non-parametric).
 
     Each comparison of two models is a Wilcoxon signed-rank test (null hypothesis is that they are equal).
@@ -473,11 +475,11 @@ def compare_models_pairwise_wilcoxon(
 
     # sort models by average value if not an ordered dictionary
     # position 0 is assumed the best model
-    if (is_pre_ordered := isinstance(scores_per_model, OrderedDict)):
+    if is_pre_ordered := isinstance(scores_per_model, OrderedDict):
         scores_per_model_nonan = OrderedDict(scores_per_model_nonan_items)
         if return_avg_ranks:
             msg = "The `return_avg_ranks` argument is ignored because the input is an ordered dictionary."
-            warnings.warn(msg, UserWarning)
+            warnings.warn(msg, UserWarning, stacklevel=2)
     else:
         # these average ranks will NOT consider `atol` because we want to rank the models anyway
         scores_nonan = np.stack([v for _, v in scores_per_model_nonan_items], axis=0)
@@ -528,8 +530,11 @@ def valid_anomaly_score_maps(anomaly_maps: ndarray, min_valid_score: float) -> n
         ndarray: Valid anomaly score maps of shape (num_images, height, width).
     """
     _validate.anomaly_maps(anomaly_maps)
-    # TODO: validate `min_valid_score`
+    # TODO(jpcbertoldo): validate `min_valid_score`  # noqa: TD003
     # `vasmaps` stands for `valid asmaps`; `asmaps` stands for `anomaly score maps`
     valid_anomaly_maps = anomaly_maps.copy()
     valid_anomaly_maps[valid_anomaly_maps < min_valid_score] = np.nan
     return valid_anomaly_maps
+
+
+# TODO(jpcbertoldo): A FUNCTION TO FIND APPROXIMATIONS TO PIVOT POINTS IN THE CURVE  # noqa: TD003
