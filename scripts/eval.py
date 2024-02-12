@@ -108,7 +108,7 @@ else:
 
 print(f"{args=}")
 
-savedir = args.asmaps.parent
+rundir = args.asmaps.parent
 
 # %%
 # Load `asmaps.pt`
@@ -295,7 +295,7 @@ if METRIC_AUROC in args.metrics:
     print("getting auroc")
     auroc = _compute_auroc(asmaps, masks)
     print(f"{auroc=:.2%}")
-    _save_value(savedir / "auroc.json", auroc, args.debug)
+    _save_value(rundir / "auroc.json", auroc, args.debug)
 
 # %%
 # AUPR
@@ -311,7 +311,7 @@ if METRIC_AUPR in args.metrics:
     print("getting aupr")
     aupr = _compute_aupr(asmaps, masks)
     print(f"{aupr=:.2%}")
-    _save_value(savedir / "aupr.json", aupr, args.debug)
+    _save_value(rundir / "aupr.json", aupr, args.debug)
 
 
 # %%
@@ -328,7 +328,7 @@ if METRIC_AUPRO in args.metrics:
     print("computing aupro")
     aupro = _compute_aupro(asmaps, masks)
     print(f"{aupro=}")
-    _save_value(savedir / "aupro.json", aupro, args.debug)
+    _save_value(rundir / "aupro.json", aupro, args.debug)
 
 
 # %%
@@ -348,7 +348,7 @@ if METRIC_AUPIMO in args.metrics:
 
     print("saving aupimo")
 
-    aupimo_dir = savedir / "aupimo"
+    aupimo_dir = rundir / "aupimo"
     if args.debug:
         aupimo_dir = aupimo_dir.with_stem("debug_" + aupimo_dir.stem)
     aupimo_dir.mkdir(exist_ok=True)
@@ -360,13 +360,13 @@ if METRIC_AUPIMO in args.metrics:
 # iou curves with shared thresholds
 if METRIC_IOU_CURVES_GLOBAL in args.metrics:
     ioucurves = per_image_iou_curves(asmaps, masks, num_threshs=10_000, common_threshs=True, paths=images_relpaths)
-    ioucurves.save(savedir / "ioucurves_global_threshs.pt")
+    ioucurves.save(rundir / "ioucurves_global_threshs.pt")
 
 # %%
 # iou curves with local thresholds
 if METRIC_IOU_CURVES_LOCAL in args.metrics:
     ioucurves = per_image_iou_curves(asmaps, masks, num_threshs=10_000, common_threshs=False, paths=images_relpaths)
-    ioucurves.save(savedir / "ioucurves_local_threshs.pt")
+    ioucurves.save(rundir / "ioucurves_local_threshs.pt")
 
 # %%
 # max avg iou withOUT min thresh
@@ -374,7 +374,7 @@ if METRIC_MAX_AVG_IOU in args.metrics:
     from aupimo import IOUCurvesResult
     from aupimo.oracles import max_avg_iou
 
-    ioucurves = IOUCurvesResult.load(savedir / "ioucurves_global_threshs.pt")
+    ioucurves = IOUCurvesResult.load(rundir / "ioucurves_global_threshs.pt")
     if args.debug:
         ioucurves.per_image_ious = ioucurves.per_image_ious[some_imgs, :]
 
@@ -384,7 +384,7 @@ if METRIC_MAX_AVG_IOU in args.metrics:
         ioucurves.image_classes,
         paths=images_relpaths,
     )
-    max_avg_iou_result.save(savedir / "max_avg_iou.json")
+    max_avg_iou_result.save(rundir / "max_avg_iou.json")
 
 
 # %%
@@ -399,11 +399,11 @@ def _get_aupimo_thresh_lower_bound(aupimoresult_fpath: Path) -> float:
 
 _get_aupimo_thresh_lower_bound = partial(
     _get_aupimo_thresh_lower_bound,
-    aupimoresult_fpath=savedir / "aupimo" / "aupimos.json",
+    aupimoresult_fpath=rundir / "aupimo" / "aupimos.json",
 )
 
 if METRIC_MAX_AVG_IOU_MIN_THRESH in args.metrics:
-    ioucurves = IOUCurvesResult.load(savedir / "ioucurves_global_threshs.pt")
+    ioucurves = IOUCurvesResult.load(rundir / "ioucurves_global_threshs.pt")
     if args.debug:
         ioucurves.per_image_ious = ioucurves.per_image_ious[some_imgs, :]
 
@@ -414,13 +414,13 @@ if METRIC_MAX_AVG_IOU_MIN_THRESH in args.metrics:
         paths=images_relpaths,
         min_thresh=_get_aupimo_thresh_lower_bound(),
     )
-    max_avg_iou_result.save(savedir / "max_avg_iou_min_thresh.json")
+    max_avg_iou_result.save(rundir / "max_avg_iou_min_thresh.json")
 
 
 # %%
 # max iou per image withOUT min thresh
 if METRIC_MAX_IOU_PER_IMG in args.metrics:
-    ioucurves = IOUCurvesResult.load(savedir / "ioucurves_local_threshs.pt")
+    ioucurves = IOUCurvesResult.load(rundir / "ioucurves_local_threshs.pt")
     if args.debug:
         ioucurves.threshs = ioucurves.threshs[some_imgs, :]
         ioucurves.per_image_ious = ioucurves.per_image_ious[some_imgs, :]
@@ -431,7 +431,7 @@ if METRIC_MAX_IOU_PER_IMG in args.metrics:
         ioucurves.image_classes,
         paths=images_relpaths,
     )
-    ious_maxs_result.save(savedir / "max_iou_per_img.json")
+    ious_maxs_result.save(rundir / "max_iou_per_img.json")
 
 
 # %%
@@ -441,7 +441,7 @@ if METRIC_MAX_IOU_PER_IMG_MIN_THRESH in args.metrics:
     from aupimo import IOUCurvesResult
     from aupimo.oracles import max_iou_per_image
 
-    ioucurves = IOUCurvesResult.load(savedir / "ioucurves_local_threshs.pt")
+    ioucurves = IOUCurvesResult.load(rundir / "ioucurves_local_threshs.pt")
     if args.debug:
         ioucurves.threshs = ioucurves.threshs[some_imgs, :]
         ioucurves.per_image_ious = ioucurves.per_image_ious[some_imgs, :]
@@ -453,4 +453,4 @@ if METRIC_MAX_IOU_PER_IMG_MIN_THRESH in args.metrics:
         min_thresh=_get_aupimo_thresh_lower_bound(),
         paths=images_relpaths,
     )
-    ious_maxs_result.save(savedir / "max_iou_per_img_min_thresh.json")
+    ious_maxs_result.save(rundir / "max_iou_per_img_min_thresh.json")
