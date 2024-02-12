@@ -19,7 +19,7 @@ from pathlib import Path
 import pandas as pd
 import torch
 
-from aupimo.oracles import IOUCurvesResult
+from aupimo.oracles import IOUCurvesResult, MaxAvgIOUResult, MaxIOUPerImageResult
 
 # is it running as a notebook or as a script?
 if (arg0 := Path(sys.argv[0]).stem) == "ipykernel_launcher":
@@ -118,8 +118,15 @@ parser.add_argument(
         "asmaps.pt",
         "aupimo/curves.pt",
         "model",
+        # --------- iou ---------
+        # curves
         "ioucurves_global_threshs.pt",
         "ioucurves_local_threshs.pt",
+        # oracle threhsolds
+        "max_avg_iou.json",
+        "max_avg_iou_min_thresh.json",
+        "max_iou_per_img.json",
+        "max_iou_per_img_min_thresh.json",
     ],
     default=[],
 )
@@ -139,13 +146,21 @@ if IS_NOTEBOOK:
         argstrs := [
             string
             for arg in [
+                # TODO(jpcbertoldo): check number of images in paths, asmaps, etc
                 "--check-paths",
                 # "--check-aupimo-thresh-bounds",
                 # "--check-missing-optional asmaps.pt",
                 # "--check-missing-optional aupimo/curves.pt",
                 # "--check-missing-optional model",
+                # --------- iou ---------
+                # curves
                 "--check-missing-optional ioucurves_global_threshs.pt",
                 "--check-missing-optional ioucurves_local_threshs.pt",
+                # oracle thresholds
+                "--check-missing-optional max_avg_iou.json",
+                "--check-missing-optional max_avg_iou_min_thresh.json",
+                "--check-missing-optional max_iou_per_img.json",
+                "--check-missing-optional max_iou_per_img_min_thresh.json",
             ]
             for string in arg.split(" ")
         ],
@@ -244,11 +259,18 @@ def expected_files_exist(rundir: Path, model: str, _collection: str, _dataset: s
         # optionals
         "asmaps.pt": (rundir / "asmaps.pt").is_file(),
         "aupimo/curves.pt": aupimo_dir.is_dir() and (aupimo_dir / "curves.pt").is_file(),
-        # model is special because some models (efficientad) are saved as a directory with multiple files
+        # --------- iou ---------
+        # curves
         "ioucurves_global_threshs.pt": (rundir / "ioucurves_global_threshs.pt").is_file(),
         "ioucurves_local_threshs.pt": (rundir / "ioucurves_local_threshs.pt").is_file(),
+        # oracle thresholds
+        "max_avg_iou.json": (rundir / "max_avg_iou.json").is_file(),
+        "max_avg_iou_min_thresh.json": (rundir / "max_avg_iou_min_thresh.json").is_file(),
+        "max_iou_per_img.json": (rundir / "max_iou_per_img.json").is_file(),
+        "max_iou_per_img_min_thresh.json": (rundir / "max_iou_per_img_min_thresh.json").is_file(),
     }
 
+    # model is special because some models (efficientad) are saved as a directory with multiple files
     if model in ("efficientad_wr101_m_ext", "efficientad_wr101_s_ext"):
         model_dir = rundir / "model"
         missing["model"] = (
@@ -413,6 +435,30 @@ def check_ioucurves(fpath: Path, check_paths: bool):
     return (None, None)
 
 
+def check_max_avg_iou(fpath: Path, check_paths: bool):
+    try:
+        max_avg_iou_result = MaxAvgIOUResult.load(fpath)
+        # TODO(jpcbertoldo): remove this later
+        raise NotImplementedError("validations in __init__ not implemented")
+    except Exception as ex:
+        return (type(ex).__name__, ex)
+    if check_paths and max_avg_iou_result.paths is None:
+        return ("missing-paths", str(fpath))
+    return (None, None)
+
+
+def check_max_iou_per_image(fpath: Path, check_paths: bool):
+    try:
+        max_iou_per_image_result = MaxIOUPerImageResult.load(fpath)
+        # TODO(jpcbertoldo): remove this later
+        raise NotImplementedError("validations in __init__ not implemented")
+    except Exception as ex:
+        return (type(ex).__name__, ex)
+    if check_paths and max_iou_per_image_result.paths is None:
+        return ("missing-paths", str(fpath))
+    return (None, None)
+
+
 def dumb_ok(_):
     return (None, None)
 
@@ -434,8 +480,14 @@ files_errors = (
             "asmaps.pt": partial(check_asmaps, check_paths=args.check_paths),
             "aupimo/curves.pt": partial(check_curves, check_paths=args.check_paths),
             # ==========================================================================
+            # --------- iou ---------
             "ioucurves_global_threshs.pt": partial(check_ioucurves, check_paths=args.check_paths),
             "ioucurves_local_threshs.pt": partial(check_ioucurves, check_paths=args.check_paths),
+            # oracle threhsolds
+            "max_avg_iou.json": partial(check_max_avg_iou, check_paths=args.check_paths),
+            "max_avg_iou_min_thresh.json": partial(check_max_avg_iou, check_paths=args.check_paths),
+            "max_iou_per_img.json": partial(check_max_iou_per_image, check_paths=args.check_paths),
+            "max_iou_per_img_min_thresh.json": partial(check_max_iou_per_image, check_paths=args.check_paths),
         }[row.name[3]](row.path),
         axis=1,
         result_type="expand",
