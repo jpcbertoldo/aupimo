@@ -178,7 +178,7 @@ class IOUCurvesResult:
 
     def plot_avg_iou_curve(self, ax: Axes = None) -> None:
         """Plot the average IoU curve."""
-        _ = ax.plot(self.threshs, self.avg_iou_curve, color="black", label="avg")
+        _ = ax.plot(self.threshs, self.avg_iou_curve, color="black", label="avg iou")
         _ = ax.fill_between(
             self.threshs,
             self.quantiles_iou_curve(0.05),
@@ -192,17 +192,72 @@ class IOUCurvesResult:
             self.quantiles_iou_curve(0.25),
             self.quantiles_iou_curve(0.75),
             alpha=0.3,
-            color="tab:red",
+            color="dimgray",
             label="p25-p75",
         )
 
-        _ = ax.set_xlabel("Threshold")
-        _ = ax.set_ylabel("Average IoU")
+    def axvline_global_oracle(self, ax: Axes, global_oracle_thresh: float, **kwargs) -> None:
+        kwargs = {
+            "label": "global oracle",
+            "color": "tab:red",
+            "linestyle": "-",
+            "alpha": 1,
+            **kwargs,
+        }
+        return ax.axvline(x=global_oracle_thresh, **kwargs)
+
+    def scatter_global_oracle(self, ax: Axes, global_oracle_thresh: float, global_oracle_iou: float, **kwargs) -> None:
+        kwargs = {
+            "color": "tab:red",
+            "s": 200,
+            "marker": "*",
+            "ec": "black",
+            "zorder": 10,
+            **kwargs,
+        }
+        return ax.scatter(global_oracle_thresh, global_oracle_iou, **kwargs)
+
+    def plot_iou_curve(self, ax: Axes, image_idx: int, **kwargs) -> None:
+        """Plot the IoU curve of a specific image."""
+        kwargs = {
+            "label": f"idx={image_idx}",
+            "alpha": 1,
+            **kwargs,
+        }
+        return ax.plot(self.threshs, self.per_image_ious[image_idx], **kwargs)
+
+    def scatter_local_oracle(
+        self, ax: Axes, local_oracle_thresh: float, local_oracle_iou: float, **kwargs
+    ) -> None:
+        kwargs = {
+            "s": 150,
+            "marker": "*",
+            "ec": "black",
+            "zorder": 10,
+            **kwargs,
+        }
+        return ax.scatter(local_oracle_thresh, local_oracle_iou, **kwargs)
+
+    def ax_cfg_yaxis(self, ax: Axes) -> None:
+        _ = ax.set_ylabel("IoU")
 
         _ = ax.set_ylim(0 - (eps := 1e-2), 1 + eps)
         _ = ax.set_yticks(np.linspace(0, 1, 5))
         _ = ax.yaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1))
         _ = ax.grid(axis="y")
+
+    def ax_cfg_xaxis(self, ax: Axes) -> None:
+        _ = ax.set_xlabel("Threshold")
+
+    def axvline_min_thresh(self, ax: Axes, min_thresh: float, **kwargs) -> None:
+        kwargs = {
+            "label": "min thresh",
+            "color": "black",
+            "linestyle": "--",
+            "alpha": 1,
+            **kwargs,
+        }
+        return ax.axvline(x=min_thresh, **kwargs)
 
 
 def per_image_iou_curves(
