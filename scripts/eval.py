@@ -15,6 +15,7 @@ import argparse
 import json
 import sys
 import warnings
+from functools import partial
 from pathlib import Path
 
 import numpy as np
@@ -43,7 +44,8 @@ else:
     IS_NOTEBOOK = False
 
 
-from aupimo import aupimo_scores, per_image_iou_curves
+from aupimo import AUPIMOResult, aupimo_scores, per_image_iou_curves
+from aupimo.oracles import IOUCurvesResult, max_avg_iou, max_iou_per_image
 
 # %%
 # Args
@@ -63,6 +65,8 @@ METRICS_CHOICES = [
     (METRIC_IOU_CURVES_LOCAL := "ioucurves_local"),
     (METRIC_MAX_AVG_IOU := "max_avg_iou"),
     (METRIC_MAX_IOU_PER_IMG := "max_iou_per_img"),
+    (METRIC_MAX_AVG_IOU_MIN_THRESH := "max_avg_iou_min_thresh"),
+    (METRIC_MAX_IOU_PER_IMG_MIN_THRESH := "max_iou_per_img_min_thresh"),
 ]
 
 parser = argparse.ArgumentParser()
@@ -86,11 +90,13 @@ if IS_NOTEBOOK:
                 # "--metrics aupimo",
                 # "--metrics ioucurves_global",
                 # "--metrics ioucurves_local",
-                # "--metrics max_avg_iou",
-                # "--metrics max_iou_per_img",
+                "--metrics max_avg_iou",
+                "--metrics max_iou_per_img",
+                "--metrics max_avg_iou_min_thresh",
+                "--metrics max_iou_per_img_min_thresh",
                 "--mvtec-root ../data/datasets/MVTec",
                 "--visa-root ../data/datasets/VisA",
-                # "--not-debug",
+                "--not-debug",
             ]
             for string in arg.split(" ")
         ],
@@ -363,7 +369,7 @@ if METRIC_IOU_CURVES_LOCAL in args.metrics:
     ioucurves.save(savedir / "ioucurves_local_threshs.pt")
 
 # %%
-# iou max avg iou
+# max avg iou withOUT min thresh
 if METRIC_MAX_AVG_IOU in args.metrics:
     from aupimo import IOUCurvesResult
     from aupimo.oracles import max_avg_iou
@@ -371,13 +377,67 @@ if METRIC_MAX_AVG_IOU in args.metrics:
     ioucurves = IOUCurvesResult.load(savedir / "ioucurves_global_threshs.pt")
     if args.debug:
         ioucurves.per_image_ious = ioucurves.per_image_ious[some_imgs, :]
-    max_avg_iou_result = max_avg_iou(ioucurves.threshs, ioucurves.per_image_ious, paths=images_relpaths)
+
+    max_avg_iou_result = max_avg_iou(
+        ioucurves.threshs,
+        ioucurves.per_image_ious,
+        ioucurves.image_classes,
+        paths=images_relpaths,
+    )
     max_avg_iou_result.save(savedir / "max_avg_iou.json")
 
 
 # %%
-# max iou per image
+# max avg iou WITH min thresh
+
+
+def _get_aupimo_thresh_lower_bound(aupimoresult_fpath: Path) -> float:
+    """Threshold lower is FPR upper bound (1e-4)."""
+    aupimoresult = AUPIMOResult.load(aupimoresult_fpath)
+    return aupimoresult.thresh_lower_bound
+
+
+_get_aupimo_thresh_lower_bound = partial(
+    _get_aupimo_thresh_lower_bound,
+    aupimoresult_fpath=savedir / "aupimo" / "aupimos.json",
+)
+
+if METRIC_MAX_AVG_IOU_MIN_THRESH in args.metrics:
+    ioucurves = IOUCurvesResult.load(savedir / "ioucurves_global_threshs.pt")
+    if args.debug:
+        ioucurves.per_image_ious = ioucurves.per_image_ious[some_imgs, :]
+
+    max_avg_iou_result = max_avg_iou(
+        ioucurves.threshs,
+        ioucurves.per_image_ious,
+        ioucurves.image_classes,
+        paths=images_relpaths,
+        min_thresh=_get_aupimo_thresh_lower_bound(),
+    )
+    max_avg_iou_result.save(savedir / "max_avg_iou_min_thresh.json")
+
+
+# %%
+# max iou per image withOUT min thresh
 if METRIC_MAX_IOU_PER_IMG in args.metrics:
+    ioucurves = IOUCurvesResult.load(savedir / "ioucurves_local_threshs.pt")
+    if args.debug:
+        ioucurves.threshs = ioucurves.threshs[some_imgs, :]
+        ioucurves.per_image_ious = ioucurves.per_image_ious[some_imgs, :]
+
+    ious_maxs_result = max_iou_per_image(
+        ioucurves.threshs,
+        ioucurves.per_image_ious,
+        ioucurves.image_classes,
+        paths=images_relpaths,
+    )
+    ious_maxs_result.save(savedir / "max_iou_per_img.json")
+
+
+# %%
+# max iou per image WITH min thresh
+
+if METRIC_MAX_IOU_PER_IMG_MIN_THRESH in args.metrics:
     from aupimo import IOUCurvesResult
     from aupimo.oracles import max_iou_per_image
 
@@ -385,128 +445,12 @@ if METRIC_MAX_IOU_PER_IMG in args.metrics:
     if args.debug:
         ioucurves.threshs = ioucurves.threshs[some_imgs, :]
         ioucurves.per_image_ious = ioucurves.per_image_ious[some_imgs, :]
-    ious_maxs_result = max_iou_per_image(ioucurves.threshs, ioucurves.per_image_ious, paths=images_relpaths)
-    ious_maxs_result.save(savedir / "max_iou_per_img.json")
 
-
-
-# %%
-# TODO include option for min valid threshold
-
-
-# %%
-# viz iou strategies
-import matplotlib as mpl
-from matplotlib import pyplot as plt
-
-from aupimo.oracles import IOUCurvesResult, MaxAvgIOUResult, MaxIOUPerImageResult
-from aupimo.utils import per_image_scores_stats
-
-max_avg_iou_result = MaxAvgIOUResult.load(savedir / "max_avg_iou.json")
-max_ious_result = MaxIOUPerImageResult.load(savedir / "max_iou_per_img.json")
-ioucurves = IOUCurvesResult.load(savedir / "ioucurves_global_threshs.pt")
-if args.debug:
-    ioucurves.per_image_ious = ioucurves.per_image_ious[some_imgs, :]
-
-diff = max_ious_result.ious - max_avg_iou_result.ious_at_thresh
-
-fig, ax = plt.subplots()
-ioucurves.plot_avg_iou_curve(ax)
-
-_ = ax.scatter(
-    max_avg_iou_result.thresh,
-    max_avg_iou_result.avg_iou,
-    color="black",
-    s=200,
-    marker="*",
-    label="max avg iou",
-)
-_ = ax.legend(loc="upper left")
-
-fig, axes = plt.subplots(
-    2,
-    1,
-    figsize=(7, 5),
-    height_ratios=[2, 1],
-    sharex=True,
-    layout="constrained",
-)
-ax = axes[0]
-_ = ax.boxplot(
-    [
-        max_avg_iou_result.ious_at_thresh[max_avg_iou_result.image_classes == 1],
-        max_ious_result.ious[max_ious_result.image_classes == 1],
-    ],
-    labels=[
-        "@ max avg iou",
-        "@ optimal",
-    ],
-    vert=False,
-    notch=False,
-)
-_ = ax.scatter(
-    max_avg_iou_result.avg_iou,
-    1,
-    color="black",
-    s=200,
-    marker="*",
-)
-
-ax = axes[1]
-_ = ax.boxplot(
-    diff[max_ious_result.image_classes == 1],
-    labels=["diff"],
-    vert=False,
-    notch=False,
-)
-
-_ = ax.set_xlabel("IoU")
-
-_ = ax.set_xlim(0 - (eps := 1e-2), 1 + eps)
-_ = ax.set_xticks(np.linspace(0, 1, 5))
-_ = ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1))
-
-for ax in axes:
-    _ = ax.grid(axis="x")
-
-fig, ax = plt.subplots()
-boxplot_stats = per_image_scores_stats(
-    # per_image_scores=ious_at_max_avg_iou,
-    per_image_scores=diff,
-    images_classes=max_ious_result.image_classes,
-    only_class=1,
-    repeated_replacement_atol=5e-2,
-)
-for bp_stat in boxplot_stats:
-    iou_curve = ioucurves.per_image_ious[bp_stat["image_idx"]]
-    line = ax.plot(
+    ious_maxs_result = max_iou_per_image(
         ioucurves.threshs,
-        iou_curve,
-        label=f"{bp_stat['stat_name']} idx={bp_stat['image_idx']}",
-        alpha=0.7,
-    )[0]
-    _ = ax.scatter(
-        max_ious_result.threshs[bp_stat["image_idx"]],
-        max_ious_result.ious[bp_stat["image_idx"]],
-        color=line.get_color(),
-        s=200,
-        marker="*",
+        ioucurves.per_image_ious,
+        ioucurves.image_classes,
+        min_thresh=_get_aupimo_thresh_lower_bound(),
+        paths=images_relpaths,
     )
-
-_ = ax.axvline(
-    x=max_avg_iou_result.thresh,
-    color="black",
-    linestyle="--",
-    alpha=0.5,
-)
-_ = ax.legend(loc="upper left")
-
-_ = ax.set_ylim(0 - (eps := 1e-2), 1 + eps)
-_ = ax.set_yticks(np.linspace(0, 1, 5))
-_ = ax.yaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1))
-_ = ax.grid(axis="y")
-
-_ = ax.set_xlabel("Threshold")
-_ = ax.set_ylabel("IoU")
-
-# %%
+    ious_maxs_result.save(savedir / "max_iou_per_img_min_thresh.json")

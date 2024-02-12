@@ -256,6 +256,8 @@ class MaxAvgIOUResult:
     ious_at_thresh: Tensor = field(repr=False)
 
     # metadata
+    image_classes: Tensor = field(repr=False)
+    min_thresh: float | None = field(default=None)
     paths: list[str] | None = field(default=None, repr=False)
 
     @property
@@ -263,24 +265,18 @@ class MaxAvgIOUResult:
         """Number of images."""
         return len(self.ious_at_thresh)
 
-    @property
-    def image_classes(self) -> Tensor:
-        """Image classes (0: normal, 1: anomalous).
-
-        Deduced from IOU values.
-        If IOU values are not NaN, the image is considered anomalous.
-        """
-        return (~self.ious_at_thresh.isnan()).to(torch.int)
-
     def to_dict(self) -> dict[str, Tensor | float]:
         """Return a dictionary with the result object's attributes."""
         dic = {
             "avg_iou": self.avg_iou,
             "thresh": self.thresh,
             "ious_at_thresh": self.ious_at_thresh,
+            "image_classes": self.image_classes,
         }
         if self.paths is not None:
             dic["paths"] = self.paths
+        if self.min_thresh is not None:
+            dic["min_thresh"] = self.min_thresh
         return dic
 
     @classmethod
@@ -307,6 +303,8 @@ class MaxAvgIOUResult:
         payload = self.to_dict()
         ious_at_thresh: Tensor = payload["ious_at_thresh"]
         payload["ious_at_thresh"] = _validate_tensor.safe_tensor_to_numpy(ious_at_thresh).tolist()
+        image_classes: Tensor = payload["image_classes"]
+        payload["image_classes"] = _validate_tensor.safe_tensor_to_numpy(image_classes).tolist()
         with file_path.open("w") as f:
             json.dump(payload, f, indent=4)
 
@@ -326,6 +324,7 @@ class MaxAvgIOUResult:
             msg = f"Invalid payload in file {file_path}. Must be a dictionary."
             raise TypeError(msg)
         payload["ious_at_thresh"] = torch.tensor(payload["ious_at_thresh"], dtype=torch.float64)
+        payload["image_classes"] = torch.tensor(payload["image_classes"], dtype=torch.int)
         try:
             return cls.from_dict(payload)
         except (TypeError, ValueError) as ex:
@@ -333,17 +332,45 @@ class MaxAvgIOUResult:
             raise TypeError(msg) from ex
 
 
-def max_avg_iou(threshs: Tensor, per_image_ious: Tensor, paths: list[str] | None = None) -> MaxAvgIOUResult:
+def max_avg_iou(
+    threshs: Tensor,
+    per_image_ious: Tensor,
+    image_classes: Tensor,
+    min_thresh: float | None = None,
+    paths: list[str] | None = None,
+) -> MaxAvgIOUResult:
     """Get the maximum average IoU.
 
-    TODO(jpcbertoldo): test & doc max_avg_iou
+    TODO(jpcbertoldo):  validate test & doc max_avg_iou
+
+    Args:
+        thresh: 1D
     """
-    avg_iou = per_image_ious.nanmean(dim=0)
-    avg_iou_argmax = avg_iou.argmax()
-    avg_iou = avg_iou[avg_iou_argmax]
-    thresh = threshs[avg_iou_argmax]
-    ious_at_thresh = per_image_ious[:, avg_iou_argmax]
-    return MaxAvgIOUResult(avg_iou.item(), thresh.item(), ious_at_thresh, paths=paths)
+    # "== 1" --> only anomalous images
+    avg_ious = per_image_ious[image_classes == 1].mean(dim=0)
+    if min_thresh is not None:
+        valid_threshs_mask = threshs >= min_thresh
+        avg_ious[~valid_threshs_mask] = torch.nan
+    else:
+        valid_threshs_mask = torch.ones_like(threshs, dtype=torch.bool)
+    if (valid_threshs_mask == 0).all():
+        msg = f"Anomalous images only have scores below the `{min_thresh=}`. This edge case is not treated."
+        raise NotImplementedError(msg)
+    valid_avg_iou = avg_ious[valid_threshs_mask]
+    valid_avg_iou_argmax = valid_avg_iou.argmax()
+    argmax = torch.where(valid_threshs_mask)[0][valid_avg_iou_argmax]
+    avg_iou = avg_ious[argmax]
+    thresh = threshs[argmax]
+    # normal images will automatically have `nan` from the `per_image_ious`
+    ious_at_thresh = per_image_ious[:, argmax]
+    return MaxAvgIOUResult(
+        avg_iou.item(),
+        thresh.item(),
+        ious_at_thresh,
+        image_classes=image_classes,
+        min_thresh=min_thresh,
+        paths=paths,
+    )
 
 
 @dataclass
@@ -353,6 +380,8 @@ class MaxIOUPerImageResult:
     threshs: Tensor = field(repr=False)
 
     # metadata
+    image_classes: Tensor = field(repr=False)
+    min_thresh: float | None = field(default=None)
     paths: list[str] | None = field(repr=False, default=None)
 
     @property
@@ -360,20 +389,13 @@ class MaxIOUPerImageResult:
         """Number of images."""
         return len(self.ious)
 
-    @property
-    def image_classes(self) -> Tensor:
-        """Image classes (0: normal, 1: anomalous).
-
-        Deduced from IOU values.
-        If IOU values are not NaN, the image is considered anomalous.
-        """
-        return (~self.ious.isnan()).to(torch.int)
-
     def to_dict(self) -> dict[str, Tensor]:
         """Return a dictionary with the result object's attributes."""
-        dic = {"ious": self.ious, "threshs": self.threshs}
+        dic = {"ious": self.ious, "threshs": self.threshs, "image_classes": self.image_classes}
         if self.paths is not None:
             dic["paths"] = self.paths
+        if self.min_thresh is not None:
+            dic["min_thresh"] = self.min_thresh
         return dic
 
     @classmethod
@@ -399,6 +421,8 @@ class MaxIOUPerImageResult:
         payload["ious"] = _validate_tensor.safe_tensor_to_numpy(ious).tolist()
         threshs: Tensor = payload["threshs"]
         payload["threshs"] = _validate_tensor.safe_tensor_to_numpy(threshs).tolist()
+        image_classes: Tensor = payload["image_classes"]
+        payload["image_classes"] = _validate_tensor.safe_tensor_to_numpy(image_classes).tolist()
         with file_path.open("w") as f:
             json.dump(payload, f, indent=4)
 
@@ -419,6 +443,7 @@ class MaxIOUPerImageResult:
             raise TypeError(msg)
         payload["ious"] = torch.tensor(payload["ious"], dtype=torch.float64)
         payload["threshs"] = torch.tensor(payload["threshs"], dtype=torch.float64)
+        payload["image_classes"] = torch.tensor(payload["image_classes"], dtype=torch.int)
         try:
             return cls.from_dict(payload)
         except (TypeError, ValueError) as ex:
@@ -426,17 +451,50 @@ class MaxIOUPerImageResult:
             raise TypeError(msg) from ex
 
 
-def max_iou_per_image(threshs: Tensor, per_image_ious: Tensor, paths: list[str] | None = None) -> MaxIOUPerImageResult:
+def max_iou_per_image(
+    threshs: Tensor,
+    per_image_ious: Tensor,
+    image_classes: Tensor,
+    min_thresh: float | None = None,
+    paths: list[str] | None = None,
+) -> MaxIOUPerImageResult:
     """Get the maximum IoU per image.
 
     TODO(jpcbertoldo): validate & test & doc max_iou_per_image
+
+    Args:
+        thresh: 2D
     """
-    ious_argmaxs = per_image_ious.argmax(dim=1)
-    ious_maxs = per_image_ious[range(len(ious_argmaxs)), ious_argmaxs]
-    ious_maxs_threshs = threshs[range(len(ious_argmaxs)), ious_argmaxs]
-    ious_maxs_threshs[ious_maxs.isnan()] = torch.nan
+    ious_maxs = []
+    ious_maxs_threshs = []
+
+    for img_ious, img_threshs, img_cls in zip(per_image_ious, threshs, image_classes, strict=True):
+        if img_cls == 0:
+            # IoU is undefined for normal images
+            ious_maxs.append(torch.nan)
+            ious_maxs_threshs.append(torch.nan)
+            continue
+        img_valid_ious_mask = img_threshs >= min_thresh if min_thresh is not None else torch.ones((len(img_ious),))
+        # happens when all scores are below the minimum
+        if (img_valid_ious_mask == 0).all():
+            # if all scores are below the minimum, then the min threhsh is chosen
+            # nothing is segmented so the iou is 0
+            ious_maxs.append(0.0)
+            ious_maxs_threshs.append(min_thresh)
+            continue
+        img_valid_ious_idxs = torch.where(img_valid_ious_mask)[0]
+        valids_argmax = img_ious[img_valid_ious_idxs].argmax()
+        argmax = img_valid_ious_idxs[valids_argmax]
+        ious_maxs.append(img_ious[argmax])
+        ious_maxs_threshs.append(img_threshs[argmax])
+
+    ious_maxs = torch.tensor(ious_maxs)
+    ious_maxs_threshs = torch.tensor(ious_maxs_threshs)
+
     return MaxIOUPerImageResult(
         ious=ious_maxs,
         threshs=ious_maxs_threshs,
+        image_classes=image_classes,
+        min_thresh=min_thresh,
         paths=paths,
     )
