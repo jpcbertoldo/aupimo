@@ -61,8 +61,12 @@ METRICS_CHOICES = [
     (METRIC_AUPR := "aupr"),
     (METRIC_AUPRO := "aupro"),
     (METRIC_AUPIMO := "aupimo"),
+    # =============================================================================
+    # --------- iou ---------
+    # curves
     (METRIC_IOU_CURVES_GLOBAL := "ioucurves_global"),
     (METRIC_IOU_CURVES_LOCAL := "ioucurves_local"),
+    # oracle threshs
     (METRIC_MAX_AVG_IOU := "max_avg_iou"),
     (METRIC_MAX_IOU_PER_IMG := "max_iou_per_img"),
     (METRIC_MAX_AVG_IOU_MIN_THRESH := "max_avg_iou_min_thresh"),
