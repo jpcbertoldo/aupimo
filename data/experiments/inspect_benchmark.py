@@ -118,15 +118,6 @@ parser.add_argument(
         "asmaps.pt",
         "aupimo/curves.pt",
         "model",
-        # --------- iou ---------
-        # curves
-        "ioucurves_global_threshs.pt",
-        "ioucurves_local_threshs.pt",
-        # oracle threhsolds
-        "max_avg_iou.json",
-        "max_avg_iou_min_thresh.json",
-        "max_iou_per_img.json",
-        "max_iou_per_img_min_thresh.json",
     ],
     default=[],
 )
@@ -152,15 +143,7 @@ if IS_NOTEBOOK:
                 # "--check-missing-optional asmaps.pt",
                 # "--check-missing-optional aupimo/curves.pt",
                 # "--check-missing-optional model",
-                # --------- iou ---------
-                # curves
-                "--check-missing-optional ioucurves_global_threshs.pt",
-                "--check-missing-optional ioucurves_local_threshs.pt",
-                # oracle thresholds
-                "--check-missing-optional max_avg_iou.json",
-                "--check-missing-optional max_avg_iou_min_thresh.json",
-                "--check-missing-optional max_iou_per_img.json",
-                "--check-missing-optional max_iou_per_img_min_thresh.json",
+                "--models patchcore_wr50 patchcore_wr101 efficientad_wr101_s_ext efficientad_wr101_m_ext rd++_wr50_ext simplenet_wr50_ext uflow_ext",
             ]
             for string in arg.split(" ")
         ],
@@ -251,6 +234,7 @@ rundirs = rundirs.reset_index(drop=True).set_index(["model", "collection", "data
 
 def expected_files_exist(rundir: Path, model: str, _collection: str, _dataset: str) -> dict[str, bool]:
     aupimo_dir = rundir / "aupimo"
+    iou_oracle_threshs_dir = rundir / "iou_oracle_threshs"
     missing = {
         "auroc.json": (rundir / "auroc.json").is_file(),
         "aupr.json": (rundir / "aupr.json").is_file(),
@@ -259,15 +243,23 @@ def expected_files_exist(rundir: Path, model: str, _collection: str, _dataset: s
         # optionals
         "asmaps.pt": (rundir / "asmaps.pt").is_file(),
         "aupimo/curves.pt": aupimo_dir.is_dir() and (aupimo_dir / "curves.pt").is_file(),
-        # --------- iou ---------
+        # --------- iou oracle threshs ---------
         # curves
-        "ioucurves_global_threshs.pt": (rundir / "ioucurves_global_threshs.pt").is_file(),
-        "ioucurves_local_threshs.pt": (rundir / "ioucurves_local_threshs.pt").is_file(),
+        "iou_oracle_threshs/ioucurves_global_threshs.pt": (
+            iou_oracle_threshs_dir / "ioucurves_global_threshs.pt"
+        ).is_file(),
+        "iou_oracle_threshs/ioucurves_local_threshs.pt": (
+            iou_oracle_threshs_dir / "ioucurves_local_threshs.pt"
+        ).is_file(),
         # oracle thresholds
-        "max_avg_iou.json": (rundir / "max_avg_iou.json").is_file(),
-        "max_avg_iou_min_thresh.json": (rundir / "max_avg_iou_min_thresh.json").is_file(),
-        "max_iou_per_img.json": (rundir / "max_iou_per_img.json").is_file(),
-        "max_iou_per_img_min_thresh.json": (rundir / "max_iou_per_img_min_thresh.json").is_file(),
+        "iou_oracle_threshs/max_avg_iou.json": (iou_oracle_threshs_dir / "max_avg_iou.json").is_file(),
+        "iou_oracle_threshs/max_avg_iou_min_thresh.json": (
+            iou_oracle_threshs_dir / "max_avg_iou_min_thresh.json"
+        ).is_file(),
+        "iou_oracle_threshs/max_iou_per_img.json": (iou_oracle_threshs_dir / "max_iou_per_img.json").is_file(),
+        "iou_oracle_threshs/max_iou_per_img_min_thresh.json": (
+            iou_oracle_threshs_dir / "max_iou_per_img_min_thresh.json"
+        ).is_file(),
     }
 
     # model is special because some models (efficientad) are saved as a directory with multiple files
@@ -287,6 +279,15 @@ def expected_files_exist(rundir: Path, model: str, _collection: str, _dataset: s
 
 
 FILES_SCORES = ["auroc.json", "aupr.json", "aupro.json", "aupimo/aupimos.json"]
+FILES_IOU_ORACLE_THRESHS = [
+    "iou_oracle_threshs/ioucurves_global_threshs.pt",
+    "iou_oracle_threshs/ioucurves_local_threshs.pt",
+    "iou_oracle_threshs/max_avg_iou.json",
+    "iou_oracle_threshs/max_avg_iou_min_thresh.json",
+    "iou_oracle_threshs/max_iou_per_img.json",
+    "iou_oracle_threshs/max_iou_per_img_min_thresh.json",
+]
+FILES_MANDATORY = FILES_SCORES + FILES_IOU_ORACLE_THRESHS
 
 rundirs_files = (
     (BENCHMARK_ROOT_DIR / rundirs[["path"]])
@@ -299,7 +300,7 @@ rundirs_files = (
 rundirs_files.columns.name = "file"
 
 # SCORES
-rundirs_files_scores = rundirs_files[FILES_SCORES]
+rundirs_files_scores = rundirs_files[FILES_MANDATORY]
 
 missing_score_files = rundirs_files_scores.apply(
     lambda row: sorted(row[row == False].index.tolist()),  # noqa: E712
@@ -332,6 +333,9 @@ if missing_score_files["num"].sum() > 0:
     who_is_missing_what[["runs"]].explode("runs").to_html(
         HERE / "missing_score_files-who_is_missing_what.html",
     )
+
+else: 
+    print("no missing score files")
 
 # OPTIONALS
 if len(args.check_missing_optional) > 0:
@@ -481,13 +485,16 @@ files_errors = (
             "aupimo/curves.pt": partial(check_curves, check_paths=args.check_paths),
             # ==========================================================================
             # --------- iou ---------
-            "ioucurves_global_threshs.pt": partial(check_ioucurves, check_paths=args.check_paths),
-            "ioucurves_local_threshs.pt": partial(check_ioucurves, check_paths=args.check_paths),
+            "iou_oracle_threshs/ioucurves_global_threshs.pt": partial(check_ioucurves, check_paths=args.check_paths),
+            "iou_oracle_threshs/ioucurves_local_threshs.pt": partial(check_ioucurves, check_paths=args.check_paths),
             # oracle threhsolds
-            "max_avg_iou.json": partial(check_max_avg_iou, check_paths=args.check_paths),
-            "max_avg_iou_min_thresh.json": partial(check_max_avg_iou, check_paths=args.check_paths),
-            "max_iou_per_img.json": partial(check_max_iou_per_image, check_paths=args.check_paths),
-            "max_iou_per_img_min_thresh.json": partial(check_max_iou_per_image, check_paths=args.check_paths),
+            "iou_oracle_threshs/max_avg_iou.json": partial(check_max_avg_iou, check_paths=args.check_paths),
+            "iou_oracle_threshs/max_avg_iou_min_thresh.json": partial(check_max_avg_iou, check_paths=args.check_paths),
+            "iou_oracle_threshs/max_iou_per_img.json": partial(check_max_iou_per_image, check_paths=args.check_paths),
+            "iou_oracle_threshs/max_iou_per_img_min_thresh.json": partial(
+                check_max_iou_per_image,
+                check_paths=args.check_paths,
+            ),
         }[row.name[3]](row.path),
         axis=1,
         result_type="expand",

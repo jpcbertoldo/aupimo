@@ -23,4 +23,4 @@ done
 
 # call with the models as arguments 
 # and forward all other arguments from the command line
-python inspect_benchmark.py ${MODELS_ARG} --check-missing-optional ioucurves_global_threshs.pt --check-missing-optional ioucurves_local_threshs.pt $@
+python inspect_benchmark.py ${MODELS_ARG} $@

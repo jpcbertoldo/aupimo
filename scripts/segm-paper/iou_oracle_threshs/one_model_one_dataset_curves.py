@@ -224,13 +224,15 @@ else:
 # %%
 # load iou stuff
 
-ioucurves_global = IOUCurvesResult.load(args.rundir / "ioucurves_global_threshs.pt")
+iou_oracle_threshs_dir = args.rundir / "iou_oracle_threshs"
 
-max_avg_iou_result = MaxAvgIOUResult.load(args.rundir / "max_avg_iou.json")
-max_ious_result = MaxIOUPerImageResult.load(args.rundir / "max_iou_per_img.json")
+ioucurves_global = IOUCurvesResult.load(iou_oracle_threshs_dir / "ioucurves_global_threshs.pt")
 
-max_avg_iou_min_thresh_result = MaxAvgIOUResult.load(args.rundir / "max_avg_iou_min_thresh.json")
-max_ious_min_thresh_result = MaxIOUPerImageResult.load(args.rundir / "max_iou_per_img_min_thresh.json")
+max_avg_iou_result = MaxAvgIOUResult.load(iou_oracle_threshs_dir / "max_avg_iou.json")
+max_ious_result = MaxIOUPerImageResult.load(iou_oracle_threshs_dir / "max_iou_per_img.json")
+
+max_avg_iou_min_thresh_result = MaxAvgIOUResult.load(iou_oracle_threshs_dir / "max_avg_iou_min_thresh.json")
+max_ious_min_thresh_result = MaxIOUPerImageResult.load(iou_oracle_threshs_dir / "max_iou_per_img_min_thresh.json")
 
 diff = max_ious_result.ious - max_avg_iou_result.ious_at_thresh
 diff_min_thresh = max_ious_min_thresh_result.ious - max_avg_iou_min_thresh_result.ious_at_thresh
