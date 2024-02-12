@@ -43,12 +43,8 @@ def _validate_shared_fpr(shared_fpr: Tensor, nan_allowed: bool = False, decreasi
     )
 
 
-def _validate_image_classes(image_classes: Tensor) -> None:
-    _validate.images_classes(_validate_tensor.safe_tensor_to_numpy(image_classes, argname="image_classes"))
-
-
 def _validate_per_image_tprs(per_image_tprs: Tensor, image_classes: Tensor) -> None:
-    _validate_image_classes(image_classes)
+    _validate.images_classes(_validate_tensor.safe_tensor_to_numpy(image_classes, argname="image_classes"))
 
     per_image_tprs_array = _validate_tensor.safe_tensor_to_numpy(per_image_tprs, argname="per_image_tprs")
 
