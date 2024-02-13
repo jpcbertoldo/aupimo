@@ -19,6 +19,7 @@ from functools import partial
 from pathlib import Path
 
 import numpy as np
+import scipy as sp
 import torch
 from anomalib.metrics import AUPR, AUPRO, AUROC
 from PIL import Image
@@ -77,6 +78,7 @@ parser = argparse.ArgumentParser()
 _ = parser.add_argument("--asmaps", type=Path, required=True)
 _ = parser.add_argument("--mvtec-root", type=Path)
 _ = parser.add_argument("--visa-root", type=Path)
+_ = parser.add_argument("--checkpoints-dir", type=Path)
 _ = parser.add_argument("--not-debug", dest="debug", action="store_false")
 _ = parser.add_argument("--metrics", "-me", type=str, action="append", choices=METRICS_CHOICES, default=[])
 _ = parser.add_argument("--device", choices=["cpu", "cuda", "gpu"], default="cpu")
@@ -87,20 +89,22 @@ if IS_NOTEBOOK:
         argstrs := [
             string
             for arg in [
-                "--asmaps ../data/experiments/benchmark/patchcore_wr50/mvtec/bottle/asmaps.pt",
+                # "--asmaps ../data/experiments/benchmark/patchcore_wr50/mvtec/metal_nut/asmaps.pt",
+                "--asmaps ../data/experiments/benchmark/patchcore_wr50/mvtec/hazelnut/asmaps.pt",
                 # "--metrics auroc",
                 # "--metrics aupr",
                 # "--metrics aupro",
                 # "--metrics aupimo",
                 # "--metrics ioucurves_global",
                 # "--metrics ioucurves_local",
-                "--metrics max_avg_iou",
-                "--metrics max_iou_per_img",
-                "--metrics max_avg_iou_min_thresh",
-                "--metrics max_iou_per_img_min_thresh",
+                # "--metrics max_avg_iou",
+                # "--metrics max_iou_per_img",
+                # "--metrics max_avg_iou_min_thresh",
+                # "--metrics max_iou_per_img_min_thresh",
                 "--mvtec-root ../data/datasets/MVTec",
                 "--visa-root ../data/datasets/VisA",
-                "--not-debug",
+                "--checkpoints-dir ../data/checkpoints",
+                # "--not-debug",
             ]
             for string in arg.split(" ")
         ],
@@ -461,3 +465,274 @@ if METRIC_MAX_IOU_PER_IMG_MIN_THRESH in args.metrics:
         paths=images_relpaths,
     )
     ious_maxs_result.save(iou_oracle_threshs_dir / "max_iou_per_img_min_thresh.json")
+
+# %%
+# viz img vs {asmap, vasmap, mask}
+import matplotlib.pyplot as plt
+
+from aupimo.utils import valid_anomaly_score_maps
+
+image_idx = 5
+asmap = asmaps[image_idx]
+mask = masks[image_idx]
+img = plt.imread(images_abspaths[image_idx])
+if img.ndim == 2:
+    img = img[..., None].repeat(3, axis=-1)
+
+thresh_min = _get_aupimo_thresh_lower_bound()
+
+vasmap = valid_anomaly_score_maps(asmap[None, ...], thresh_min)[0]
+
+fig, axrow = plt.subplots(
+    1,
+    2,
+    figsize=np.array((10, 5)) * 1.0,
+    layout="constrained",
+)
+
+for ax in axrow:
+    _ = ax.imshow(img)
+    cs_gt = ax.contour(
+        mask,
+        levels=[0.5],
+        colors="black",
+        linewidths=(lw := 2.5),
+        linestyles="--",
+    )
+    cs_thresh_min = ax.contour(
+        asmap,
+        levels=[thresh_min],
+        colors=["white"],
+        linewidths=lw,
+    )
+
+ax = axrow[0]
+_ = ax.imshow(asmap, alpha=0.4, cmap="jet")
+_ = ax.annotate(
+    "Anomaly Score Map",
+    xy=(0, 1),
+    xycoords="axes fraction",
+    xytext=(10, -10),
+    textcoords="offset points",
+    ha="left",
+    va="top",
+    fontsize=20,
+    bbox=dict(  # noqa: C408
+        facecolor="white",
+        alpha=1,
+        edgecolor="black",
+        boxstyle="round,pad=0.2",
+    ),
+)
+
+ax = axrow[1]
+_ = ax.imshow(vasmap, alpha=0.4, cmap="jet")
+_ = ax.annotate(
+    "Valid Anomaly Score Map",
+    xy=(0, 1),
+    xycoords="axes fraction",
+    xytext=(10, -10),
+    textcoords="offset points",
+    ha="left",
+    va="top",
+    fontsize=20,
+    bbox=dict(  # noqa: C408
+        facecolor="white",
+        alpha=1,
+        edgecolor="black",
+        boxstyle="round,pad=0.2",
+    ),
+)
+
+for ax in axrow:
+    _ = ax.set_xticks([])
+    _ = ax.set_yticks([])
+
+# %%
+# download the sam checkpoint
+from huggingface_hub import hf_hub_download
+
+# ckpt_name = "sam_vit_b_01ec64.pth"
+ckpt_name = "sam_vit_h_4b8939.pth"
+
+if not (ckpt_path := args.checkpoints_dir / ckpt_name).exists():
+    print(f"downloading {ckpt_name=}")
+    hf_hub_download(
+        "ybelkada/segment-anything",
+        f"checkpoints/{ckpt_name}",
+        local_dir=args.checkpoints_dir.parent,
+        local_dir_use_symlinks=False,
+    )
+
+else:
+    print(f"{ckpt_name=} already exists")
+
+from segment_anything import sam_model_registry
+
+# %%
+# load the sam model
+sam = sam_model_registry["vit_h"](checkpoint=ckpt_path)
+
+# %%
+# click points from the vasmap
+
+import matplotlib.pyplot as plt
+import skimage as sk
+from segment_anything import SamPredictor
+
+from aupimo._validate_tensor import safe_tensor_to_numpy
+from aupimo.utils import valid_anomaly_score_maps
+
+image_idx = 5
+asmap = asmaps[image_idx]
+mask = masks[image_idx]
+img = plt.imread(images_abspaths[image_idx])
+if img.ndim == 2:
+    img = img[..., None].repeat(3, axis=-1)
+img_uint8 = plt.imread(images_abspaths[image_idx])
+img_uint8 = (img_uint8 * 255).astype(np.uint8)
+if img_uint8.ndim == 2:
+    img_uint8 = img_uint8[..., None].repeat(3, axis=-1)
+
+thresh_min = _get_aupimo_thresh_lower_bound()
+vasmap = valid_anomaly_score_maps(asmap[None, ...], thresh_min)[0]
+
+sam_predictor = SamPredictor(sam)
+sam_predictor.set_image(img_uint8)
+
+fig, axes = plt.subplots(
+    3,
+    2,
+    figsize=np.array((20, 30)) * 0.5,
+    layout="constrained",
+)
+axrow = axes.ravel()
+
+for ax in axrow:
+    _ = ax.imshow(img)
+    cs_gt = ax.contour(
+        mask,
+        levels=[0.5],
+        colors="black",
+        linewidths=(lw := 2.5),
+        linestyles="--",
+    )
+    cs_thresh_min = ax.contour(
+        asmap,
+        levels=[thresh_min],
+        colors=["white"],
+        linewidths=lw,
+    )
+
+ax = axrow[1]
+_ = ax.imshow(vasmap, alpha=0.4, cmap="jet")
+
+ax = axrow[2]
+vasmap_maxima_coords = sk.feature.peak_local_max(
+    safe_tensor_to_numpy(asmap),
+    min_distance=1,
+    threshold_abs=thresh_min,
+    exclude_border=True,
+)
+normal_minima_coords = sk.feature.peak_local_max(
+    safe_tensor_to_numpy(-asmap),
+    min_distance=1,
+    threshold_abs=-thresh_min,
+    exclude_border=True,
+)
+_ = ax.scatter(
+    vasmap_maxima_coords[:, 1],
+    vasmap_maxima_coords[:, 0],
+    c="black",
+    s=100,
+    alpha=1,
+)
+_ = ax.scatter(
+    normal_minima_coords[:, 1],
+    normal_minima_coords[:, 0],
+    c="white",
+    s=100,
+    alpha=1,
+)
+
+ax = axrow[3]
+sam_masks, sam_masks_qualities, _ = sam_predictor.predict(
+    point_coords=np.concatenate(
+        [
+            vasmap_maxima_coords,
+            normal_minima_coords,
+        ],
+        axis=0,
+    ),
+    point_labels=np.concatenate(
+        [
+            np.ones(len(vasmap_maxima_coords)),
+            np.zeros(len(normal_minima_coords)),
+        ],
+    ),
+    multimask_output=False,
+    return_logits=False,
+)
+sam_mask_best = sam_masks[0]
+sam_mask_best = sam_mask_best & safe_tensor_to_numpy(~vasmap.isnan())
+_ = ax.imshow(sam_mask_best, cmap="jet")
+
+ax = axrow[4]
+gt_dist_borders = sp.ndimage.morphology.distance_transform_edt(mask)
+gt_dist_borders_maxima = sk.feature.peak_local_max(
+    gt_dist_borders,
+    min_distance=1,
+    threshold_rel=0.5,
+    exclude_border=True,
+)[:1]
+gt_dist_borders_out = sp.ndimage.morphology.distance_transform_edt(~mask)
+gt_dist_borders_out[safe_tensor_to_numpy(vasmap.isnan())] = 0
+gt_dist_borders_out_maxima = sk.feature.peak_local_max(
+    gt_dist_borders_out,
+    min_distance=1,
+    threshold_rel=0.5,
+    exclude_border=False,
+)[:1]
+_ = ax.imshow(gt_dist_borders, cmap="jet", alpha=0.4)
+_ = ax.scatter(
+    gt_dist_borders_maxima[:, 1],
+    gt_dist_borders_maxima[:, 0],
+    c="black",
+    s=100,
+    alpha=1,
+)
+_ = ax.scatter(
+    gt_dist_borders_out_maxima[:, 1],
+    gt_dist_borders_out_maxima[:, 0],
+    c="white",
+    s=100,
+    alpha=1,
+)
+
+ax = axrow[5]
+sam_gt_masks, _, _ = sam_predictor.predict(
+    point_coords=np.concatenate(
+        [
+            gt_dist_borders_maxima,
+            gt_dist_borders_out_maxima,
+        ],
+        axis=0,
+    ),
+    point_labels=np.concatenate(
+        [
+            np.ones(len(gt_dist_borders_maxima)),
+            np.zeros(len(gt_dist_borders_out_maxima)),
+        ],
+    ),
+    multimask_output=False,
+    return_logits=False,
+)
+sam_gt_mask_best = sam_gt_masks[0]
+sam_gt_mask_best = sam_gt_mask_best & safe_tensor_to_numpy(~vasmap.isnan())
+_ = ax.imshow(sam_gt_mask_best, cmap="jet",)
+
+for ax in axrow:
+    _ = ax.set_xticks([])
+    _ = ax.set_yticks([])
+
+# %%
