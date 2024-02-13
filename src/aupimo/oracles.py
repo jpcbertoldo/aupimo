@@ -209,7 +209,7 @@ class IOUCurvesResult:
     def scatter_global_oracle(self, ax: Axes, global_oracle_thresh: float, global_oracle_iou: float, **kwargs) -> None:
         kwargs = {
             "color": "tab:red",
-            "s": 200,
+            "s": 250,
             "marker": "*",
             "ec": "black",
             "zorder": 10,
@@ -230,7 +230,8 @@ class IOUCurvesResult:
         self, ax: Axes, local_oracle_thresh: float, local_oracle_iou: float, **kwargs
     ) -> None:
         kwargs = {
-            "s": 150,
+            "color": "tab:blue",
+            "s": 250,
             "marker": "*",
             "ec": "black",
             "zorder": 10,
