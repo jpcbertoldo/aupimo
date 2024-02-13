@@ -90,7 +90,7 @@ if IS_NOTEBOOK:
             string
             for arg in [
                 # "--asmaps ../data/experiments/benchmark/patchcore_wr50/mvtec/metal_nut/asmaps.pt",
-                "--asmaps ../data/experiments/benchmark/patchcore_wr50/mvtec/hazelnut/asmaps.pt",
+                "--asmaps ../data/experiments/benchmark/patchcore_wr50/mvtec/toothbrush/asmaps.pt",
                 # "--metrics auroc",
                 # "--metrics aupr",
                 # "--metrics aupro",
@@ -663,7 +663,7 @@ sam_masks, sam_masks_qualities, _ = sam_predictor.predict(
             normal_minima_coords,
         ],
         axis=0,
-    ),
+    )[:, ::-1],
     point_labels=np.concatenate(
         [
             np.ones(len(vasmap_maxima_coords)),
@@ -717,7 +717,7 @@ sam_gt_masks, _, _ = sam_predictor.predict(
             gt_dist_borders_out_maxima,
         ],
         axis=0,
-    ),
+    )[:, ::-1],
     point_labels=np.concatenate(
         [
             np.ones(len(gt_dist_borders_maxima)),
@@ -729,7 +729,7 @@ sam_gt_masks, _, _ = sam_predictor.predict(
 )
 sam_gt_mask_best = sam_gt_masks[0]
 sam_gt_mask_best = sam_gt_mask_best & safe_tensor_to_numpy(~vasmap.isnan())
-_ = ax.imshow(sam_gt_mask_best, cmap="jet",)
+_ = ax.imshow(sam_gt_mask_best, cmap="jet")
 
 for ax in axrow:
     _ = ax.set_xticks([])
