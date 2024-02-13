@@ -157,9 +157,9 @@ for dataset_idx, relpath in enumerate(rundirs_relpaths):
     )
 
 avg_avg_iou_at_global = np.mean(avg_iou_at_global)
-avg_avg_iou_at_local = np.mean(avg_iou_at_global)
+avg_avg_iou_at_local = np.mean(avg_iou_at_local)
 avg_avg_iou_at_global_min_thresh = np.mean(avg_iou_at_global_min_thresh)
-avg_avg_iou_at_local_min_thresh = np.mean(avg_iou_at_global_min_thresh)
+avg_avg_iou_at_local_min_thresh = np.mean(avg_iou_at_local_min_thresh)
 
 # %%
 # plot averages
