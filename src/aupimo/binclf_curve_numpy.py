@@ -179,6 +179,7 @@ MULTIPLE binary classification matrix at each threshold (PYTHON implementation).
 vectorized version of `_binclf_one_curve_python` (see above)
 """
 
+
 def _binclf_multiple_curves_per_instance_threshs_python(
     scores_batch: ndarray,
     gts_batch: ndarray,
@@ -202,10 +203,14 @@ def _binclf_multiple_curves_per_instance_threshs_python(
 
         See docstring of `binclf_multiple_curves` for details.
     """
-    return np.stack([
-        _binclf_one_curve_python(scores, gts, threshs_row)
-        for scores, gts, threshs_row in zip(scores_batch, gts_batch, threshs, strict=True)
-    ], axis=0)
+    return np.stack(
+        [
+            _binclf_one_curve_python(scores, gts, threshs_row)
+            for scores, gts, threshs_row in zip(scores_batch, gts_batch, threshs, strict=True)
+        ],
+        axis=0,
+    )
+
 
 # =========================================== INTERFACE ===========================================
 
@@ -515,7 +520,10 @@ def per_image_binclf_curve(
 
     elif threshs.ndim == 2:
         binclf_curves = binclf_multiple_curves_per_instance_threshs(
-            scores_batch, gts_batch, threshs, algorithm=algorithm,
+            scores_batch,
+            gts_batch,
+            threshs,
+            algorithm=algorithm,
         )
 
     else:

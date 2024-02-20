@@ -414,11 +414,23 @@ def format_pairwise_tests_results(
 def valid_anomaly_score_maps(
     anomaly_score_maps: Tensor,
     min_valid_score: float,
+    return_mask: bool = False,
 ) -> Tensor:
     """TODO(jpcbertoldo): write docstring of `valid_anomaly_score_maps`."""
     anomaly_score_maps_array = _validate_tensor.safe_tensor_to_numpy(anomaly_score_maps, argname="anomaly_score_maps")
-    valid_anomaly_score_maps_array = utils_numpy.valid_anomaly_score_maps(
+    ret = utils_numpy.valid_anomaly_score_maps(
         anomaly_score_maps_array,
         min_valid_score,
+        return_mask=return_mask,
     )
-    return torch.from_numpy(valid_anomaly_score_maps_array).to(anomaly_score_maps.device)
+    if return_mask:
+        valid_anomaly_score_maps_array, valid_scores_mask_array = ret
+        valid_scores_mask = torch.from_numpy(valid_scores_mask_array).to(anomaly_score_maps.device)
+    else:
+        valid_anomaly_score_maps_array = ret
+
+    valid_anomaly_score_maps = torch.from_numpy(valid_anomaly_score_maps_array).to(anomaly_score_maps.device)
+
+    if return_mask:
+        return valid_anomaly_score_maps, valid_scores_mask
+    return valid_anomaly_score_maps

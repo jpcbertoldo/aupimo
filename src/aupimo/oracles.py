@@ -40,13 +40,13 @@ def _validate_per_image_ious(per_image_ious: Tensor, image_classes: Tensor) -> N
 
     # specific to anomalous images
     _validate.per_image_rate_curves(
-        per_image_ious_array[image_classes == 1],
+        per_image_ious_array[(image_classes == 1).tolist()],
         nan_allowed=False,
         decreasing=None,  # not applicable
     )
 
     # specific to normal images
-    normal_images_ious = per_image_ious[image_classes == 0]
+    normal_images_ious = per_image_ious[(image_classes == 0).tolist()]
     if not normal_images_ious.isnan().all():
         msg = "Expected all normal images to have NaN IoUs, but some have non-NaN values."
         raise ValueError(msg)

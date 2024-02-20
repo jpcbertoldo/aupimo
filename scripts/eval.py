@@ -489,7 +489,6 @@ if METRIC_SUPERPIXEL_ORACLE in args.metrics:
             results.append(None)
             continue
 
-        asmap = asmaps[image_idx]
         if (img := plt.imread(images_abspaths[image_idx])).ndim == 2:
             img = img[..., None].repeat(3, axis=-1)
 

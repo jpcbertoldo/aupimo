@@ -517,7 +517,9 @@ def compare_models_pairwise_wilcoxon(
     return models_ordered, confidences
 
 
-def valid_anomaly_score_maps(anomaly_maps: ndarray, min_valid_score: float) -> ndarray:
+def valid_anomaly_score_maps(
+    anomaly_maps: ndarray, min_valid_score: float, return_mask: bool = False,
+) -> ndarray | tuple[ndarray, ndarray]:
     """Set to nan all values below `min_valid_score`.
 
     TODO test `valid_anomaly_score_maps()`
@@ -525,15 +527,21 @@ def valid_anomaly_score_maps(anomaly_maps: ndarray, min_valid_score: float) -> n
     Args:
         anomaly_maps (ndarray): Anomaly score maps of shape (num_images, height, width).
         min_valid_score (float): Minimum valid anomaly score.
+        return_mask (bool, optional): Whether to return the mask of valid scores. Defaults to False.
 
     Returns:
         ndarray: Valid anomaly score maps of shape (num_images, height, width).
+        if `return_mask` is True, also returns the mask of valid scores.
+        valid_scores_mask (ndarray): Mask (bool) of valid scores of shape (num_images, height, width).
     """
     _validate.anomaly_maps(anomaly_maps)
     # TODO(jpcbertoldo): validate `min_valid_score`  # noqa: TD003
     # `vasmaps` stands for `valid asmaps`; `asmaps` stands for `anomaly score maps`
     valid_anomaly_maps = anomaly_maps.copy()
-    valid_anomaly_maps[valid_anomaly_maps < min_valid_score] = np.nan
+    valid_scores_mask = valid_anomaly_maps >= min_valid_score
+    valid_anomaly_maps[~valid_scores_mask] = np.nan
+    if return_mask:
+        return valid_anomaly_maps, valid_scores_mask
     return valid_anomaly_maps
 
 
