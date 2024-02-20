@@ -260,6 +260,7 @@ def expected_files_exist(rundir: Path, model: str, _collection: str, _dataset: s
         "iou_oracle_threshs/max_iou_per_img_min_thresh.json": (
             iou_oracle_threshs_dir / "max_iou_per_img_min_thresh.json"
         ).is_file(),
+        # TODO(jpcbertoldo): add `superpixel_oracle_selection/optimal_iou.json`
     }
 
     # model is special because some models (efficientad) are saved as a directory with multiple files
@@ -287,6 +288,7 @@ FILES_IOU_ORACLE_THRESHS = [
     "iou_oracle_threshs/max_iou_per_img.json",
     "iou_oracle_threshs/max_iou_per_img_min_thresh.json",
 ]
+# TODO(jpcbertoldo): add `superpixel_oracle_selection/optimal_iou.json`
 FILES_MANDATORY = FILES_SCORES + FILES_IOU_ORACLE_THRESHS
 
 rundirs_files = (
@@ -495,6 +497,7 @@ files_errors = (
                 check_max_iou_per_image,
                 check_paths=args.check_paths,
             ),
+            # TODO(jpcbertoldo): add `superpixel_oracle_selection/optimal_iou.json`
         }[row.name[3]](row.path),
         axis=1,
         result_type="expand",

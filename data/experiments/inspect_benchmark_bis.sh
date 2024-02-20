@@ -12,7 +12,7 @@ echo "[debug] SCRIPT_DIR=${SCRIPT_DIR}"
 cd ${SCRIPT_DIR}
 echo "[debug] pwd=$(pwd)"
 
-MODELS=( "patchcore_wr50" "patchcore_wr101" "efficientad_wr101_s_ext" "efficientad_wr101_m_ext" "rd++_wr50_ext" "simplenet_wr50_ext" "uflow_ext" )
+MODELS=( "patchcore_wr50" "patchcore_wr101" "efficientad_wr101_s_ext" "efficientad_wr101_m_ext" "rd++_wr50_ext" "uflow_ext" )
 echo "[debug] MODELS=${MODELS[@]}"
 
 MODELS_ARG="--models"
