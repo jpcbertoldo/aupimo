@@ -71,6 +71,8 @@ METRICS_CHOICES = [
     (METRIC_MAX_IOU_PER_IMG := "max_iou_per_img"),
     (METRIC_MAX_AVG_IOU_MIN_THRESH := "max_avg_iou_min_thresh"),
     (METRIC_MAX_IOU_PER_IMG_MIN_THRESH := "max_iou_per_img_min_thresh"),
+    # oracle superpixels
+    (METRIC_SUPERPIXEL_ORACLE := "superpixel_oracle"),
 ]
 
 parser = argparse.ArgumentParser()
@@ -87,17 +89,18 @@ if IS_NOTEBOOK:
         argstrs := [
             string
             for arg in [
-                "--asmaps ../data/experiments/benchmark/patchcore_wr50/mvtec/bottle/asmaps.pt",
+                "--asmaps ../data/experiments/benchmark/efficientad_wr101_m_ext/mvtec/wood/asmaps.pt",
                 # "--metrics auroc",
                 # "--metrics aupr",
                 # "--metrics aupro",
                 # "--metrics aupimo",
                 # "--metrics ioucurves_global",
                 # "--metrics ioucurves_local",
-                "--metrics max_avg_iou",
-                "--metrics max_iou_per_img",
-                "--metrics max_avg_iou_min_thresh",
-                "--metrics max_iou_per_img_min_thresh",
+                # "--metrics max_avg_iou",
+                # "--metrics max_iou_per_img",
+                # "--metrics max_avg_iou_min_thresh",
+                # "--metrics max_iou_per_img_min_thresh",
+                "--metrics superpixel_oracle",
                 "--mvtec-root ../data/datasets/MVTec",
                 "--visa-root ../data/datasets/VisA",
                 "--not-debug",
@@ -461,3 +464,61 @@ if METRIC_MAX_IOU_PER_IMG_MIN_THRESH in args.metrics:
         paths=images_relpaths,
     )
     ious_maxs_result.save(iou_oracle_threshs_dir / "max_iou_per_img_min_thresh.json")
+
+# %%
+# best achievable iou with superpixels
+
+if METRIC_SUPERPIXEL_ORACLE in args.metrics:
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from progressbar import progressbar
+
+    from aupimo._validate_tensor import safe_tensor_to_numpy
+    from aupimo.oracles_numpy import (
+        find_best_superpixels,
+        get_superpixels_watershed,
+    )
+
+    results = []
+
+    for image_idx in progressbar(range(len(images_relpaths))):
+        mask = masks[image_idx]
+
+        if mask.sum() == 0:
+            results.append(None)
+            continue
+
+        asmap = asmaps[image_idx]
+        if (img := plt.imread(images_abspaths[image_idx])).ndim == 2:
+            img = img[..., None].repeat(3, axis=-1)
+
+        superpixels = get_superpixels_watershed(
+            img,
+            superpixel_relsize=(watershed_superpixel_relsize := 1e-4),
+            compactness=(watershed_compactness := 1e-4),
+        )
+        history, selected_suppixs, available_suppixs = find_best_superpixels(
+            superpixels,
+            safe_tensor_to_numpy(mask),
+        )
+        superpixel_best_iou = history[-1]["iou"]
+        results.append(
+            {
+                "iou": float(superpixel_best_iou),
+                "superpixels_selection": sorted(selected_suppixs),
+                "superpixels_method": "watershed",
+                "superpixels_params": {
+                    "superpixel_relsize": watershed_superpixel_relsize,
+                    "compactness": watershed_compactness,
+                },
+            },
+        )
+
+    (
+        superpixel_oracle_selection_dir := rundir / "superpixel_oracle_selection"
+    ).mkdir(exist_ok=True)
+    with (superpixel_oracle_selection_dir / "optimal_iou.json").open("w") as f:
+        json.dump(results, f, indent=4)
+
+# %%
