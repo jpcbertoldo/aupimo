@@ -7,11 +7,16 @@ TODO(jpcbertoldo): test this module.
 import copy
 import logging
 from functools import partial
+from pathlib import Path
 
 import matplotlib as mpl
 import numpy as np
 import skimage as sk
+from matplotlib import pyplot as plt
 from numpy import ndarray
+from scipy.ndimage import distance_transform_edt
+
+from aupimo.utils_numpy import valid_anomaly_score_maps
 
 from . import _validate
 from .binclf_curve_numpy import BinclfAlgorithm, BinclfThreshsChoice, per_image_binclf_curve, per_image_iou
@@ -268,3 +273,131 @@ def plot_superpixel_search_history(
     _ = twinax.set_ylabel("Superpixel anomaly score")
     _ = twinax.set_yticks(np.linspace(*twinax.get_ylim(), 6))
     _ = twinax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda x, _: f"{x:.1f}"))
+
+
+def open_image(image_abspath: str | Path) -> np.ndarray:
+    if (img := plt.imread(image_abspath)).ndim == 2:
+        img = img[..., None].repeat(3, axis=-1)
+    return img
+
+
+def upscale_image_asmap_mask(
+    image: np.ndarray | None,
+    anomaly_map: np.ndarray | None,
+    mask: np.ndarray | None,
+    upscale_factor: int | float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Upscale image, asmap, and mask by `upscale_factor`."""
+    assert upscale_factor >= 1, f"{upscale_factor=}"
+    if upscale_factor == 1:
+        return image, anomaly_map, mask
+    if image is not None:
+        image = sk.transform.resize(image, (upscale_factor * image.shape[0], upscale_factor * image.shape[1]))
+    if anomaly_map is not None:
+        anomaly_map = sk.transform.resize(
+            anomaly_map,
+            (upscale_factor * anomaly_map.shape[0], upscale_factor * anomaly_map.shape[1]),
+        )
+    if mask is not None:
+        mask = sk.transform.resize(mask, (upscale_factor * mask.shape[0], upscale_factor * mask.shape[1]))
+    return image, anomaly_map, mask
+
+
+def _get_contour_mask(mask: np.ndarray, type: str = "inner") -> np.ndarray:
+    assert mask.dtype == bool, f"{mask.dtype=}"
+    # contour of class 1 (anomalous)
+    if type == "inner":
+        return sk.morphology.binary_dilation(~mask, sk.morphology.square(3)) * mask
+    if type == "outter":
+        return sk.morphology.binary_dilation(mask, sk.morphology.square(3)) * (~mask)
+    msg = f"Unknown type of contour: {type}. Must be in ['inner', 'outter']"
+    raise ValueError(msg)
+
+
+def _calculate_superpixels_boundaries_distance_map(
+    superpixels: np.ndarray,
+    saturation_distance_percentile: int,
+    distortion_power: int,
+) -> np.ndarray:
+    """Calculate the distance map of superpixels boundaries.
+
+    TODO(jpcbertoldo): validate & test.
+
+    Args:
+        valid_anomaly_map_mask (np.ndarray): Mask indicating the valid regions of the anomaly score map.
+        superpixels (np.ndarray): Superpixels array (each pixel has a unique integer value).
+        saturation_distance_percentile (int): Percentile value to determine the saturation distance.
+        distortion_power (int): Power value for distance distortion.
+
+    Returns:
+        np.ndarray: Distance map of superpixels boundaries.
+
+        Values are in [0, 1].
+    """
+    if superpixels.max() == 0:
+        msg = "There are no superpixels, only the background."
+        raise ValueError(msg)
+
+    superpixels_boundaries = sk.segmentation.find_boundaries(superpixels, mode="outer")
+
+    distance_map = distance_transform_edt(~superpixels_boundaries)
+    # do not account for distances beyond a saturation distance
+    saturation_distance = np.percentile(distance_map * (superpixels > 0), saturation_distance_percentile)
+    # saturate the distance map and normalize it
+    # so the distances are relative to the furthest distance, ie in [0, 1]
+    # it is kind of the furthest distance within a cell
+    # therefore the mean distance is always in [0, 1] no matter the resolution or the size of the superpixels
+    # the `** distortion_power` is to exagerate the distances if < 1 or to diminish them if > 1
+    return (np.clip(distance_map, 0, saturation_distance) / saturation_distance) ** distortion_power
+
+
+def calculate_levelset_mean_dist_to_superpixel_boundaries_curve(
+    image: np.ndarray,
+    anomaly_map: np.ndarray,
+    min_thresh: float,
+    watershed_superpixel_relsize: float,
+    watershed_compactness: float,
+    distance_map_saturation_distance_percentile: int = 100,
+    distance_map_distortion_power: int = 1,
+    num_levelsets: int = 500,
+) -> np.ndarray:
+    """Calculate the mean distance of the levelset contours of the anomaly map.
+
+    TODO(jpcbertoldo): validate & test & document.
+    """
+    # the valid regions are those with pixel score above the min threshold
+    _, valid_anomaly_map_mask = valid_anomaly_score_maps(anomaly_map[None, ...], min_thresh, return_mask=True)
+    valid_anomaly_map_mask = valid_anomaly_map_mask[0]
+
+    if valid_anomaly_map_mask.sum() == 0:
+        return (
+            np.zeros_like(anomaly_map, dtype=int),
+            np.full_like(anomaly_map, np.nan),
+            np.full(num_levelsets, np.nan),
+            np.full(num_levelsets, np.nan),
+        )
+
+    superpixels = get_superpixels_watershed(
+        image,
+        superpixel_relsize=watershed_superpixel_relsize,
+        compactness=watershed_compactness,
+    )
+
+    # a valid superpixel is a superpixel that touches the valid region mask
+    superpixels = superpixels * valid_anomaly_map_mask
+
+    superpixels_boundaries_distance_map = _calculate_superpixels_boundaries_distance_map(
+        superpixels,
+        distance_map_saturation_distance_percentile,
+        distance_map_distortion_power,
+    )
+
+    threshs = np.linspace(min_thresh, anomaly_map[valid_anomaly_map_mask].max(), num_levelsets, endpoint=False)
+
+    levelset_mean_dist_curve = []
+    for thresh in threshs:
+        levelset_binmask = _get_contour_mask(anomaly_map >= thresh, type="inner")
+        levelset_dists = superpixels_boundaries_distance_map[levelset_binmask]
+        levelset_mean_dist_curve.append(levelset_dists.mean())
+
+    return superpixels, superpixels_boundaries_distance_map, threshs, np.array(levelset_mean_dist_curve)

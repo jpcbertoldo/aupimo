@@ -19,6 +19,7 @@ from functools import partial
 from pathlib import Path
 
 import numpy as np
+import scipy as sp
 import torch
 from anomalib.metrics import AUPR, AUPRO, AUROC
 from PIL import Image
@@ -44,8 +45,14 @@ else:
     IS_NOTEBOOK = False
 
 
-from aupimo import AUPIMOResult, aupimo_scores, per_image_iou_curves
+from aupimo import aupimo_scores, per_image_iou_curves
+from aupimo._validate_tensor import safe_tensor_to_numpy
 from aupimo.oracles import IOUCurvesResult, max_avg_iou, max_iou_per_image
+from aupimo.oracles_numpy import (
+    calculate_levelset_mean_dist_to_superpixel_boundaries_curve,
+    get_superpixels_watershed,
+)
+from aupimo.pimo_numpy import compute_min_thresh_at_max_fpr_normal_images
 
 # %%
 # Args
@@ -73,7 +80,15 @@ METRICS_CHOICES = [
     (METRIC_MAX_IOU_PER_IMG_MIN_THRESH := "max_iou_per_img_min_thresh"),
     # oracle superpixels
     (METRIC_SUPERPIXEL_ORACLE := "superpixel_oracle"),
+    # thresh selection with superpixels boundaries distance heuristic
+    (METRIC_SUPERPIXEL_BOUND_DIST_HEURISTIC := "superpixel_bound_dist_heuristic"),
+    (METRIC_SUPERPIXEL_BOUND_DIST_HEURISTIC_PARALLEL := "superpixel_bound_dist_heuristic_parallel"),
 ]
+
+ANY_METRIC_SUPERPIXEL_BOUND_DIST_HEURISTIC = {
+    METRIC_SUPERPIXEL_BOUND_DIST_HEURISTIC,
+    METRIC_SUPERPIXEL_BOUND_DIST_HEURISTIC_PARALLEL,
+}
 
 parser = argparse.ArgumentParser()
 _ = parser.add_argument("--asmaps", type=Path, required=True)
@@ -89,7 +104,7 @@ if IS_NOTEBOOK:
         argstrs := [
             string
             for arg in [
-                "--asmaps ../data/experiments/benchmark/efficientad_wr101_m_ext/mvtec/wood/asmaps.pt",
+                "--asmaps ../data/experiments/benchmark/efficientad_wr101_m_ext/mvtec/metal_nut/asmaps.pt",
                 # "--metrics auroc",
                 # "--metrics aupr",
                 # "--metrics aupro",
@@ -100,10 +115,12 @@ if IS_NOTEBOOK:
                 # "--metrics max_iou_per_img",
                 # "--metrics max_avg_iou_min_thresh",
                 # "--metrics max_iou_per_img_min_thresh",
-                "--metrics superpixel_oracle",
+                # "--metrics superpixel_oracle",
+                # "--metrics superpixel_bound_dist_heuristic",
+                # "--metrics superpixel_bound_dist_heuristic_parallel",
                 "--mvtec-root ../data/datasets/MVTec",
                 "--visa-root ../data/datasets/VisA",
-                "--not-debug",
+                # "--not-debug",
             ]
             for string in arg.split(" ")
         ],
@@ -199,8 +216,10 @@ def _convert_path(relative_path: str, collection_root: Path) -> str | None:
     return str(collection_root / relative_path)
 
 
-images_abspaths = [_convert_path(p, collection_root) for p in images_relpaths]
-masks_abspaths = [_convert_path(p, collection_root) for p in masks_relpaths]
+_convert_path = partial(_convert_path, collection_root=collection_root)
+
+images_abspaths = [_convert_path(p) for p in images_relpaths]
+masks_abspaths = [_convert_path(p) for p in masks_relpaths]
 
 for path in images_abspaths + masks_abspaths:
     assert path is None or Path(path).exists(), path
@@ -379,6 +398,25 @@ if METRIC_IOU_CURVES_LOCAL in args.metrics:
     ioucurves.save(iou_oracle_threshs_dir / "ioucurves_local_threshs.pt")
 
 # %%
+
+# %%
+# validation min thresh at max fpr normal images
+
+METRICS_THAT_USE_MIN_THRESH = {
+    METRIC_MAX_AVG_IOU_MIN_THRESH,
+    METRIC_MAX_IOU_PER_IMG_MIN_THRESH,
+} | ANY_METRIC_SUPERPIXEL_BOUND_DIST_HEURISTIC
+
+if len(set(args.metrics) & METRICS_THAT_USE_MIN_THRESH) > 0:
+    min_thresh = compute_min_thresh_at_max_fpr_normal_images(
+        safe_tensor_to_numpy(asmaps),
+        safe_tensor_to_numpy(masks),
+        fpr_metric=(fpr_metric := "mean-per-image-fpr"),
+        max_fpr=(max_fpr_normal_images := 1e-2),
+    )
+
+
+# %%
 # max avg iou withOUT min thresh
 if METRIC_MAX_AVG_IOU in args.metrics:
     from aupimo import IOUCurvesResult
@@ -401,17 +439,6 @@ if METRIC_MAX_AVG_IOU in args.metrics:
 # max avg iou WITH min thresh
 
 
-def _get_aupimo_thresh_lower_bound(aupimoresult_fpath: Path) -> float:
-    """Threshold lower is FPR upper bound (1e-4)."""
-    aupimoresult = AUPIMOResult.load(aupimoresult_fpath)
-    return aupimoresult.thresh_lower_bound
-
-
-_get_aupimo_thresh_lower_bound = partial(
-    _get_aupimo_thresh_lower_bound,
-    aupimoresult_fpath=rundir / "aupimo" / "aupimos.json",
-)
-
 if METRIC_MAX_AVG_IOU_MIN_THRESH in args.metrics:
     ioucurves = IOUCurvesResult.load(iou_oracle_threshs_dir / "ioucurves_global_threshs.pt")
     if args.debug:
@@ -422,7 +449,7 @@ if METRIC_MAX_AVG_IOU_MIN_THRESH in args.metrics:
         ioucurves.per_image_ious,
         ioucurves.image_classes,
         paths=images_relpaths,
-        min_thresh=_get_aupimo_thresh_lower_bound(),
+        min_thresh=min_thresh,
     )
     max_avg_iou_result.save(iou_oracle_threshs_dir / "max_avg_iou_min_thresh.json")
 
@@ -460,7 +487,7 @@ if METRIC_MAX_IOU_PER_IMG_MIN_THRESH in args.metrics:
         ioucurves.threshs,
         ioucurves.per_image_ious,
         ioucurves.image_classes,
-        min_thresh=_get_aupimo_thresh_lower_bound(),
+        min_thresh=min_thresh,
         paths=images_relpaths,
     )
     ious_maxs_result.save(iou_oracle_threshs_dir / "max_iou_per_img_min_thresh.json")
@@ -469,8 +496,6 @@ if METRIC_MAX_IOU_PER_IMG_MIN_THRESH in args.metrics:
 # best achievable iou with superpixels
 
 if METRIC_SUPERPIXEL_ORACLE in args.metrics:
-
-    import matplotlib.pyplot as plt
     import numpy as np
     from progressbar import progressbar
 
@@ -478,6 +503,7 @@ if METRIC_SUPERPIXEL_ORACLE in args.metrics:
     from aupimo.oracles_numpy import (
         find_best_superpixels,
         get_superpixels_watershed,
+        open_image,
     )
 
     results = []
@@ -489,12 +515,11 @@ if METRIC_SUPERPIXEL_ORACLE in args.metrics:
             results.append(None)
             continue
 
-        if (img := plt.imread(images_abspaths[image_idx])).ndim == 2:
-            img = img[..., None].repeat(3, axis=-1)
+        img = open_image(images_abspaths[image_idx])
 
         superpixels = get_superpixels_watershed(
             img,
-            superpixel_relsize=(watershed_superpixel_relsize := 1e-4),
+            superpixel_relsize=(watershed_superpixel_relsize := 3e-4),
             compactness=(watershed_compactness := 1e-4),
         )
         history, selected_suppixs, available_suppixs = find_best_superpixels(
@@ -504,20 +529,251 @@ if METRIC_SUPERPIXEL_ORACLE in args.metrics:
         superpixel_best_iou = history[-1]["iou"]
         results.append(
             {
+                "path": images_relpaths[image_idx],
                 "iou": float(superpixel_best_iou),
                 "superpixels_selection": sorted(selected_suppixs),
-                "superpixels_method": "watershed",
-                "superpixels_params": {
-                    "superpixel_relsize": watershed_superpixel_relsize,
-                    "compactness": watershed_compactness,
-                },
             },
         )
 
-    (
-        superpixel_oracle_selection_dir := rundir / "superpixel_oracle_selection"
-    ).mkdir(exist_ok=True)
+    (superpixel_oracle_selection_dir := rundir / "superpixel_oracle_selection").mkdir(exist_ok=True)
+
+    payload = {
+        "superpixels_method": "watershed",
+        "superpixels_params": {
+            "superpixel_relsize": watershed_superpixel_relsize,
+            "compactness": watershed_compactness,
+        },
+        "results": results,
+    }
     with (superpixel_oracle_selection_dir / "optimal_iou.json").open("w") as f:
-        json.dump(results, f, indent=4)
+        json.dump(payload, f, indent=4)
+
 
 # %%
+# asmap-superpixels contour distance heuristic
+
+
+def calculate_levelset_mean_dist_curve(
+    images_absolute_paths: list[str | Path],
+    anomaly_maps: np.ndarray,
+    upscale_factor: int | float,
+    min_thresh: float,
+    watershed_superpixel_relsize: float = 3e-4,
+    watershed_compactness: float = 1e-4,
+    num_levelsets: int = 500,
+):
+    from aupimo.oracles_numpy import open_image, upscale_image_asmap_mask
+
+    threshs_per_image = []
+    levelset_mean_dist_curve_per_image = []
+
+    for image_idx, asmap_original_size in enumerate(anomaly_maps):
+        image_original_size = open_image(images_absolute_paths[image_idx])
+        image, asmap, _ = upscale_image_asmap_mask(
+            image_original_size,
+            asmap_original_size,
+            None,
+            upscale_factor=upscale_factor,
+        )
+        _, __, threshs, levelset_mean_dist_curve = calculate_levelset_mean_dist_to_superpixel_boundaries_curve(
+            image,
+            asmap,
+            min_thresh,
+            watershed_superpixel_relsize,
+            watershed_compactness,
+            num_levelsets=num_levelsets,
+        )
+        threshs_per_image.append(threshs)
+        levelset_mean_dist_curve_per_image.append(levelset_mean_dist_curve)
+
+    threshs_per_image = np.array(threshs_per_image)
+    levelset_mean_dist_curve_per_image = np.array(levelset_mean_dist_curve_per_image)
+
+    return threshs_per_image, levelset_mean_dist_curve_per_image
+
+
+if METRIC_SUPERPIXEL_BOUND_DIST_HEURISTIC in args.metrics:
+    threshs_per_image, levelset_mean_dist_curve_per_image = calculate_levelset_mean_dist_curve(
+        images_abspaths[:2],
+        safe_tensor_to_numpy(asmaps)[:2],
+        upscale_factor=(upscale_factor := 2),
+        min_thresh=min_thresh,
+        watershed_superpixel_relsize=(watershed_superpixel_relsize := 3e-4),
+        watershed_compactness=(watershed_compactness := 1e-4),
+    )
+
+# %%
+# asmap-superpixels contour distance heuristic WITH MULTIPROCESSING
+
+
+def _worker_init(
+    images_absolute_paths,
+    mp_anomaly_maps,
+    mp_threshs_per_image,
+    mp_levelset_mean_dist_curve_per_image,
+    shape_anomaly_maps: tuple[int, int, int],
+    num_levelsets: int,
+):
+    from copy import deepcopy
+
+    import numpy as np
+
+    global shared_images_absolute_paths, shared_anomaly_maps, shared_threshs_per_image, shared_levelset_mean_dist_curve_per_image  # noqa: PLW0603
+
+    shared_images_absolute_paths = deepcopy(images_absolute_paths)
+    shared_anomaly_maps = np.frombuffer(mp_anomaly_maps, dtype=np.float32).reshape(shape_anomaly_maps)
+
+    num_images = shape_anomaly_maps[0]
+
+    shared_threshs_per_image = np.frombuffer(mp_threshs_per_image, dtype=np.float32).reshape(
+        (num_images, num_levelsets),
+    )
+    shared_levelset_mean_dist_curve_per_image = np.frombuffer(
+        mp_levelset_mean_dist_curve_per_image,
+        dtype=np.float32,
+    ).reshape((num_images, num_levelsets))
+
+
+def _worker_do(
+    image_idx: int,
+    upscale_factor: int | float,
+    min_thresh: float,
+    watershed_superpixel_relsize: float,
+    watershed_compactness: float,
+    num_levelsets: int,
+):
+    from aupimo.oracles_numpy import (
+        calculate_levelset_mean_dist_to_superpixel_boundaries_curve,
+        open_image,
+        upscale_image_asmap_mask,
+    )
+
+    global shared_images_absolute_paths, shared_anomaly_maps, shared_threshs_per_image, shared_levelset_mean_dist_curve_per_image  # noqa: PLW0602
+
+    image_original_size = open_image(shared_images_absolute_paths[image_idx])
+    anomaly_map_original_size = shared_anomaly_maps[image_idx]
+
+    image, anomaly_map, _ = upscale_image_asmap_mask(
+        image_original_size,
+        anomaly_map_original_size,
+        None,
+        upscale_factor=upscale_factor,
+    )
+    _, __, threshs, levelset_mean_dist_curve = calculate_levelset_mean_dist_to_superpixel_boundaries_curve(
+        image,
+        anomaly_map,
+        min_thresh=min_thresh,
+        watershed_superpixel_relsize=watershed_superpixel_relsize,
+        watershed_compactness=watershed_compactness,
+        num_levelsets=num_levelsets,
+    )
+
+    shared_threshs_per_image[image_idx, :] = threshs[:]
+    shared_levelset_mean_dist_curve_per_image[image_idx, :] = levelset_mean_dist_curve.astype(np.float32)[:]
+
+
+def calculate_levelset_mean_dist_curve_multiprocessing(
+    images_absolute_paths: list[str | Path],
+    anomaly_maps: np.ndarray,
+    upscale_factor: int | float,
+    min_thresh: float,
+    watershed_superpixel_relsize: float = 3e-4,
+    watershed_compactness: float = 1e-4,
+    num_levelsets: int = 500,
+    num_procs: int | None = None,
+):
+    import multiprocessing as mp
+    import multiprocessing.sharedctypes
+
+    if num_procs is None:
+        num_procs = mp.cpu_count() - 1
+
+    mp_anomaly_maps = mp.sharedctypes.RawArray(np.ctypeslib.as_ctypes_type(anomaly_maps.dtype), anomaly_maps.size)
+    shared_anomaly_maps = np.frombuffer(mp_anomaly_maps, dtype=anomaly_maps.dtype).reshape(anomaly_maps.shape)
+    shared_anomaly_maps[:, :, :] = anomaly_maps[:, :, :]
+
+    num_images = anomaly_maps.shape[0]
+
+    mp_threshs_per_image = mp.sharedctypes.RawArray(np.ctypeslib.as_ctypes_type(np.float32), num_images * num_levelsets)
+    shared_threshs_per_image = np.frombuffer(mp_threshs_per_image, dtype=np.float32).reshape(
+        (num_images, num_levelsets),
+    )
+
+    mp_levelset_mean_dist_curve_per_image = mp.sharedctypes.RawArray(
+        np.ctypeslib.as_ctypes_type(np.float32),
+        num_images * num_levelsets,
+    )
+    shared_levelset_mean_dist_curve_per_image = np.frombuffer(
+        mp_levelset_mean_dist_curve_per_image,
+        dtype=np.float32,
+    ).reshape((num_images, num_levelsets))
+
+    _worker_do_partial = partial(
+        _worker_do,
+        upscale_factor=upscale_factor,
+        min_thresh=min_thresh,
+        watershed_superpixel_relsize=watershed_superpixel_relsize,
+        watershed_compactness=watershed_compactness,
+        num_levelsets=num_levelsets,
+    )
+    _worker_args = [(image_index,) for image_index in range(len(images_absolute_paths))]
+
+    with mp.Pool(
+        processes=num_procs,
+        initializer=_worker_init,
+        initargs=(
+            images_absolute_paths,
+            mp_anomaly_maps,
+            mp_threshs_per_image,
+            mp_levelset_mean_dist_curve_per_image,
+            anomaly_maps.shape,
+            num_levelsets,
+        ),
+    ) as pool:
+        pool.starmap(_worker_do_partial, _worker_args)
+
+    return shared_threshs_per_image, shared_levelset_mean_dist_curve_per_image
+
+
+if METRIC_SUPERPIXEL_BOUND_DIST_HEURISTIC_PARALLEL in args.metrics:
+    threshs_per_image, levelset_mean_dist_curve_per_image = calculate_levelset_mean_dist_curve_multiprocessing(
+        images_abspaths,
+        safe_tensor_to_numpy(asmaps),
+        upscale_factor=(upscale_factor := 2.0),
+        min_thresh=min_thresh,
+        watershed_superpixel_relsize=(watershed_superpixel_relsize := 3e-4),
+        watershed_compactness=(watershed_compactness := 1e-4),
+        num_levelsets=500,
+        num_procs=None,  # None means all cpus - 1
+    )
+
+
+# %%
+# save asmap-superpixels contour distance heuristic
+
+(superpixel_bound_dist_heuristic_dir := rundir / "superpixel_bound_dist_heuristic").mkdir(exist_ok=True)
+
+if len(set(args.metrics) & ANY_METRIC_SUPERPIXEL_BOUND_DIST_HEURISTIC) > 0:
+    # order = 2% of num_thresh is a heuristic i found manually (based on num_levelsets=500)
+    # keep it as list of lists instead of ndarray because they may have different lengths
+    num_levelsets = levelset_mean_dist_curve_per_image.shape[1]
+    local_minima_idxs_per_image = [
+        sp.signal.argrelmin(levelset_mean_dist_curve, order=int(2e-2 * num_levelsets))[0].astype(int).tolist()
+        for levelset_mean_dist_curve in levelset_mean_dist_curve_per_image
+    ]
+
+    payload = {
+        "min_thresh": float(min_thresh),
+        "upscale_factor": float(upscale_factor),
+        "superpixels_method": "watershed",
+        "superpixels_params": {
+            "superpixel_relsize": float(watershed_superpixel_relsize),
+            "compactness": float(watershed_compactness),
+        },
+        "paths": images_relpaths,
+        "threshs_per_image": torch.from_numpy(threshs_per_image),
+        "levelset_mean_dist_curve_per_image": torch.from_numpy(levelset_mean_dist_curve_per_image),
+        "local_minima_idxs_per_image": local_minima_idxs_per_image,
+    }
+
+    torch.save(payload, superpixel_bound_dist_heuristic_dir / "superpixel_bound_dist_heuristic.pt")
