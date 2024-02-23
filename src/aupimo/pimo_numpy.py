@@ -90,6 +90,71 @@ def _joint_validate_threshs_shared_fpr(threshs: ndarray, shared_fpr: ndarray) ->
         raise ValueError(msg)
 
 
+# =========================================== NORMAL IMAGES FPR ===========================================
+
+
+def compute_min_thresh_at_max_fpr_normal_images(
+    anomaly_maps: ndarray,
+    masks: ndarray,
+    max_fpr: float,
+    num_threshs: int = 10_000,
+    binclf_algorithm: str = BinclfAlgorithm.NUMBA,
+    fpr_metric: str = PIMOSharedFPRMetric.MEAN_PERIMAGE_FPR,
+) -> float:
+    """Calculate the threshold at a given FPR for the normal images.
+
+    TODO(jpcbertoldo): validate & test & document this function.
+    """
+    BinclfAlgorithm.validate(binclf_algorithm)
+    PIMOSharedFPRMetric.validate(fpr_metric)
+    _validate.num_threshs(num_threshs)
+    _validate.anomaly_maps(anomaly_maps)
+    _validate.masks(masks)
+    _validate.same_shape(anomaly_maps, masks)
+    _validate_at_least_one_normal_image(masks)
+    # at least one anomalous image is NOT required to compute the threshold
+
+    # remove the anomalous images
+    image_classes = _images_classes_from_masks(masks)
+    normal_images_mask = image_classes == 0
+    anomaly_maps = anomaly_maps[normal_images_mask]
+    masks = masks[normal_images_mask]
+    del image_classes  # not needed anymore, avoid misuse
+
+    # N: number of NORMAL images, K: number of thresholds
+    # shapes are (K,) and (N, K, 2, 2)
+    threshs, binclf_curves = binclf_curve_numpy.per_image_binclf_curve(
+        anomaly_maps=anomaly_maps,
+        masks=masks,
+        algorithm=binclf_algorithm,
+        threshs_choice=BinclfThreshsChoice.MINMAX_LINSPACE,
+        threshs_given=None,
+        num_threshs=num_threshs,
+    )
+
+    fpr: ndarray
+    if fpr_metric == PIMOSharedFPRMetric.MEAN_PERIMAGE_FPR:
+        # shape -> (N, K)
+        per_image_fprs_normals = binclf_curve_numpy.per_image_fpr(binclf_curves)
+        try:
+            _validate.per_image_rate_curves(per_image_fprs_normals, nan_allowed=False, decreasing=True)
+        except ValueError as ex:
+            msg = f"Computed per-image FPR curves from normal images are invalid. Cause: {ex}"
+            raise RuntimeError(msg) from ex
+
+        # shape -> (K,)
+        fpr = per_image_fprs_normals.mean(axis=0)
+
+    else:
+        msg = f"FPR metric `{fpr_metric}` is not implemented."
+        raise NotImplementedError(msg)
+
+    # TODO(jpcbertoldo): change vocabulary to not use "shared FPR" here?
+    _, thresh_at, defacto_value = thresh_at_shared_fpr_level(threshs, fpr, max_fpr)
+    _warn_pivot_vs_defacto_difference(max_fpr, defacto_value, "FPR", rtol=1e-2)
+    return thresh_at
+
+
 # =========================================== PIMO ===========================================
 
 
@@ -143,6 +208,7 @@ def pimo_curves(
     # therefore getting a better resolution in terms of FPR quantization
     # otherwise the function `binclf_curve_numpy.per_image_binclf_curve` would have the range of thresholds
     # computed from all the images (normal + anomalous)
+    # TODO(jpcbertoldo): this is now in the funcion below; remove redundant code?
     threshs = binclf_curve_numpy._get_threshs_minmax_linspace(  # noqa: SLF001
         anomaly_maps[image_classes == 0],
         num_threshs,
@@ -260,19 +326,8 @@ def aupimo_scores(
         fpr_upper_bound,
     )
 
-    if not np.isclose(fpr_lower_bound_defacto, fpr_lower_bound, rtol=(rtol := 1e-2)):
-        msg = (
-            "The lower bound of the shared FPR integration range is not exactly achieved. "
-            f"Expected {fpr_lower_bound} but got {fpr_lower_bound_defacto}, which is not within {rtol=}."
-        )
-        warnings.warn(msg, RuntimeWarning, stacklevel=1)
-
-    if not np.isclose(fpr_upper_bound_defacto, fpr_upper_bound, rtol=rtol):
-        msg = (
-            "The upper bound of the shared FPR integration range is not exactly achieved. "
-            f"Expected {fpr_upper_bound} but got {fpr_upper_bound_defacto}, which is not within {rtol=}."
-        )
-        warnings.warn(msg, RuntimeWarning, stacklevel=1)
+    _warn_pivot_vs_defacto_difference(fpr_lower_bound, fpr_lower_bound_defacto, "FPR Lower Bound", rtol=1e-2)
+    _warn_pivot_vs_defacto_difference(fpr_upper_bound, fpr_upper_bound_defacto, "FPR Upper Bound", rtol=1e-2)
 
     # reminder: fpr lower/upper bound is threshold upper/lower bound (reversed)
     thresh_lower_bound_idx = fpr_upper_bound_thresh_idx
@@ -350,6 +405,16 @@ def aupimo_scores(
     aucs = (aucs / normalization_factor).clip(0, 1)
 
     return threshs, shared_fpr, per_image_tprs, image_classes, aucs, num_points_integral
+
+
+def _warn_pivot_vs_defacto_difference(pivot_value: float, defacto_value: float, name: str, rtol: float = 1e-2) -> None:
+    if not np.isclose(defacto_value, pivot_value, rtol=rtol):
+        msg = (
+            # "The lower bound of the shared FPR integration range is not exactly achieved. "
+            f"The pivot value of `{name}` was NOT exactly achieved."
+            f"Expected `{pivot_value}` but got `{defacto_value}`, which is NOT within {rtol=}."
+        )
+        warnings.warn(msg, RuntimeWarning, stacklevel=2)
 
 
 # =========================================== AUX ===========================================
