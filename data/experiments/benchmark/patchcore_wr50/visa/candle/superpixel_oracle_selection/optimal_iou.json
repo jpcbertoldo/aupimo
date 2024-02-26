@@ -1,0 +1,1941 @@
+{
+    "superpixels_method": "watershed",
+    "superpixels_params": {
+        "superpixel_relsize": 0.0003,
+        "compactness": 0.0001
+    },
+    "results": [
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/000.JPG",
+            "iou": 0.6910866910866911,
+            "superpixels_selection": [
+                805,
+                806,
+                867,
+                927,
+                928
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/001.JPG",
+            "iou": 0.8193202146690519,
+            "superpixels_selection": [
+                2724,
+                2725,
+                2784,
+                2785,
+                2786,
+                2787,
+                2845,
+                2846,
+                2848
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/002.JPG",
+            "iou": 0.8221055701370662,
+            "superpixels_selection": [
+                2575,
+                2576,
+                2636,
+                2637,
+                2698,
+                2699,
+                2700,
+                2760,
+                2761
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/003.JPG",
+            "iou": 0.6273318872017354,
+            "superpixels_selection": [
+                748,
+                750,
+                810,
+                811,
+                871
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/004.JPG",
+            "iou": 0.7118581455485777,
+            "superpixels_selection": [
+                842,
+                843,
+                902,
+                903,
+                904,
+                905,
+                963,
+                964,
+                965,
+                966,
+                1025,
+                1026,
+                1085,
+                1086
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/005.JPG",
+            "iou": 0.7686004588659456,
+            "superpixels_selection": [
+                770,
+                771,
+                832,
+                892,
+                893,
+                953,
+                1015,
+                1076
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/006.JPG",
+            "iou": 0.8412017167381974,
+            "superpixels_selection": [
+                2910,
+                2970,
+                2971,
+                3030,
+                3031,
+                3032,
+                3033,
+                3090,
+                3091,
+                3092,
+                3093,
+                3094,
+                3095,
+                3153,
+                3154
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/007.JPG",
+            "iou": 0.7013475399561266,
+            "superpixels_selection": [
+                748,
+                749,
+                750,
+                751,
+                809,
+                810,
+                811,
+                812,
+                871
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/008.JPG",
+            "iou": 0.7126483831354892,
+            "superpixels_selection": [
+                872,
+                873,
+                874,
+                933,
+                934,
+                935,
+                995,
+                996
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/009.JPG",
+            "iou": 0.8236136689175363,
+            "superpixels_selection": [
+                2785,
+                2846,
+                2847,
+                2848,
+                2906,
+                2907,
+                2908,
+                2909,
+                2910,
+                2969,
+                2970
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/010.JPG",
+            "iou": 0.6974849450938718,
+            "superpixels_selection": [
+                320,
+                321,
+                322,
+                381,
+                383,
+                443,
+                1908,
+                1909,
+                1970,
+                1971,
+                1972,
+                2033
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/011.JPG",
+            "iou": 0.7336756187467088,
+            "superpixels_selection": [
+                2916,
+                2917,
+                2918,
+                2976,
+                2977,
+                2978,
+                2979,
+                3034,
+                3035,
+                3036,
+                3037,
+                3038,
+                3039,
+                3040,
+                3093,
+                3094,
+                3095,
+                3096,
+                3097,
+                3098
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/012.JPG",
+            "iou": 0.7212238950947062,
+            "superpixels_selection": [
+                1196,
+                1197,
+                1198,
+                1199,
+                1258,
+                1259,
+                1319,
+                1320
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/013.JPG",
+            "iou": 0.6921653300431833,
+            "superpixels_selection": [
+                1937,
+                2782,
+                2843,
+                2905
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/014.JPG",
+            "iou": 0.707936507936508,
+            "superpixels_selection": [
+                908,
+                969,
+                1029,
+                1030,
+                1090,
+                1091,
+                1151,
+                1152,
+                1212,
+                1272,
+                1273,
+                1333
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/015.JPG",
+            "iou": 0.674190800681431,
+            "superpixels_selection": [
+                387,
+                388,
+                449,
+                450,
+                510,
+                511,
+                512,
+                572
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/016.JPG",
+            "iou": 0.545663852647736,
+            "superpixels_selection": [
+                449,
+                510,
+                511,
+                572
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/017.JPG",
+            "iou": 0.6188186813186813,
+            "superpixels_selection": [
+                2343,
+                2344,
+                2404,
+                2405,
+                2465,
+                2466,
+                2526,
+                2527,
+                2588
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/018.JPG",
+            "iou": 0.7257549717652836,
+            "superpixels_selection": [
+                1210,
+                1211,
+                1212,
+                1270,
+                1271,
+                1272,
+                1331,
+                1332,
+                1333,
+                1392
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/019.JPG",
+            "iou": 0.7614489003880983,
+            "superpixels_selection": [
+                2885,
+                2945,
+                2946,
+                2947,
+                2948,
+                3006,
+                3007,
+                3008,
+                3009
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/020.JPG",
+            "iou": 0.45857642940490084,
+            "superpixels_selection": [
+                378,
+                437,
+                438
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/021.JPG",
+            "iou": 0.6923990498812351,
+            "superpixels_selection": [
+                2354,
+                2355,
+                2414,
+                2415,
+                2416,
+                2475,
+                2476,
+                2536,
+                2537
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/022.JPG",
+            "iou": 0.5405523893029373,
+            "superpixels_selection": [
+                2144,
+                2145,
+                2205,
+                2206,
+                2265,
+                2266,
+                2509,
+                2710
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/023.JPG",
+            "iou": 0.6986535584526609,
+            "superpixels_selection": [
+                1273,
+                1332,
+                1333,
+                1334,
+                1392,
+                1393,
+                1394,
+                1451,
+                1452,
+                1453,
+                1511,
+                1512,
+                1513
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/024.JPG",
+            "iou": 0.5238290879211175,
+            "superpixels_selection": [
+                2221,
+                2222,
+                2282,
+                2283,
+                2342,
+                2343,
+                2344,
+                2405,
+                2466
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/025.JPG",
+            "iou": 0.5217259191735035,
+            "superpixels_selection": [
+                1936,
+                1937,
+                1938,
+                1940,
+                1997,
+                1998,
+                1999,
+                2000,
+                2059,
+                2061
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/026.JPG",
+            "iou": 0.639807576668671,
+            "superpixels_selection": [
+                1294,
+                1295,
+                1353,
+                1354,
+                1355,
+                1356,
+                1357,
+                1417
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/027.JPG",
+            "iou": 0.4061032863849765,
+            "superpixels_selection": [
+                406,
+                465,
+                525
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/028.JPG",
+            "iou": 0.32063165121867493,
+            "superpixels_selection": [
+                259,
+                318,
+                319,
+                320,
+                321,
+                322
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/029.JPG",
+            "iou": 0.281893747741236,
+            "superpixels_selection": [
+                574,
+                634,
+                635,
+                696,
+                697,
+                2536,
+                2597,
+                2599,
+                2781,
+                2843
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/030.JPG",
+            "iou": 0.7415223225176872,
+            "superpixels_selection": [
+                2546,
+                2606,
+                2607,
+                2667,
+                2668,
+                2729,
+                2790,
+                2851,
+                2912,
+                2973,
+                2974,
+                3034,
+                3095,
+                3156,
+                3217,
+                3218,
+                3278,
+                3339
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/031.JPG",
+            "iou": 0.5339805825242718,
+            "superpixels_selection": [
+                2518,
+                2579,
+                2640,
+                2641,
+                2701,
+                2702,
+                2763,
+                2824,
+                2825
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/032.JPG",
+            "iou": 0.6722763507528786,
+            "superpixels_selection": [
+                2518,
+                2579
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/033.JPG",
+            "iou": 0.5125425828429855,
+            "superpixels_selection": [
+                933,
+                994,
+                1055,
+                1115,
+                1116,
+                1177
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/034.JPG",
+            "iou": 0.5399773499433749,
+            "superpixels_selection": [
+                959,
+                1020,
+                1081,
+                1142,
+                1203,
+                1451,
+                1452,
+                1453,
+                1512,
+                1513,
+                1569,
+                1570,
+                1571
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/035.JPG",
+            "iou": 0.74981738495252,
+            "superpixels_selection": [
+                2822,
+                2883,
+                2944,
+                3005,
+                3006,
+                3066,
+                3067
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/036.JPG",
+            "iou": 0.7039594843462247,
+            "superpixels_selection": [
+                958,
+                959,
+                1020,
+                1081,
+                1082
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/037.JPG",
+            "iou": 0.75,
+            "superpixels_selection": [
+                2546,
+                2607,
+                2668,
+                2729,
+                2730
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/038.JPG",
+            "iou": 0.45147437732608076,
+            "superpixels_selection": [
+                2607,
+                2668,
+                2729,
+                2730,
+                2790,
+                2791,
+                2851,
+                2912,
+                2973
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/039.JPG",
+            "iou": 0.5332088971846322,
+            "superpixels_selection": [
+                2580,
+                2581,
+                2641,
+                2642,
+                2701,
+                2702,
+                2703,
+                2762,
+                2763,
+                2764,
+                2823,
+                2824,
+                2884,
+                2885
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/040.JPG",
+            "iou": 0.18636363636363637,
+            "superpixels_selection": [
+                1968,
+                1969,
+                2028
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/041.JPG",
+            "iou": 0.2697456492637216,
+            "superpixels_selection": [
+                2551,
+                2571,
+                2631,
+                2632
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/042.JPG",
+            "iou": 0.3047034764826176,
+            "superpixels_selection": [
+                772,
+                833,
+                834
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/043.JPG",
+            "iou": 0.09263657957244656,
+            "superpixels_selection": [
+                2307,
+                2367,
+                2368
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/044.JPG",
+            "iou": 0.04588607594936709,
+            "superpixels_selection": [
+                2144,
+                2449,
+                2450,
+                2633,
+                2702
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/045.JPG",
+            "iou": 0.09281961471103327,
+            "superpixels_selection": [
+                656,
+                657,
+                717
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/046.JPG",
+            "iou": 0.2198581560283688,
+            "superpixels_selection": [
+                2209,
+                2210
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/047.JPG",
+            "iou": 0.10354223433242507,
+            "superpixels_selection": [
+                1324,
+                1325
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/048.JPG",
+            "iou": 0.05263157894736842,
+            "superpixels_selection": [
+                2060,
+                2121,
+                2122
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/049.JPG",
+            "iou": 0.18705035971223022,
+            "superpixels_selection": [
+                2096,
+                2219
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/050.JPG",
+            "iou": 0.6315942873797726,
+            "superpixels_selection": [
+                2485,
+                2546,
+                2547,
+                2607,
+                2667,
+                2668,
+                2728,
+                2789
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/051.JPG",
+            "iou": 0.22422680412371135,
+            "superpixels_selection": [
+                1075,
+                1076,
+                1137
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/052.JPG",
+            "iou": 0.2602739726027397,
+            "superpixels_selection": [
+                1073,
+                1089,
+                1090
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/053.JPG",
+            "iou": 0.32491928382741414,
+            "superpixels_selection": [
+                1241,
+                1242,
+                1303,
+                1480,
+                1482,
+                1484,
+                1544,
+                2822
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/054.JPG",
+            "iou": 0.06285714285714286,
+            "superpixels_selection": [
+                2828,
+                2889
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/055.JPG",
+            "iou": 0.3035143769968051,
+            "superpixels_selection": [
+                2370,
+                2432
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/056.JPG",
+            "iou": 0.04642857142857143,
+            "superpixels_selection": [
+                513,
+                574,
+                2889
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/057.JPG",
+            "iou": 0.6488095238095238,
+            "superpixels_selection": [
+                1148,
+                1149
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/058.JPG",
+            "iou": 0.10830324909747292,
+            "superpixels_selection": [
+                2770,
+                2831
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/059.JPG",
+            "iou": 0.057007125890736345,
+            "superpixels_selection": [
+                2182,
+                2183
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/060.JPG",
+            "iou": 0.8280127693535515,
+            "superpixels_selection": [
+                1910,
+                1911,
+                1912,
+                1970,
+                1971,
+                1972,
+                1973,
+                2031,
+                2032,
+                2033,
+                2034,
+                2093
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/061.JPG",
+            "iou": 0.807864350358889,
+            "superpixels_selection": [
+                2735,
+                2736,
+                2795,
+                2796,
+                2797,
+                2798,
+                2799,
+                2856,
+                2857,
+                2858,
+                2859,
+                2860,
+                2916,
+                2917,
+                2918,
+                2919,
+                2920,
+                2978,
+                2979,
+                2980
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/062.JPG",
+            "iou": 0.7920428462127008,
+            "superpixels_selection": [
+                1936,
+                1937,
+                1997,
+                1998,
+                1999,
+                2059,
+                2060,
+                2120,
+                2121,
+                2181,
+                2182,
+                2183,
+                2242,
+                2243,
+                2303,
+                2304
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/063.JPG",
+            "iou": 0.8847704847704848,
+            "superpixels_selection": [
+                408,
+                410,
+                465,
+                468,
+                469,
+                470,
+                471,
+                472,
+                525,
+                526,
+                527,
+                528,
+                529,
+                530,
+                531,
+                532,
+                533,
+                587,
+                588,
+                589,
+                590,
+                591,
+                592,
+                593,
+                648,
+                649,
+                653
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/064.JPG",
+            "iou": 0.9088339222614841,
+            "superpixels_selection": [
+                1911,
+                1912,
+                1972,
+                1973,
+                2033,
+                2034,
+                2094,
+                2095,
+                2096,
+                2156,
+                2157,
+                2217,
+                2218,
+                2219,
+                2278,
+                2279,
+                2280
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/065.JPG",
+            "iou": 0.8359818388195233,
+            "superpixels_selection": [
+                1906,
+                1907,
+                1966,
+                1967,
+                1968,
+                1969,
+                2026,
+                2027,
+                2028,
+                2029,
+                2086,
+                2087,
+                2088,
+                2089,
+                2148,
+                2149
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/066.JPG",
+            "iou": 0.8612540628385699,
+            "superpixels_selection": [
+                2396,
+                2456,
+                2457,
+                2458,
+                2459,
+                2517,
+                2518,
+                2519,
+                2520,
+                2521,
+                2577,
+                2578,
+                2579,
+                2580,
+                2581,
+                2582,
+                2638,
+                2639,
+                2640,
+                2641,
+                2642,
+                2643,
+                2699,
+                2700,
+                2701,
+                2702,
+                2703,
+                2704,
+                2763,
+                2764,
+                2765
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/067.JPG",
+            "iou": 0.917045395183618,
+            "superpixels_selection": [
+                535,
+                536,
+                537,
+                594,
+                595,
+                596,
+                597,
+                598,
+                599,
+                600,
+                601,
+                654,
+                655,
+                656,
+                657,
+                658,
+                659,
+                660,
+                661,
+                662,
+                715,
+                716,
+                717,
+                718,
+                719,
+                720,
+                721,
+                722,
+                776,
+                777,
+                778,
+                779,
+                780,
+                781,
+                782,
+                837,
+                838,
+                839,
+                840,
+                841,
+                842
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/068.JPG",
+            "iou": 0.9276014222679175,
+            "superpixels_selection": [
+                385,
+                386,
+                387,
+                445,
+                446,
+                447,
+                448,
+                449,
+                450,
+                451,
+                452,
+                506,
+                507,
+                508,
+                509,
+                510,
+                511,
+                512,
+                568,
+                569,
+                570,
+                571,
+                572,
+                573,
+                574,
+                630,
+                631,
+                632,
+                633,
+                634,
+                635,
+                636,
+                637,
+                692,
+                693,
+                694,
+                695,
+                696,
+                697,
+                698,
+                699,
+                753,
+                754,
+                755,
+                756,
+                757,
+                758,
+                759,
+                815,
+                816,
+                817,
+                820
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/069.JPG",
+            "iou": 0.7880766976471574,
+            "superpixels_selection": [
+                381,
+                382,
+                620,
+                621,
+                681,
+                682,
+                683,
+                741,
+                742,
+                743,
+                744,
+                802,
+                803,
+                804,
+                805,
+                862,
+                863,
+                864,
+                865,
+                924,
+                925,
+                926,
+                985,
+                986,
+                987,
+                1048
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/070.JPG",
+            "iou": 0.30902869176098974,
+            "superpixels_selection": [
+                2113,
+                2114,
+                2172,
+                2233,
+                2235,
+                2236,
+                2293,
+                2295,
+                2354,
+                2355,
+                2356
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/071.JPG",
+            "iou": 0.12875536480686695,
+            "superpixels_selection": [
+                721,
+                723,
+                724,
+                725,
+                784,
+                785,
+                786,
+                843,
+                844,
+                846,
+                906,
+                907,
+                1207
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/072.JPG",
+            "iou": 0.1796276013143483,
+            "superpixels_selection": [
+                636,
+                697,
+                758,
+                878,
+                879,
+                939,
+                941,
+                999,
+                1000,
+                1002,
+                1059,
+                1061,
+                1121,
+                1182
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/073.JPG",
+            "iou": 0.13333333333333333,
+            "superpixels_selection": [
+                2333,
+                2391,
+                2516
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/074.JPG",
+            "iou": 0.2860708936595107,
+            "superpixels_selection": [
+                622,
+                623,
+                624,
+                625,
+                628,
+                683,
+                684,
+                687,
+                744,
+                745,
+                747,
+                805,
+                806,
+                808,
+                865,
+                866,
+                867,
+                930,
+                1109,
+                1111,
+                1170
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/075.JPG",
+            "iou": 0.171712158808933,
+            "superpixels_selection": [
+                2300,
+                2361,
+                2362,
+                2423,
+                2481,
+                2482,
+                2542,
+                2543,
+                2546,
+                2602,
+                2603
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/076.JPG",
+            "iou": 0.1883513386566463,
+            "superpixels_selection": [
+                2214,
+                2215,
+                2332,
+                2333,
+                2334,
+                2336,
+                2393,
+                2395,
+                2397,
+                2647
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/077.JPG",
+            "iou": 0.2387295081967213,
+            "superpixels_selection": [
+                2184,
+                2243,
+                2246,
+                2305,
+                2364,
+                2366,
+                2367,
+                2426,
+                2427,
+                2487,
+                2488,
+                2729
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/078.JPG",
+            "iou": 0.3795659078877713,
+            "superpixels_selection": [
+                533,
+                534,
+                594,
+                595,
+                596,
+                597,
+                657
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/079.JPG",
+            "iou": 0.27970939283860924,
+            "superpixels_selection": [
+                2179,
+                2299,
+                2300,
+                2301,
+                2360,
+                2361,
+                2362,
+                2422,
+                2483,
+                2604
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/080.JPG",
+            "iou": 0.22105263157894736,
+            "superpixels_selection": [
+                2153,
+                2212,
+                2214,
+                2273,
+                2275,
+                2276,
+                2335,
+                2395,
+                2456,
+                2457
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/081.JPG",
+            "iou": 0.32016829533116176,
+            "superpixels_selection": [
+                625,
+                628,
+                686,
+                687,
+                688,
+                689,
+                690,
+                691,
+                747,
+                748,
+                749,
+                750,
+                751,
+                752,
+                809,
+                810,
+                811,
+                812,
+                813,
+                872,
+                873
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/082.JPG",
+            "iou": 0.23143939393939394,
+            "superpixels_selection": [
+                1966,
+                1993,
+                1995,
+                1996,
+                2053,
+                2056,
+                2117,
+                2177,
+                2234
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/083.JPG",
+            "iou": 0.3182135380321005,
+            "superpixels_selection": [
+                387,
+                449,
+                510,
+                572,
+                635,
+                695
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/084.JPG",
+            "iou": 0.2936074526180533,
+            "superpixels_selection": [
+                2121,
+                2122,
+                2183,
+                2184,
+                2243,
+                2244,
+                2245,
+                2246,
+                2307
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/085.JPG",
+            "iou": 0.861388550548112,
+            "superpixels_selection": [
+                2672,
+                2673,
+                2674,
+                2732,
+                2733,
+                2734,
+                2735,
+                2793,
+                2794,
+                2795,
+                2854,
+                2855,
+                2856,
+                2916,
+                2917,
+                2918,
+                2977,
+                2978,
+                2979,
+                3039
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/086.JPG",
+            "iou": 0.8759322628761955,
+            "superpixels_selection": [
+                346,
+                347,
+                406,
+                407,
+                408,
+                466,
+                467,
+                468,
+                469,
+                470,
+                527,
+                528,
+                529,
+                530,
+                531,
+                589,
+                590,
+                591,
+                592,
+                650,
+                651,
+                652,
+                653,
+                712,
+                713,
+                714
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/087.JPG",
+            "iou": 0.8459726801695714,
+            "superpixels_selection": [
+                2398,
+                2457,
+                2458,
+                2459,
+                2460,
+                2519,
+                2520,
+                2521,
+                2580,
+                2581,
+                2641,
+                2642
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/088.JPG",
+            "iou": 0.8563320326356865,
+            "superpixels_selection": [
+                1909,
+                1966,
+                1967,
+                1968,
+                1969,
+                1975,
+                2025,
+                2026,
+                2027,
+                2028,
+                2029,
+                2037,
+                2085,
+                2086,
+                2087,
+                2088,
+                2089,
+                2145,
+                2146,
+                2147,
+                2148,
+                2149,
+                2150,
+                2206,
+                2207,
+                2208,
+                2209,
+                2210,
+                2267,
+                2268,
+                2269,
+                2270
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/089.JPG",
+            "iou": 0.7302680946858585,
+            "superpixels_selection": [
+                1146,
+                1147,
+                1207,
+                1208,
+                1268,
+                1269,
+                1321,
+                1325,
+                1326,
+                1327,
+                1328,
+                1329,
+                1330,
+                1382,
+                1384,
+                1385,
+                1386,
+                1387,
+                1388,
+                1389,
+                1390,
+                2432,
+                2433,
+                2493,
+                2494,
+                2553,
+                2554,
+                2555,
+                2615,
+                2616,
+                2676
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/090.JPG",
+            "iou": 0.833794648741268,
+            "superpixels_selection": [
+                2279,
+                2339,
+                2340,
+                2400,
+                2401,
+                2462,
+                2463,
+                2523,
+                2524,
+                2525,
+                2526,
+                2527,
+                2585,
+                2586,
+                2587,
+                2588,
+                2646
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/091.JPG",
+            "iou": 0.8587582496111649,
+            "superpixels_selection": [
+                2516,
+                2575,
+                2576,
+                2577,
+                2578,
+                2636,
+                2637,
+                2638,
+                2639,
+                2641,
+                2642,
+                2697,
+                2698,
+                2699,
+                2700,
+                2702,
+                2703,
+                2758,
+                2759,
+                2760,
+                2761,
+                2763,
+                2764,
+                2820,
+                2821,
+                2822,
+                2824,
+                2825,
+                2826,
+                2882,
+                2883,
+                2884,
+                2885,
+                2886,
+                2887,
+                2943,
+                2944,
+                2945,
+                2946,
+                2947,
+                2948,
+                3003,
+                3004,
+                3005,
+                3006,
+                3007,
+                3008,
+                3009
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/092.JPG",
+            "iou": 0.8129316960859555,
+            "superpixels_selection": [
+                778,
+                779,
+                780,
+                838,
+                839,
+                840,
+                841,
+                899,
+                900,
+                901,
+                960,
+                961
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/093.JPG",
+            "iou": 0.7405017921146954,
+            "superpixels_selection": [
+                721,
+                722,
+                782,
+                783,
+                967,
+                968,
+                1028,
+                1029,
+                1030
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/094.JPG",
+            "iou": 0.8859425068499512,
+            "superpixels_selection": [
+                2146,
+                2148,
+                2206,
+                2207,
+                2208,
+                2209,
+                2266,
+                2267,
+                2268,
+                2269,
+                2270,
+                2271,
+                2327,
+                2328,
+                2329,
+                2330,
+                2331,
+                2332,
+                2388,
+                2389,
+                2390,
+                2391,
+                2392,
+                2393,
+                2449,
+                2450,
+                2451,
+                2452,
+                2453,
+                2509,
+                2510,
+                2511,
+                2512,
+                2513,
+                2514,
+                2570,
+                2571,
+                2572,
+                2573,
+                2574,
+                2631,
+                2632,
+                2633,
+                2634,
+                2635,
+                2694,
+                2695,
+                2696
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/095.JPG",
+            "iou": 0.7726067036411864,
+            "superpixels_selection": [
+                467,
+                468,
+                527,
+                528,
+                529,
+                588,
+                589,
+                648,
+                649,
+                650
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/096.JPG",
+            "iou": 0.7799717912552891,
+            "superpixels_selection": [
+                2030,
+                2031,
+                2089,
+                2090,
+                2091,
+                2151,
+                2152,
+                2213
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/097.JPG",
+            "iou": 0.8697341021944578,
+            "superpixels_selection": [
+                1993,
+                1994,
+                2053,
+                2054,
+                2112,
+                2113,
+                2114,
+                2115,
+                2172,
+                2173,
+                2174,
+                2175,
+                2233,
+                2234,
+                2235,
+                2236,
+                2293,
+                2294,
+                2295,
+                2296,
+                2297,
+                2298,
+                2300,
+                2354,
+                2355,
+                2356,
+                2357,
+                2358,
+                2359,
+                2360,
+                2361,
+                2414,
+                2415,
+                2416,
+                2417,
+                2418,
+                2419,
+                2420,
+                2421,
+                2422,
+                2423,
+                2476,
+                2477,
+                2478,
+                2480,
+                2481,
+                2482,
+                2483,
+                2484,
+                2537,
+                2538,
+                2543,
+                2544,
+                2545,
+                2598
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/098.JPG",
+            "iou": 0.8963915684172918,
+            "superpixels_selection": [
+                291,
+                349,
+                350,
+                351,
+                352,
+                353,
+                354,
+                410,
+                411,
+                412,
+                413,
+                414,
+                415,
+                416,
+                417,
+                471,
+                472,
+                473,
+                474,
+                475,
+                476,
+                477,
+                478,
+                479,
+                534,
+                535,
+                536,
+                537,
+                538,
+                539,
+                540,
+                596,
+                597,
+                598,
+                599,
+                600,
+                601,
+                602,
+                662,
+                663,
+                724,
+                725,
+                786
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/candle/test/bad/099.JPG",
+            "iou": 0.9021049114600735,
+            "superpixels_selection": [
+                1908,
+                1909,
+                1968,
+                1969,
+                1970,
+                1974,
+                1975,
+                2029,
+                2030,
+                2031,
+                2032,
+                2090,
+                2091,
+                2092,
+                2152
+            ]
+        },
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ]
+}

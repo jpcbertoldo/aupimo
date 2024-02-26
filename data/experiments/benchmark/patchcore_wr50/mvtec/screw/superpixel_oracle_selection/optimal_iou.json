@@ -1,0 +1,2326 @@
+{
+    "superpixels_method": "watershed",
+    "superpixels_params": {
+        "superpixel_relsize": 0.0003,
+        "compactness": 0.0001
+    },
+    "results": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+            "path": "MVTec/screw/test/manipulated_front/000.png",
+            "iou": 0.6759581881533101,
+            "superpixels_selection": [
+                2747,
+                2748,
+                2749,
+                2750,
+                2751,
+                2804,
+                2805,
+                2806,
+                2807,
+                2861,
+                2862,
+                2917,
+                2918
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/001.png",
+            "iou": 0.5129288910989558,
+            "superpixels_selection": [
+                2668,
+                2725,
+                2726,
+                2781,
+                2782,
+                2783,
+                2839,
+                2840,
+                2841,
+                2896,
+                2897,
+                2898
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/002.png",
+            "iou": 0.5368723098995696,
+            "superpixels_selection": [
+                2933,
+                2990,
+                2991,
+                2992,
+                3048,
+                3049,
+                3105,
+                3106,
+                3161,
+                3162,
+                3220
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/003.png",
+            "iou": 0.7431372549019608,
+            "superpixels_selection": [
+                916,
+                917,
+                918,
+                919,
+                920,
+                974,
+                975,
+                976,
+                977,
+                1031,
+                1032,
+                1033,
+                1034,
+                1088,
+                1089,
+                1091
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/004.png",
+            "iou": 0.4978562421185372,
+            "superpixels_selection": [
+                329,
+                386,
+                387,
+                388,
+                443,
+                444,
+                445,
+                499,
+                500,
+                501,
+                556
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/005.png",
+            "iou": 0.4899167437557817,
+            "superpixels_selection": [
+                2832,
+                2887,
+                2888,
+                2889,
+                2945,
+                2946,
+                2947,
+                3002,
+                3003,
+                3004,
+                3005,
+                3060,
+                3061
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/006.png",
+            "iou": 0.7531070745697896,
+            "superpixels_selection": [
+                2517,
+                2518,
+                2573,
+                2574,
+                2575,
+                2629,
+                2630,
+                2631,
+                2632,
+                2686,
+                2687,
+                2688,
+                2745
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/007.png",
+            "iou": 0.6682926829268293,
+            "superpixels_selection": [
+                2286,
+                2287,
+                2288,
+                2289,
+                2342,
+                2343,
+                2344,
+                2345,
+                2346,
+                2347,
+                2348,
+                2399,
+                2400,
+                2401,
+                2402,
+                2403,
+                2404,
+                2405
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/008.png",
+            "iou": 0.6535645472061657,
+            "superpixels_selection": [
+                194,
+                195,
+                250,
+                251,
+                252,
+                253,
+                308,
+                309,
+                310,
+                365,
+                366,
+                367,
+                423,
+                424,
+                480
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/009.png",
+            "iou": 0.8626519491407014,
+            "superpixels_selection": [
+                2404,
+                2405,
+                2461,
+                2462,
+                2463,
+                2464,
+                2465,
+                2517,
+                2518,
+                2519,
+                2520,
+                2521,
+                2522,
+                2573,
+                2574,
+                2575,
+                2576,
+                2630,
+                2631,
+                2632,
+                2687,
+                2688,
+                2689
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/010.png",
+            "iou": 0.7171442687747036,
+            "superpixels_selection": [
+                2818,
+                2819,
+                2873,
+                2874,
+                2875,
+                2876,
+                2930,
+                2931,
+                2932,
+                2987,
+                2988,
+                2989,
+                2990,
+                3045,
+                3102
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/011.png",
+            "iou": 0.7276029055690073,
+            "superpixels_selection": [
+                850,
+                904,
+                905,
+                906,
+                907,
+                908,
+                961,
+                962,
+                963,
+                964,
+                1020,
+                1021
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/012.png",
+            "iou": 0.6234203875315922,
+            "superpixels_selection": [
+                2933,
+                2988,
+                2989,
+                3045,
+                3046,
+                3103
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/013.png",
+            "iou": 0.6043136464422495,
+            "superpixels_selection": [
+                2555,
+                2668,
+                2669,
+                2670,
+                2725,
+                2726,
+                2727,
+                2728,
+                2782,
+                2783,
+                2784,
+                2785,
+                2839,
+                2840
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/014.png",
+            "iou": 0.5875770723909568,
+            "superpixels_selection": [
+                297,
+                353,
+                354,
+                355,
+                356,
+                357,
+                411,
+                412,
+                413,
+                468,
+                469,
+                470
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/015.png",
+            "iou": 0.7626281807823775,
+            "superpixels_selection": [
+                1716,
+                1717,
+                1771,
+                1772,
+                1773,
+                1774,
+                1775,
+                1827,
+                1828,
+                1829,
+                1830,
+                1831,
+                1832,
+                1886,
+                1889,
+                1943
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/016.png",
+            "iou": 0.6995186522262334,
+            "superpixels_selection": [
+                2533,
+                2534,
+                2589,
+                2590,
+                2591,
+                2646,
+                2647,
+                2648,
+                2703,
+                2704,
+                2760,
+                2816,
+                2817,
+                2873,
+                2874,
+                2929,
+                2930,
+                2931,
+                2986,
+                2987,
+                2988
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/017.png",
+            "iou": 0.46545454545454545,
+            "superpixels_selection": [
+                736,
+                792,
+                793,
+                794,
+                850,
+                907
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/018.png",
+            "iou": 0.6244791666666667,
+            "superpixels_selection": [
+                1705,
+                1706,
+                1762,
+                1763,
+                1764,
+                1819,
+                1820,
+                1821,
+                1822,
+                1823,
+                1875,
+                1876,
+                1879
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/019.png",
+            "iou": 0.7147922998986829,
+            "superpixels_selection": [
+                1485,
+                1542,
+                1543,
+                1544,
+                1599,
+                1600,
+                1601
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/020.png",
+            "iou": 0.4567779960707269,
+            "superpixels_selection": [
+                2633,
+                2689,
+                2746,
+                2747,
+                2802,
+                2803
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/021.png",
+            "iou": 0.4065934065934066,
+            "superpixels_selection": [
+                677,
+                678,
+                679,
+                733,
+                734,
+                735,
+                737,
+                792
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/022.png",
+            "iou": 0.5458758109360519,
+            "superpixels_selection": [
+                242,
+                298,
+                299,
+                300,
+                356,
+                357,
+                413
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/manipulated_front/023.png",
+            "iou": 0.6146788990825688,
+            "superpixels_selection": [
+                2056,
+                2057,
+                2058,
+                2112,
+                2113,
+                2114,
+                2115,
+                2169,
+                2170
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/000.png",
+            "iou": 0.8614478697609975,
+            "superpixels_selection": [
+                644,
+                700,
+                701,
+                702,
+                756,
+                757,
+                758,
+                759,
+                813,
+                814,
+                815
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/001.png",
+            "iou": 0.8050822122571002,
+            "superpixels_selection": [
+                1647,
+                1703,
+                1704,
+                1759,
+                1760,
+                1761,
+                1816,
+                1817,
+                1818,
+                1874,
+                1875
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/002.png",
+            "iou": 0.7055335968379447,
+            "superpixels_selection": [
+                644,
+                700,
+                701,
+                702,
+                756,
+                757,
+                758,
+                813,
+                814,
+                815,
+                870
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/003.png",
+            "iou": 0.8255874673629243,
+            "superpixels_selection": [
+                376,
+                377,
+                378,
+                433,
+                434,
+                435
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/004.png",
+            "iou": 0.7881788178817882,
+            "superpixels_selection": [
+                664,
+                665,
+                666,
+                667,
+                722,
+                723,
+                724,
+                725,
+                781,
+                782,
+                783
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/005.png",
+            "iou": 0.7196652719665272,
+            "superpixels_selection": [
+                1761,
+                1817,
+                1818,
+                1874
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/006.png",
+            "iou": 0.8504775900073476,
+            "superpixels_selection": [
+                2526,
+                2527,
+                2583,
+                2584,
+                2585,
+                2641,
+                2642,
+                2643,
+                2698,
+                2699
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/007.png",
+            "iou": 0.6796363636363636,
+            "superpixels_selection": [
+                1431,
+                1487,
+                1488,
+                1544,
+                1545,
+                1546,
+                1601,
+                1602,
+                1603,
+                1659
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/008.png",
+            "iou": 0.7478791092258749,
+            "superpixels_selection": [
+                868,
+                869,
+                870,
+                871,
+                924,
+                925,
+                926,
+                927,
+                981,
+                982,
+                983
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/009.png",
+            "iou": 0.7710843373493976,
+            "superpixels_selection": [
+                255,
+                309,
+                310,
+                311,
+                312,
+                313,
+                314,
+                367,
+                368,
+                369,
+                370,
+                371,
+                427
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/010.png",
+            "iou": 0.8945808636748518,
+            "superpixels_selection": [
+                1017,
+                1073,
+                1074,
+                1130,
+                1131,
+                1132,
+                1187,
+                1188,
+                1189
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/011.png",
+            "iou": 0.716382252559727,
+            "superpixels_selection": [
+                1816,
+                1817,
+                1872,
+                1873,
+                1874,
+                1929,
+                1930,
+                1931,
+                1986,
+                1987,
+                2044
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/012.png",
+            "iou": 0.80557880055788,
+            "superpixels_selection": [
+                645,
+                646,
+                701,
+                702,
+                703,
+                757,
+                758,
+                759,
+                814,
+                815
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/013.png",
+            "iou": 0.8286082474226805,
+            "superpixels_selection": [
+                2583,
+                2584,
+                2585,
+                2641,
+                2642,
+                2643,
+                2699,
+                2700
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/014.png",
+            "iou": 0.7105356509400497,
+            "superpixels_selection": [
+                1205,
+                1206,
+                1262,
+                1263,
+                1318,
+                1319,
+                1320,
+                1376,
+                1377
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/015.png",
+            "iou": 0.8411826268969126,
+            "superpixels_selection": [
+                367,
+                368,
+                369,
+                423,
+                424,
+                425,
+                426,
+                479,
+                480,
+                481,
+                482,
+                483
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/016.png",
+            "iou": 0.801433389544688,
+            "superpixels_selection": [
+                1873,
+                1874,
+                1930,
+                1931,
+                1987,
+                1988,
+                2044
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/017.png",
+            "iou": 0.7965517241379311,
+            "superpixels_selection": [
+                365,
+                366,
+                367,
+                368,
+                421,
+                422,
+                423,
+                424,
+                425,
+                480
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/018.png",
+            "iou": 0.5287271383705893,
+            "superpixels_selection": [
+                2876,
+                2877,
+                2878,
+                2879,
+                2880,
+                2932,
+                2934,
+                2935,
+                2936,
+                2937,
+                2938,
+                2939,
+                2995,
+                2996
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/019.png",
+            "iou": 0.6275402943237561,
+            "superpixels_selection": [
+                2468,
+                2469,
+                2524,
+                2525,
+                2526,
+                2582,
+                2583,
+                2584,
+                2640,
+                2641
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/020.png",
+            "iou": 0.8377869777945051,
+            "superpixels_selection": [
+                1375,
+                1376,
+                1431,
+                1432,
+                1433,
+                1489,
+                1490,
+                1546
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/021.png",
+            "iou": 0.7036859741503112,
+            "superpixels_selection": [
+                1304,
+                1305,
+                1306,
+                1361,
+                1362,
+                1418,
+                1419
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/022.png",
+            "iou": 0.44279507603186097,
+            "superpixels_selection": [
+                1259,
+                1260,
+                1316,
+                1317,
+                1318,
+                1375
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_head/023.png",
+            "iou": 0.7872340425531915,
+            "superpixels_selection": [
+                2585,
+                2641,
+                2642,
+                2643,
+                2698,
+                2699,
+                2700,
+                2701,
+                2757,
+                2758
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/000.png",
+            "iou": 0.6200852676456655,
+            "superpixels_selection": [
+                1328,
+                1329,
+                1384,
+                1385,
+                1386,
+                1387,
+                1388,
+                1442,
+                1443,
+                1444,
+                1445,
+                1500
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/001.png",
+            "iou": 0.7789574138136706,
+            "superpixels_selection": [
+                1274,
+                1275,
+                1276,
+                1277,
+                1330,
+                1331,
+                1332,
+                1333,
+                1334,
+                1387,
+                1388,
+                1389,
+                1390,
+                1391,
+                1392,
+                1444,
+                1445,
+                1446,
+                1447,
+                1448,
+                1449,
+                1502,
+                1503,
+                1504,
+                1505,
+                1559,
+                1561
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/002.png",
+            "iou": 0.6072884811416922,
+            "superpixels_selection": [
+                1505,
+                1506,
+                1507,
+                1561,
+                1562,
+                1563,
+                1564,
+                1565,
+                1620,
+                1621,
+                1622,
+                1623,
+                1680
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/003.png",
+            "iou": 0.6014410314751611,
+            "superpixels_selection": [
+                882,
+                939,
+                995,
+                996,
+                1052,
+                1053,
+                1054,
+                1109,
+                1110,
+                1167
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/004.png",
+            "iou": 0.824516129032258,
+            "superpixels_selection": [
+                1520,
+                1521,
+                1576,
+                1577,
+                1578,
+                1579,
+                1631,
+                1632,
+                1633,
+                1634,
+                1635,
+                1688
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/005.png",
+            "iou": 0.5893883068604259,
+            "superpixels_selection": [
+                1798,
+                1799,
+                1800,
+                1857,
+                1978,
+                2034,
+                2091,
+                2092,
+                2149
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/006.png",
+            "iou": 0.8383551260185712,
+            "superpixels_selection": [
+                2022,
+                2023,
+                2024,
+                2079,
+                2080,
+                2081,
+                2137,
+                2478,
+                2479,
+                2480,
+                2535,
+                2536,
+                2537,
+                2592,
+                2593,
+                2594,
+                2649,
+                2651
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/007.png",
+            "iou": 0.8934198331788693,
+            "superpixels_selection": [
+                2136,
+                2137,
+                2138,
+                2139,
+                2193,
+                2194,
+                2195,
+                2196,
+                2250,
+                2251,
+                2252
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/008.png",
+            "iou": 0.8315240083507307,
+            "superpixels_selection": [
+                1557,
+                1558,
+                1560,
+                1613,
+                1614,
+                1615,
+                1616,
+                1617,
+                1618,
+                1670,
+                1671,
+                1672,
+                1673,
+                1674,
+                1675,
+                1729
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/009.png",
+            "iou": 0.9033078880407125,
+            "superpixels_selection": [
+                1559,
+                1560,
+                1561,
+                1615,
+                1616,
+                1617,
+                1618,
+                1673,
+                1674
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/010.png",
+            "iou": 0.6868113522537562,
+            "superpixels_selection": [
+                1220,
+                1221,
+                1277,
+                1278,
+                1279,
+                1334,
+                1335,
+                1336,
+                1338,
+                1393,
+                1394,
+                1395,
+                1396,
+                1450,
+                1451,
+                1452,
+                1453,
+                1508,
+                1509,
+                1565
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/011.png",
+            "iou": 0.4843940008107013,
+            "superpixels_selection": [
+                1170,
+                1283,
+                1284,
+                1285,
+                1340,
+                1341,
+                1397
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/012.png",
+            "iou": 0.8655312658871378,
+            "superpixels_selection": [
+                1506,
+                1507,
+                1562,
+                1563,
+                1564,
+                1565,
+                1619,
+                1620,
+                1621,
+                1622,
+                1677,
+                1678,
+                1679
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/013.png",
+            "iou": 0.7768446310737852,
+            "superpixels_selection": [
+                1576,
+                1577,
+                1578,
+                1631,
+                1632,
+                1633,
+                1634,
+                1688,
+                1689,
+                1690,
+                1691
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/014.png",
+            "iou": 0.6629941672067401,
+            "superpixels_selection": [
+                1690,
+                1691,
+                1692,
+                1747,
+                1748,
+                1749,
+                1804,
+                1805,
+                1806,
+                1863
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/015.png",
+            "iou": 0.8971166448230669,
+            "superpixels_selection": [
+                1910,
+                1911,
+                1967,
+                1968,
+                1969,
+                2024,
+                2025,
+                2026,
+                2081,
+                2082,
+                2138
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/016.png",
+            "iou": 0.8792631316903161,
+            "superpixels_selection": [
+                1908,
+                1909,
+                1964,
+                1965,
+                1966,
+                1967,
+                2021,
+                2022,
+                2023,
+                2024,
+                2078,
+                2079,
+                2080,
+                2081
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/017.png",
+            "iou": 0.8603888498477396,
+            "superpixels_selection": [
+                1392,
+                1393,
+                1394,
+                1449,
+                1450,
+                1451,
+                1505,
+                1506,
+                1507,
+                1508,
+                1563,
+                1564,
+                1565
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/018.png",
+            "iou": 0.8729216152019003,
+            "superpixels_selection": [
+                1560,
+                1561,
+                1562,
+                1616,
+                1617,
+                1618,
+                1619,
+                1674,
+                1675,
+                1676
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/019.png",
+            "iou": 0.8150044523597507,
+            "superpixels_selection": [
+                1457,
+                1458,
+                1460,
+                1461,
+                1513,
+                1514,
+                1515,
+                1517,
+                1518,
+                1519,
+                1574,
+                1575,
+                1576,
+                1632,
+                1633
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/020.png",
+            "iou": 0.7518037518037518,
+            "superpixels_selection": [
+                1160,
+                1161,
+                1162,
+                1216,
+                1217,
+                1218,
+                1219,
+                1274,
+                1275,
+                1276,
+                1337,
+                1392,
+                1393,
+                1394,
+                1449,
+                1450,
+                1451,
+                1452,
+                1506,
+                1507,
+                1508,
+                1509,
+                1564,
+                1565
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/021.png",
+            "iou": 0.908724340175953,
+            "superpixels_selection": [
+                1627,
+                1628,
+                1629,
+                1683,
+                1684,
+                1685,
+                1686,
+                1741,
+                1742
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/022.png",
+            "iou": 0.8831168831168831,
+            "superpixels_selection": [
+                1849,
+                1850,
+                1851,
+                1907,
+                1908
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/023.png",
+            "iou": 0.5723089564502876,
+            "superpixels_selection": [
+                1161,
+                1219,
+                1220,
+                1221,
+                1277,
+                1278,
+                1335
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/scratch_neck/024.png",
+            "iou": 0.7383738373837384,
+            "superpixels_selection": [
+                1557,
+                1558,
+                1559,
+                1614,
+                1615,
+                1616,
+                1617,
+                1671,
+                1672,
+                1673,
+                1674,
+                1729,
+                1730
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/000.png",
+            "iou": 0.3458591754834002,
+            "superpixels_selection": [
+                834,
+                835,
+                891,
+                1005,
+                1060,
+                1061,
+                1062,
+                1119,
+                1232,
+                1289
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/001.png",
+            "iou": 0.5717682020802377,
+            "superpixels_selection": [
+                1391,
+                1392,
+                1394,
+                1395,
+                1448,
+                1449,
+                1450,
+                1451,
+                1452,
+                1453,
+                1460,
+                1496,
+                1509,
+                1516,
+                1517,
+                1518,
+                1519,
+                1552,
+                1553,
+                1572,
+                1574,
+                1575,
+                1576,
+                1628
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/002.png",
+            "iou": 0.4329004329004329,
+            "superpixels_selection": [
+                2026,
+                2027,
+                2082,
+                2083,
+                2139,
+                2140,
+                2141,
+                2255,
+                2256,
+                2312,
+                2313
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/003.png",
+            "iou": 0.35493914520237757,
+            "superpixels_selection": [
+                1691,
+                1747,
+                1748,
+                1749,
+                1805,
+                1958,
+                1959,
+                1960,
+                1962,
+                2014,
+                2015,
+                2016,
+                2017,
+                2018
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/004.png",
+            "iou": 0.4281524926686217,
+            "superpixels_selection": [
+                900,
+                956,
+                957,
+                1012,
+                1068,
+                1069,
+                1125,
+                1126,
+                1237,
+                1294
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/005.png",
+            "iou": 0.6659824046920821,
+            "superpixels_selection": [
+                1803,
+                1860,
+                1861,
+                1917,
+                1918,
+                1919,
+                1975,
+                1976,
+                1977,
+                1978,
+                1979
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/006.png",
+            "iou": 0.6478052126200274,
+            "superpixels_selection": [
+                1571,
+                1628,
+                1629,
+                1685,
+                1686,
+                1742,
+                1743,
+                1744,
+                1745,
+                1800,
+                1801,
+                1802,
+                1860,
+                1861,
+                1862,
+                1977
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/007.png",
+            "iou": 0.5949764521193093,
+            "superpixels_selection": [
+                873,
+                874,
+                930,
+                931,
+                988,
+                989,
+                991,
+                1046,
+                1047,
+                1048,
+                1743,
+                1800,
+                1801,
+                1858
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/008.png",
+            "iou": 0.6288026793190065,
+            "superpixels_selection": [
+                1568,
+                1625,
+                1682,
+                1683,
+                1684,
+                1685,
+                1741,
+                1742,
+                1743
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/009.png",
+            "iou": 0.371356783919598,
+            "superpixels_selection": [
+                1180,
+                1236,
+                1237,
+                1238,
+                1292,
+                1293,
+                1294,
+                1348,
+                1349,
+                1350,
+                1406,
+                1407
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/010.png",
+            "iou": 0.5540061451193571,
+            "superpixels_selection": [
+                1517,
+                1518,
+                1521,
+                1522,
+                1574,
+                1575,
+                1576,
+                1577,
+                1578,
+                1632,
+                1633
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/011.png",
+            "iou": 0.4056297365571996,
+            "superpixels_selection": [
+                1152,
+                1208,
+                1265,
+                1266,
+                1267,
+                1268,
+                1324,
+                1325,
+                1326,
+                1383
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/012.png",
+            "iou": 0.6704253214638971,
+            "superpixels_selection": [
+                2075,
+                2128,
+                2129,
+                2130,
+                2131,
+                2183,
+                2185,
+                2186,
+                2187,
+                2188,
+                2240,
+                2241,
+                2242,
+                2296,
+                2298
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/013.png",
+            "iou": 0.4691358024691358,
+            "superpixels_selection": [
+                1965,
+                2022,
+                2134,
+                2191,
+                2192,
+                2248
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/014.png",
+            "iou": 0.5519532288068031,
+            "superpixels_selection": [
+                1919,
+                1975,
+                2032,
+                2033,
+                2089,
+                2090,
+                2091,
+                2092,
+                2147,
+                2149
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/015.png",
+            "iou": 0.7888061759029501,
+            "superpixels_selection": [
+                1166,
+                1223,
+                1280,
+                1281,
+                1282,
+                1283,
+                1284,
+                1338,
+                1339,
+                1340,
+                1341
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/016.png",
+            "iou": 0.7764725347452018,
+            "superpixels_selection": [
+                1175,
+                1179,
+                1180,
+                1229,
+                1233,
+                1236,
+                1237,
+                1238,
+                1287,
+                1288,
+                1289,
+                1290,
+                1291,
+                1292,
+                1293,
+                1344,
+                1345,
+                1346,
+                1347,
+                1402
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/017.png",
+            "iou": 0.39371204001429083,
+            "superpixels_selection": [
+                659,
+                660,
+                717,
+                774,
+                775,
+                831,
+                888,
+                944,
+                945,
+                999,
+                1000,
+                1055,
+                1056
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/018.png",
+            "iou": 0.4676234979973298,
+            "superpixels_selection": [
+                876,
+                877,
+                933,
+                934,
+                989,
+                991,
+                992,
+                1051
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/019.png",
+            "iou": 0.3114503816793893,
+            "superpixels_selection": [
+                694,
+                695,
+                751,
+                752,
+                753,
+                809,
+                810,
+                867,
+                924
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/020.png",
+            "iou": 0.46808510638297873,
+            "superpixels_selection": [
+                2186,
+                2187,
+                2188,
+                2242,
+                2243,
+                2244,
+                2245,
+                2299,
+                2300
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/021.png",
+            "iou": 0.5467592592592593,
+            "superpixels_selection": [
+                1979,
+                2035,
+                2036,
+                2093,
+                2094,
+                2096,
+                2149,
+                2150,
+                2151,
+                2152,
+                2153,
+                2206,
+                2207,
+                2208,
+                2209
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_side/022.png",
+            "iou": 0.7333477508650519,
+            "superpixels_selection": [
+                1838,
+                1839,
+                1840,
+                1841,
+                1893,
+                1894,
+                1895,
+                1896,
+                1897,
+                1898,
+                1951,
+                1952,
+                1954,
+                1955
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/000.png",
+            "iou": 0.8493795464270432,
+            "superpixels_selection": [
+                871,
+                928,
+                984,
+                985,
+                986,
+                987,
+                988,
+                1041,
+                1042,
+                1043,
+                1044,
+                1045,
+                1098,
+                1099,
+                1100,
+                1101,
+                1102,
+                1157,
+                1158,
+                1159,
+                1215
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/001.png",
+            "iou": 0.8118150227211975,
+            "superpixels_selection": [
+                1173,
+                1174,
+                1175,
+                1176,
+                1228,
+                1229,
+                1230,
+                1231,
+                1232,
+                1233,
+                1234,
+                1286,
+                1287,
+                1288,
+                1289,
+                1343,
+                1344,
+                1345,
+                1346,
+                1400,
+                1402
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/002.png",
+            "iou": 0.8672276764843385,
+            "superpixels_selection": [
+                1845,
+                1846,
+                1901,
+                1902,
+                1903,
+                1955,
+                1956,
+                1957,
+                1958,
+                1959,
+                1960,
+                1961,
+                2013,
+                2014,
+                2015,
+                2016,
+                2018,
+                2071,
+                2072,
+                2129
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/003.png",
+            "iou": 0.8336878746857475,
+            "superpixels_selection": [
+                2240,
+                2241,
+                2297,
+                2298,
+                2299,
+                2355,
+                2357,
+                2411,
+                2412,
+                2467,
+                2468,
+                2469,
+                2524,
+                2525,
+                2526
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/004.png",
+            "iou": 0.8957668889533198,
+            "superpixels_selection": [
+                1744,
+                1745,
+                1746,
+                1747,
+                1748,
+                1749,
+                1802,
+                1803,
+                1804,
+                1805,
+                1806,
+                1859,
+                1860,
+                1861,
+                1862,
+                1863,
+                1916,
+                1917,
+                1918,
+                1919,
+                1920,
+                1973
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/005.png",
+            "iou": 0.6789886258837996,
+            "superpixels_selection": [
+                1512,
+                1513,
+                1514,
+                1515,
+                1569,
+                1570,
+                1571,
+                1572,
+                1625,
+                1626,
+                1627,
+                1628,
+                1629,
+                1683,
+                1684,
+                1685,
+                1686,
+                1740,
+                1741,
+                1742,
+                1743,
+                1744,
+                1799,
+                1801,
+                1856,
+                1857,
+                1913,
+                1914,
+                1970,
+                1971,
+                1972,
+                2026,
+                2027,
+                2028
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/006.png",
+            "iou": 0.8052467763450423,
+            "superpixels_selection": [
+                1900,
+                1956,
+                1957,
+                2013,
+                2014,
+                2015,
+                2070,
+                2071,
+                2072,
+                2073,
+                2124,
+                2125,
+                2126,
+                2127,
+                2128,
+                2129,
+                2130,
+                2181,
+                2182,
+                2183,
+                2184,
+                2185,
+                2239,
+                2240,
+                2241,
+                2242,
+                2298,
+                2299
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/007.png",
+            "iou": 0.7727913835107065,
+            "superpixels_selection": [
+                1512,
+                1513,
+                1514,
+                1515,
+                1516,
+                1569,
+                1570,
+                1571,
+                1572,
+                1573,
+                1574,
+                1626,
+                1627,
+                1628,
+                1629,
+                1630,
+                1683,
+                1684,
+                1685,
+                1686,
+                1688,
+                1739,
+                1740,
+                1741,
+                1742
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/008.png",
+            "iou": 0.7852981494174092,
+            "superpixels_selection": [
+                1970,
+                1971,
+                1972,
+                1973,
+                2025,
+                2026,
+                2027,
+                2028,
+                2082,
+                2083,
+                2084,
+                2085,
+                2141,
+                2142,
+                2199,
+                2200,
+                2201,
+                2254,
+                2255,
+                2256,
+                2257
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/009.png",
+            "iou": 0.8044989775051125,
+            "superpixels_selection": [
+                812,
+                813,
+                814,
+                869,
+                870,
+                871,
+                872,
+                873,
+                927,
+                928,
+                929,
+                930,
+                985,
+                986,
+                1042
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/010.png",
+            "iou": 0.8001428826576175,
+            "superpixels_selection": [
+                989,
+                1045,
+                1046,
+                1102,
+                1103,
+                1106,
+                1107,
+                1158,
+                1159,
+                1160,
+                1161,
+                1162,
+                1163,
+                1215,
+                1219,
+                1220,
+                1275,
+                1276,
+                1333
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/011.png",
+            "iou": 0.8615619629558908,
+            "superpixels_selection": [
+                1790,
+                1843,
+                1847,
+                1848,
+                1901,
+                1902,
+                1903,
+                1904,
+                1905,
+                1958,
+                1959,
+                1960,
+                1961,
+                1962,
+                1963,
+                2016,
+                2021,
+                2074
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/012.png",
+            "iou": 0.45125482625482627,
+            "superpixels_selection": [
+                933,
+                934,
+                990,
+                991,
+                1048,
+                1049
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/013.png",
+            "iou": 0.703372729893341,
+            "superpixels_selection": [
+                2134,
+                2191,
+                2192,
+                2248,
+                2249,
+                2252,
+                2304,
+                2305,
+                2306,
+                2307,
+                2308
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/014.png",
+            "iou": 0.8826934207987652,
+            "superpixels_selection": [
+                1745,
+                1802,
+                1858,
+                1859,
+                1862,
+                1915,
+                1916,
+                1917,
+                1918,
+                1919,
+                1972,
+                1973,
+                1974,
+                1975,
+                1976,
+                2031,
+                2032,
+                2089,
+                2145
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/015.png",
+            "iou": 0.5826686004350979,
+            "superpixels_selection": [
+                1391,
+                1392,
+                1447,
+                1448,
+                1449,
+                1450,
+                1504,
+                1505,
+                1506,
+                1507,
+                1508,
+                1563,
+                1564,
+                1565,
+                1621
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/016.png",
+            "iou": 0.6825734157650696,
+            "superpixels_selection": [
+                434,
+                435,
+                436,
+                492,
+                549,
+                604,
+                605,
+                606,
+                660,
+                662,
+                663,
+                664,
+                718,
+                719,
+                720,
+                776,
+                777
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/017.png",
+            "iou": 0.5156794425087108,
+            "superpixels_selection": [
+                1271,
+                1328,
+                1329,
+                1386,
+                1443
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/018.png",
+            "iou": 0.6544975536319156,
+            "superpixels_selection": [
+                1685,
+                1686,
+                1741,
+                1742,
+                1743,
+                1744,
+                1797,
+                1798,
+                1799,
+                1800,
+                1801,
+                1802,
+                1856,
+                1857,
+                1858,
+                1859,
+                1860,
+                1913,
+                1914,
+                1915
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/019.png",
+            "iou": 0.7606992163954189,
+            "superpixels_selection": [
+                2144,
+                2145,
+                2198,
+                2199,
+                2200,
+                2201,
+                2254,
+                2255,
+                2256,
+                2257,
+                2258,
+                2313,
+                2314,
+                2315,
+                2316,
+                2370,
+                2371,
+                2372,
+                2373,
+                2374,
+                2427,
+                2428,
+                2429,
+                2430,
+                2483,
+                2484,
+                2485,
+                2486
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/020.png",
+            "iou": 0.7604608050847458,
+            "superpixels_selection": [
+                658,
+                659,
+                660,
+                713,
+                714,
+                715,
+                716,
+                717,
+                771,
+                772,
+                773,
+                774,
+                828,
+                829,
+                830,
+                831,
+                885,
+                886,
+                887,
+                888,
+                889,
+                941,
+                942,
+                943
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/021.png",
+            "iou": 0.8908965754603339,
+            "superpixels_selection": [
+                1976,
+                1977,
+                1978,
+                2033,
+                2034,
+                2035,
+                2036,
+                2090,
+                2091,
+                2092,
+                2093,
+                2148,
+                2149,
+                2150,
+                2205,
+                2206,
+                2262
+            ]
+        },
+        {
+            "path": "MVTec/screw/test/thread_top/022.png",
+            "iou": 0.8311045071817732,
+            "superpixels_selection": [
+                2521,
+                2577,
+                2578,
+                2579,
+                2633,
+                2634,
+                2635,
+                2636,
+                2690,
+                2691,
+                2746,
+                2747,
+                2748,
+                2804
+            ]
+        }
+    ]
+}
