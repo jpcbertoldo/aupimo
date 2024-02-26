@@ -133,5 +133,5 @@
         "MVTec/toothbrush/test/good/010.png",
         "MVTec/toothbrush/test/good/011.png"
     ],
-    "min_thresh": 0.23873715102672577
+    "min_thresh": 0.030347686260938644
 }

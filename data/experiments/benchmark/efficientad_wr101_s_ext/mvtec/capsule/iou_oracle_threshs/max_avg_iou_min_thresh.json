@@ -403,5 +403,5 @@
         "MVTec/capsule/test/squeeze/018.png",
         "MVTec/capsule/test/squeeze/019.png"
     ],
-    "min_thresh": 0.27253708243370056
+    "min_thresh": 0.06746499240398407
 }

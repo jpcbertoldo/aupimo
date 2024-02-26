@@ -607,5 +607,5 @@
         "VisA/visa_pytorch/macaroni1/test/good/0994.JPG",
         "VisA/visa_pytorch/macaroni1/test/good/0996.JPG"
     ],
-    "min_thresh": 0.6261953115463257
+    "min_thresh": 0.49139612913131714
 }

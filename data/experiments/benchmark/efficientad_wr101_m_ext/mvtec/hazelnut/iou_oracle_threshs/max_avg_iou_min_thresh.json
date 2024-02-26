@@ -337,5 +337,5 @@
         "MVTec/hazelnut/test/print/015.png",
         "MVTec/hazelnut/test/print/016.png"
     ],
-    "min_thresh": 0.13469217717647552
+    "min_thresh": 0.03151829540729523
 }

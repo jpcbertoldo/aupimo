@@ -457,5 +457,5 @@
         "VisA/visa_pytorch/cashew/test/good/484.JPG",
         "VisA/visa_pytorch/cashew/test/good/487.JPG"
     ],
-    "min_thresh": 0.7048500776290894
+    "min_thresh": 0.573915421962738
 }

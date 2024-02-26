@@ -256,5 +256,5 @@
         "MVTec/bottle/test/good/018.png",
         "MVTec/bottle/test/good/019.png"
     ],
-    "min_thresh": 0.49356189370155334
+    "min_thresh": 0.33771565732498027
 }

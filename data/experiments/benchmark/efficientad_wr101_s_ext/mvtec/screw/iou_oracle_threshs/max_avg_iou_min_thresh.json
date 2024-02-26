@@ -487,5 +487,5 @@
         "MVTec/screw/test/thread_top/021.png",
         "MVTec/screw/test/thread_top/022.png"
     ],
-    "min_thresh": 0.17665080726146698
+    "min_thresh": 0.04270812124013901
 }

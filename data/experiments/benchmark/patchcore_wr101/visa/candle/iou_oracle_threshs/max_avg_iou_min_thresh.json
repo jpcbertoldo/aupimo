@@ -607,5 +607,5 @@
         "VisA/visa_pytorch/candle/test/good/0994.JPG",
         "VisA/visa_pytorch/candle/test/good/0996.JPG"
     ],
-    "min_thresh": 1.5966964960098267
+    "min_thresh": 1.3024981021881104
 }

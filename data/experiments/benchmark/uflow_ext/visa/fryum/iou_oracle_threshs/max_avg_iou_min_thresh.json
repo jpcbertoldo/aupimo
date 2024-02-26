@@ -457,5 +457,5 @@
         "VisA/visa_pytorch/fryum/test/good/484.JPG",
         "VisA/visa_pytorch/fryum/test/good/487.JPG"
     ],
-    "min_thresh": 0.7147920727729797
+    "min_thresh": 0.5955972075462341
 }

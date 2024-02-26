@@ -607,5 +607,5 @@
         "VisA/visa_pytorch/pcb2/test/good/0994.JPG",
         "VisA/visa_pytorch/pcb2/test/good/0997.JPG"
     ],
-    "min_thresh": 0.42447108030319214
+    "min_thresh": 0.25835257763504793
 }

@@ -457,5 +457,5 @@
         "VisA/visa_pytorch/chewinggum/test/good/487.JPG",
         "VisA/visa_pytorch/chewinggum/test/good/497.JPG"
     ],
-    "min_thresh": 0.5730302333831787
+    "min_thresh": 0.4705975651741028
 }
