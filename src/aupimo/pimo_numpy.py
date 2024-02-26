@@ -152,7 +152,7 @@ def compute_min_thresh_at_max_fpr_normal_images(
     # TODO(jpcbertoldo): change vocabulary to not use "shared FPR" here?
     _, thresh_at, defacto_value = thresh_at_shared_fpr_level(threshs, fpr, max_fpr)
     _warn_pivot_vs_defacto_difference(max_fpr, defacto_value, "FPR", rtol=1e-2)
-    return thresh_at
+    return float(thresh_at)
 
 
 # =========================================== PIMO ===========================================

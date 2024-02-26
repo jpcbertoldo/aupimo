@@ -104,7 +104,8 @@ if IS_NOTEBOOK:
         argstrs := [
             string
             for arg in [
-                "--asmaps ../data/experiments/benchmark/efficientad_wr101_m_ext/mvtec/metal_nut/asmaps.pt",
+                # "--asmaps ../data/experiments/benchmark/efficientad_wr101_m_ext/mvtec/metal_nut/asmaps.pt",
+                "--asmaps ../data/experiments/benchmark/rd++_wr50_ext/mvtec/bottle/asmaps.pt",
                 # "--metrics auroc",
                 # "--metrics aupr",
                 # "--metrics aupro",
@@ -117,10 +118,10 @@ if IS_NOTEBOOK:
                 # "--metrics max_iou_per_img_min_thresh",
                 # "--metrics superpixel_oracle",
                 # "--metrics superpixel_bound_dist_heuristic",
-                # "--metrics superpixel_bound_dist_heuristic_parallel",
+                "--metrics superpixel_bound_dist_heuristic_parallel",
                 "--mvtec-root ../data/datasets/MVTec",
                 "--visa-root ../data/datasets/VisA",
-                # "--not-debug",
+                "--not-debug",
             ]
             for string in arg.split(" ")
         ],
@@ -738,7 +739,7 @@ def calculate_levelset_mean_dist_curve_multiprocessing(
 if METRIC_SUPERPIXEL_BOUND_DIST_HEURISTIC_PARALLEL in args.metrics:
     threshs_per_image, levelset_mean_dist_curve_per_image = calculate_levelset_mean_dist_curve_multiprocessing(
         images_abspaths,
-        safe_tensor_to_numpy(asmaps),
+        safe_tensor_to_numpy(asmaps).astype(np.float32),
         upscale_factor=(upscale_factor := 2.0),
         min_thresh=min_thresh,
         watershed_superpixel_relsize=(watershed_superpixel_relsize := 3e-4),

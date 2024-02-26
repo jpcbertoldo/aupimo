@@ -61,7 +61,7 @@ echo "[debug] python=$(which python)"
 # MAIN
 
 # MODELS=( "patchcore_wr50" "patchcore_wr101" "efficientad_wr101_s_ext" "efficientad_wr101_m_ext" "rd++_wr50_ext" "uflow_ext" )
-MODELS=( "patchcore_wr101" "efficientad_wr101_s_ext" "efficientad_wr101_m_ext" "rd++_wr50_ext" "uflow_ext" )
+MODELS=( "rd++_wr50_ext" "uflow_ext" )
 echo "[debug] MODELS=${MODELS[@]}"
 
 ARG_METRICS="--metrics superpixel_bound_dist_heuristic_parallel"
