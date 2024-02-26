@@ -43,7 +43,7 @@ echo "going to scripts dir"
 cd ${AUPIMO_SCRIPTS_DIR}
 echo "[debug] pwd=$(pwd)"
 
-BENCHMARK_DIR=$(realpath ${SCRIPT_DIR}/../data/experiments/benchmark)
+BENCHMARK_DIR=$(realpath ${SCRIPT_DIR}/../data/experiments/benchmark-segm-paper)
 echo "[debug] BENCHMARK_DIR=${BENCHMARK_DIR}"
 
 if [ ! -d ${BENCHMARK_DIR} ]; then
@@ -60,7 +60,7 @@ echo "[debug] python=$(which python)"
 # ==========================================================
 # MAIN
 
-MODELS=( "patchcore_wr50" "patchcore_wr101" "efficientad_wr101_s_ext" "efficientad_wr101_m_ext" "rd++_wr50_ext" "simplenet_wr50_ext" "uflow_ext" )
+MODELS=( "patchcore_wr50" "patchcore_wr101" "efficientad_wr101_s_ext" "efficientad_wr101_m_ext" "rd++_wr50_ext" "uflow_ext" )
 echo "[debug] MODELS=${MODELS[@]}"
 
 ARG_METRICS="--metrics max_avg_iou --metrics max_iou_per_img --metrics max_avg_iou_min_thresh --metrics max_iou_per_img_min_thresh"
@@ -77,7 +77,8 @@ do
     echo "MODEL_DIR=${MODEL_DIR}"
 
     # find all `asmaps.pt` files in the model directory
-    ASMAPS_PTS=$(find ${MODEL_DIR} -name "asmaps.pt")
+    # -L to follow symlinks (IMPORTANT!)
+    ASMAPS_PTS=$(find -L ${MODEL_DIR} -name "asmaps.pt")
     ASMAPS_PTS=$(echo ${ASMAPS_PTS} | tr ' ' '\n' | sort)
     echo "ASMAPS_PTS count=$(echo ${ASMAPS_PTS} | wc -w)"  
 
