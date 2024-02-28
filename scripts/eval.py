@@ -25,6 +25,8 @@ from anomalib.metrics import AUPR, AUPRO, AUROC
 from PIL import Image
 from torch import Tensor
 
+# %%
+
 # is it running as a notebook or as a script?
 if (arg0 := Path(sys.argv[0]).stem) == "ipykernel_launcher":
     print("running as a notebook")
@@ -118,10 +120,10 @@ if IS_NOTEBOOK:
                 # "--metrics max_iou_per_img_min_thresh",
                 # "--metrics superpixel_oracle",
                 # "--metrics superpixel_bound_dist_heuristic",
-                "--metrics superpixel_bound_dist_heuristic_parallel",
+                # "--metrics superpixel_bound_dist_heuristic_parallel",
                 "--mvtec-root ../data/datasets/MVTec",
                 "--visa-root ../data/datasets/VisA",
-                "--not-debug",
+                # "--not-debug",
             ]
             for string in arg.split(" ")
         ],
@@ -524,15 +526,15 @@ if METRIC_SUPERPIXEL_ORACLE in args.metrics:
             compactness=(watershed_compactness := 1e-4),
         )
         history, selected_suppixs, available_suppixs = find_best_superpixels(
-            superpixels,
-            safe_tensor_to_numpy(mask),
+            superpixels.astype(int),
+            safe_tensor_to_numpy(mask).astype(bool),
         )
         superpixel_best_iou = history[-1]["iou"]
         results.append(
             {
                 "path": images_relpaths[image_idx],
                 "iou": float(superpixel_best_iou),
-                "superpixels_selection": sorted(selected_suppixs),
+                "superpixels_selection": sorted(map(int, selected_suppixs)),
             },
         )
 
@@ -778,3 +780,109 @@ if len(set(args.metrics) & ANY_METRIC_SUPERPIXEL_BOUND_DIST_HEURISTIC) > 0:
     }
 
     torch.save(payload, superpixel_bound_dist_heuristic_dir / "superpixel_bound_dist_heuristic.pt")
+
+# %%
+from anomalib.models import SuperpixelCore
+
+module = SuperpixelCore(
+    input_size=tuple(asmaps.shape[-2:]),
+    layers=["layer1"],
+    backbone="resnet18",
+)
+
+# %%
+from functools import partial, update_wrapper
+from types import MethodType
+
+import numpy as np
+from lightning.pytorch import LightningModule
+from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
+from matplotlib import pyplot as plt
+from PIL import Image
+from torch.optim import Optimizer
+from torch.optim.adam import Adam
+from torch.utils.data import DataLoader
+
+from anomalib.data import PredictDataset, MVTec
+from anomalib.engine import Engine
+from anomalib.models import Fastflow
+from anomalib.utils.post_processing import superimpose_anomaly_map
+from anomalib import TaskType
+
+task = TaskType.SEGMENTATION
+datamodule = MVTec(
+    root=args.mvtec_root,
+    category="bottle",
+    image_size=(900, 900),
+    train_batch_size=10,
+    eval_batch_size=10,
+    num_workers=8,
+    task=task,
+)
+datamodule.setup()
+i, data = next(enumerate(datamodule.test_dataloader()))
+print(f'Image Shape: {data["image"].shape}\nMask Shape: {data["mask"].shape}\nImage Original Shape: {data["image_original"].shape}')
+
+# %%
+module.model(data["image"], data["image_original"])
+
+# %%
+
+callbacks = [
+    ModelCheckpoint(
+        mode="max",
+        monitor="pixel_AUROC",
+    ),
+    EarlyStopping(
+        monitor="pixel_AUROC",
+        mode="max",
+        patience=3,
+    ),
+]
+
+engine = Engine(
+    callbacks=callbacks,
+    pixel_metrics="AUROC",
+    accelerator="auto",  # \<"cpu", "gpu", "tpu", "ipu", "hpu", "auto">,
+    devices=1,
+    logger=False,
+    #
+    max_epochs=1
+)
+
+engine.fit(datamodule=datamodule, model=module)
+
+# %%
+
+engine.test(datamodule=datamodule, model=model)
+
+
+# %%
+
+
+# %%
+
+
+# %%
+# %%
+from aupimo.oracles_numpy import open_image
+images = torch.stack([torch.from_numpy(open_image(impath)) for impath in images_abspaths]).permute(0, 3, 2, 1)
+
+# %%
+from anomalib.data.utils import read_image 
+images = torch.stack([torch.from_numpy(read_image(impath)) for impath in images_abspaths]).permute(0, 3, 2, 1)
+
+
+# %%
+# superpixel core model
+
+output = model(images, images)
+output["embeddings"].shape
+output["superpixels"].shape
+
+model.memory_bank = output["embeddings"]
+model.eval()
+output = model(images, images)
+output["anomaly_map"].shape
+output["pred_score"]
+
