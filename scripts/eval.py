@@ -25,6 +25,8 @@ from anomalib.metrics import AUPR, AUPRO, AUROC
 from PIL import Image
 from torch import Tensor
 
+# %%
+
 # is it running as a notebook or as a script?
 if (arg0 := Path(sys.argv[0]).stem) == "ipykernel_launcher":
     print("running as a notebook")
@@ -118,10 +120,10 @@ if IS_NOTEBOOK:
                 # "--metrics max_iou_per_img_min_thresh",
                 # "--metrics superpixel_oracle",
                 # "--metrics superpixel_bound_dist_heuristic",
-                "--metrics superpixel_bound_dist_heuristic_parallel",
+                # "--metrics superpixel_bound_dist_heuristic_parallel",
                 "--mvtec-root ../data/datasets/MVTec",
                 "--visa-root ../data/datasets/VisA",
-                "--not-debug",
+                # "--not-debug",
             ]
             for string in arg.split(" ")
         ],
@@ -524,15 +526,15 @@ if METRIC_SUPERPIXEL_ORACLE in args.metrics:
             compactness=(watershed_compactness := 1e-4),
         )
         history, selected_suppixs, available_suppixs = find_best_superpixels(
-            superpixels,
-            safe_tensor_to_numpy(mask),
+            superpixels.astype(int),
+            safe_tensor_to_numpy(mask).astype(bool),
         )
         superpixel_best_iou = history[-1]["iou"]
         results.append(
             {
                 "path": images_relpaths[image_idx],
                 "iou": float(superpixel_best_iou),
-                "superpixels_selection": sorted(selected_suppixs),
+                "superpixels_selection": sorted(map(int, selected_suppixs)),
             },
         )
 
@@ -778,3 +780,111 @@ if len(set(args.metrics) & ANY_METRIC_SUPERPIXEL_BOUND_DIST_HEURISTIC) > 0:
     }
 
     torch.save(payload, superpixel_bound_dist_heuristic_dir / "superpixel_bound_dist_heuristic.pt")
+
+# %%
+from anomalib.models import SuperpixelCore
+
+module = SuperpixelCore(
+    input_size=tuple(asmaps.shape[-2:]),
+    layers=["layer1"],
+    backbone="resnet18",
+    superpixel_relsize=1e-3,
+)
+
+# %%
+from functools import partial
+
+import numpy as np
+from anomalib import TaskType
+from anomalib.data import MVTec
+from anomalib.engine import Engine
+from anomalib.utils.post_processing import superimpose_anomaly_map
+from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
+from matplotlib import pyplot as plt
+from PIL import Image
+
+task = TaskType.SEGMENTATION
+datamodule = MVTec(
+    root=args.mvtec_root,
+    category="bottle",
+    image_size=tuple(asmaps.shape[-2:]),
+    train_batch_size=10,
+    eval_batch_size=10,
+    num_workers=8,
+    task=task,
+)
+datamodule.setup()
+i, data = next(enumerate(datamodule.test_dataloader()))
+print(f'Image Shape: {data["image"].shape}\nMask Shape: {data["mask"].shape}\nImage Original Shape: {data["image_original"].shape}')
+
+# %%
+
+output = module.model(data["image"], data["image_original"])
+output["embeddings"].shape
+output["superpixels"].shape
+
+# %%
+# set logging to info level
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
+# %%
+
+callbacks = [
+    ModelCheckpoint(
+        mode="max",
+        monitor="pixel_AUROC",
+    ),
+    EarlyStopping(
+        monitor="pixel_AUROC",
+        mode="max",
+        patience=3,
+    ),
+]
+
+engine = Engine(
+    callbacks=callbacks,
+    pixel_metrics="AUROC",
+    accelerator="auto",  # \<"cpu", "gpu", "tpu", "ipu", "hpu", "auto">,
+    devices=1,
+    logger=False,
+    #
+    max_epochs=1,
+)
+
+engine.fit(datamodule=datamodule, model=module)
+
+# %%
+engine.test(datamodule=datamodule, model=module)
+
+# %%
+predictions = engine.predict(model=module, dataloaders=datamodule.test_dataloader())
+tmp = {}
+tmp["image"] = torch.concat([batch["image"] for batch in predictions], dim=0)
+tmp["anomaly_maps"] = torch.concat([batch["anomaly_maps"] for batch in predictions], dim=0)
+tmp["pred_masks"] = torch.concat([batch["pred_masks"] for batch in predictions], dim=0)
+tmp["mask"] = torch.concat([batch["mask"] for batch in predictions], dim=0)
+tmp["image_original"] = torch.concat([batch["image_original"] for batch in predictions], dim=0)
+predictions = tmp
+# %%
+print(
+    f'Image Shape: {predictions["image"].shape},\n'
+    f'Anomaly Map Shape: {predictions["anomaly_maps"].shape}, \n'
+    f'Predicted Mask Shape: {predictions["pred_masks"].shape}',
+)
+
+# %%
+for image_idx in range(0, len(predictions["image"]), 10):
+    image = predictions["image_original"][image_idx].cpu().numpy()
+    anomaly_map = predictions["anomaly_maps"][image_idx].cpu().numpy().squeeze()
+    gt_mask = predictions["mask"][image_idx].cpu().numpy().squeeze()
+    fig, axrow = plt.subplots(1, 2, figsize=(10, 5))
+    _ = axrow[0].imshow(image)
+    _ = axrow[1].imshow(anomaly_map, cmap="jet")
+    for ax in axrow:
+        _ = ax.axis("off")
+        _ = ax.contour(gt_mask, [0.5], colors="k", alpha=1, lw=5, ls="--")
+
+
+# %%
