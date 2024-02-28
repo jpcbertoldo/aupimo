@@ -60,7 +60,7 @@ echo "[debug] python=$(which python)"
 # ==========================================================
 # MAIN
 
-MODELS=( "patchcore_wr50" "patchcore_wr101" "efficientad_wr101_s_ext" "efficientad_wr101_m_ext" "rd++_wr50_ext" "uflow_ext" )
+MODELS=( "patchcore_wr50" )
 echo "[debug] MODELS=${MODELS[@]}"
 
 ARG_METRICS="--metrics superpixel_oracle"
@@ -81,6 +81,10 @@ do
     ASMAPS_PTS=$(find -L ${MODEL_DIR} -name "asmaps.pt")
     ASMAPS_PTS=$(echo ${ASMAPS_PTS} | tr ' ' '\n' | sort)
     echo "ASMAPS_PTS count=$(echo ${ASMAPS_PTS} | wc -w)"  
+
+    # skip the 20 first asmaps.pt files
+    ASMAPS_PTS=$(echo ${ASMAPS_PTS} | tr ' ' '\n' | tail -n +21)
+    echo "ASMAPS_PTS count=$(echo ${ASMAPS_PTS} | wc -w)"
 
     for ASMAPS_PT in ${ASMAPS_PTS}
     do

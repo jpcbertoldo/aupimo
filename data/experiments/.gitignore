@@ -7,7 +7,7 @@ benchmark/**/asmaps.pt
 benchmark/**/model.pt
 benchmark/**/ioucurves_global_threshs.pt
 benchmark/**/ioucurves_local_threshs.pt
-benchmark/**/optimal_iou.json
+benchmark/**/superpixel_bound_dist_heuristic/superpixel_bound_dist_heuristic.pt
 # efficientad has multiple .pt for each model
 benchmark/**/model/autoencoder.pt
 benchmark/**/model/student.pt

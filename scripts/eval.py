@@ -885,6 +885,6 @@ for image_idx in range(0, len(predictions["image"]), 10):
     for ax in axrow:
         _ = ax.axis("off")
         _ = ax.contour(gt_mask, [0.5], colors="k", alpha=1, lw=5, ls="--")
-
+    fig.savefig(f"{image_idx}.pdf")
 
 # %%
