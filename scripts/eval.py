@@ -21,7 +21,8 @@ from pathlib import Path
 import numpy as np
 import scipy as sp
 import torch
-from anomalib.metrics import AUPR, AUPRO, AUROC
+
+# from anomalib.metrics import AUPR, AUPRO, AUROC
 from PIL import Image
 from torch import Tensor
 
@@ -786,9 +787,11 @@ from anomalib.models import SuperpixelCore
 
 module = SuperpixelCore(
     input_size=tuple(asmaps.shape[-2:]),
-    layers=["layer1"],
-    backbone="resnet18",
-    superpixel_relsize=1e-3,
+    # layers=["layer1"],
+    # backbone="resnet18",
+    layers=["layer2", "layer3"],
+    backbone="wide_resnet50_2",
+    superpixel_relsize=3e-4,
 )
 
 # %%
@@ -798,7 +801,6 @@ import numpy as np
 from anomalib import TaskType
 from anomalib.data import MVTec
 from anomalib.engine import Engine
-from anomalib.utils.post_processing import superimpose_anomaly_map
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from matplotlib import pyplot as plt
 from PIL import Image
@@ -808,8 +810,8 @@ datamodule = MVTec(
     root=args.mvtec_root,
     category="bottle",
     image_size=tuple(asmaps.shape[-2:]),
-    train_batch_size=10,
-    eval_batch_size=10,
+    train_batch_size=2,
+    eval_batch_size=2,
     num_workers=8,
     task=task,
 )
