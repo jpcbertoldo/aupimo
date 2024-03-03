@@ -532,7 +532,7 @@ if METRIC_SUPERPIXEL_ORACLE in args.metrics:
             {
                 "path": images_relpaths[image_idx],
                 "iou": float(superpixel_best_iou),
-                "superpixels_selection": sorted(selected_suppixs),
+                "superpixels_selection": sorted(map(int, selected_suppixs)),
             },
         )
 
