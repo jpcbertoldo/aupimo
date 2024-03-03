@@ -138,7 +138,7 @@ mpl.rcParams.update(RCPARAMS := {
 
 # %%
 
-fig, ax = plt.subplots(figsize=np.array((5.5, 3))*1.1, layout="constrained", dpi=150)
+fig, ax = plt.subplots(figsize=np.array((5.5, 2.9))*1.1, layout="constrained", dpi=150)
 ax2 = ax.twinx()
 
 marker_of_device = {
@@ -200,7 +200,7 @@ _ = fig.show()
 # %%
 
 fig, axes = plt.subplots(
-    2, 1, figsize=np.array((5, 2.3))*1.1, 
+    2, 1, figsize=np.array((5, 2.95))*1, 
     sharex=True, sharey=False, layout="constrained", dpi=150,
 )
 

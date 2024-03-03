@@ -4,18 +4,14 @@
 from __future__ import annotations
 
 import sys
-from functools import partial
 import warnings
 from pathlib import Path
 
-import scipy as sp
+import matplotlib as mpl
 import numpy as np
 import torch
-import skimage
-from PIL import Image
 from matplotlib import pyplot as plt
-import matplotlib as mpl
-from anomalib.data import UCSDped
+from PIL import Image
 
 # is it running as a notebook or as a script?
 if (arg0 := Path(sys.argv[0]).stem) == "ipykernel_launcher":
@@ -73,10 +69,10 @@ def load_data(asmaps_fpath: Path):
 
     elif collection == "VisA":
         collection_root = visa_root
-    
+
     elif collection == "UCSDped":
         collection_root = ucsdped_root
-        
+
     else:
         msg = f"Unknown collection: {collection=}"
         raise NotImplementedError(msg)
@@ -96,7 +92,7 @@ def load_data(asmaps_fpath: Path):
 
         elif collection == "MVTec":
             image_path = image_path.with_stem(image_path.stem + "_mask").with_suffix(".png")
-            
+
         elif collection == "UCSDped":
             video_dir = image_path.parent
             gt_dir = video_dir.with_name(video_dir.name + "_gt")
@@ -171,18 +167,18 @@ def load_data(asmaps_fpath: Path):
         ).squeeze(1)
         print(f"{asmaps.shape=}")
     asmaps = asmaps.cpu().numpy()
-    
+
     # make sure all values in the asmaps are positive
     # `as` stands for `anomaly score`
     as_min = asmaps.min()
     if as_min < 0:
         print(f"shifting asmaps by {as_min=}")
         asmaps += abs(as_min)
-        
+
     return images, masks, asmaps, images_abspaths, masks_abspaths
 
 images, masks, asmaps, images_abspaths, masks_abspaths = load_data(
-    Path.home() / "repos/aupimo/data/experiments/video/patchcore_wr50_every_2_frames/ucsdped/ucsdped2/asmaps.pt"
+    Path.home() / "repos/aupimo/data/experiments/video/patchcore_wr50_every_2_frames/ucsdped/ucsdped2/asmaps.pt",
 )
 
 # %%
@@ -195,28 +191,29 @@ def load_aupimo_thresh_bounds(aupimos_fpath: Path):
     return AUPIMOResult.load(aupimos_fpath).thresh_bounds
 
 aupimos = load_aupimos(
-    Path.home() / "repos/aupimo/data/experiments/video/patchcore_wr50_every_2_frames/ucsdped/ucsdped2/aupimo/aupimos.json"
+    Path.home() / "repos/aupimo/data/experiments/video/patchcore_wr50_every_2_frames/ucsdped/ucsdped2/aupimo/aupimos.json",
 )
 aupimos.aupimos.shape
-    
+
 # %%
 aupimo_thresh_bounds = load_aupimo_thresh_bounds(
-    Path.home() / "repos/aupimo/data/experiments/video/patchcore_wr50_every_2_frames/ucsdped/ucsdped2/aupimo/aupimos.json"
+    Path.home() / "repos/aupimo/data/experiments/video/patchcore_wr50_every_2_frames/ucsdped/ucsdped2/aupimo/aupimos.json",
 )
 # %%
 frames = [
     {
         "path": path,
         "image": path.name,
-        "video": path.parent.name,      
+        "video": path.parent.name,
         "aupimo": aupimo,
     }
     for path, aupimo in zip([
         Path(p)
         for p in aupimos.paths
-    ], aupimos.aupimos.numpy().tolist())
+    ], aupimos.aupimos.numpy().tolist(), strict=False)
 ]
 import pandas as pd
+
 frames = pd.DataFrame(frames).sort_values(["video", "image"]).set_index(["video"])
 frames["frame_idx"] = frames["image"].map(lambda x: int(x.split(".")[0]))
 frames["has_anomaly"] = frames["aupimo"].map(lambda x: int(not pd.isna(x)))
@@ -241,15 +238,13 @@ assert set(selection_frames_idxs).issubset(video_frames.index.values)
 
 frame_shape = images.shape[:2][::-1]  # [H, W] --> [W, H]
 
-#%%
-
 fig_frames, axes = plt.subplots(
-    2, 2, figsize=np.array((10.6, 1)) * np.array(frame_shape) * 8e-3, dpi=150, 
+    2, 2, figsize=np.array((10.6, 1)) * np.array(frame_shape) * 8e-3, dpi=150,
     sharex=True, sharey=True, layout="constrained",
 )
 axes = axes.flatten()
 
-for frame_idx, ax in zip(selection_frames_idxs, axes):
+for frame_idx, ax in zip(selection_frames_idxs, axes, strict=False):
     frame_relpath = str(video_frames.loc[frame_idx, "path"])
     frame_idx_in_images = images_relpaths.index(frame_relpath)
     frame = images[frame_idx_in_images]
@@ -265,20 +260,20 @@ for frame_idx, ax in zip(selection_frames_idxs, axes):
     jet_transparent.set_bad(alpha=0)
     _ = ax.imshow(
         vasmap, cmap=jet_transparent, alpha=0.5,
-        # vmin=ascore_norm_min, vmax=ascore_norm_max, 
+        # vmin=ascore_norm_min, vmax=ascore_norm_max,
         # vmin=local_norm_min, vmax=local_norm_max,
     )
     _ = ax.contour(asmap, [aupimo_thresh_bounds[-1]], colors="black", linewidths=1)
     _ = ax.set_title(f"Frame {frame_idx} ({'anomalous' if img_class else 'normal'})")
     _ = ax.axis("off")
     _ = ax.set_ylim(240 - 30, 0 + 80)
-    
+
 (SAVEDIR := Path("/home/jcasagrandebertoldo/repos/anomalib-workspace/adhoc/4200-gsoc-paper/latex-project/src/img/video")).mkdir(exist_ok=True, parents=True)
 
 fig_frames.savefig(SAVEDIR / "frames.pdf", bbox_inches="tight", pad_inches=0.01)
 
 # %%
-# 
+#
 ax.get_ylim()[0]
 # %%
 from skimage.morphology import label
@@ -287,7 +282,7 @@ from skimage.morphology import label
 # ax = axes[0, 0]
 
 fig, axes = plt.subplots(
-    3, 4, figsize=(4 * 4, 1.5 * 4), dpi=150, 
+    3, 4, figsize=(4 * 4, 1.5 * 4), dpi=150,
     sharex=True, sharey=True, layout="constrained",
 )
 
@@ -303,12 +298,12 @@ _ = ax.set_xticks(np.linspace(0, max_frame_idx + 1, 4).astype(int))
 for idx, vk in enumerate(videos_keys):
     ax = axes[idx // 4, idx % 4]
     video_frames = frames.loc[vk].reset_index(drop=True).set_index("image")
-    
+
     _ = ax.plot(
         video_frames["frame_idx"], video_frames["aupimo"],
         color="black", linewidth=1, label="AUPIMO",
     )
-    
+
     if vk == "Test006":
         for frame_idx in selection_frames_idxs:
             _ = ax.axvline(frame_idx, color="black", linestyle="--", linewidth=1)
@@ -321,7 +316,7 @@ for idx, vk in enumerate(videos_keys):
         if segm_label == 0:
             continue
         frame_selection_mask = without_anomaly_segments == segm_label
-        
+
         min_idx = np.where(frame_selection_mask)[0].min()
         max_idx = np.where(frame_selection_mask)[0].max()
         span_min_frame_idx = video_frames["frame_idx"].values[min_idx]
@@ -345,7 +340,7 @@ for idx, vk in enumerate(videos_keys):
             label="Has anomaly",
             color="tab:red", alpha=0.4,
         )
-        
+
     video_max_frame_idx = video_frames["frame_idx"].max()
     if video_max_frame_idx < max_frame_idx:
         _ = ax.axvspan(
@@ -353,7 +348,7 @@ for idx, vk in enumerate(videos_keys):
             label="No frame",
             color="grey", alpha=0.5,
         )
-        
+
     _ = ax.set_title(vk)
 
 for ax in axes[-1, :]:
@@ -364,10 +359,174 @@ for ax in axes[:, 0]:
 
 for ax in axes.flatten():
     _ = ax.yaxis.grid(True, linestyle="--", linewidth=1, alpha=0.3, zorder=10, color="black")
-    
+
 # # get legend handles and labels from axes[1, 0]
 # # then plot the legend in axes[0, 0]
 # handles, labels = axes[1, 0].get_legend_handles_labels()
 # _ = axes[0, 0].legend(handles, labels, loc="upper left",)
 
 fig.savefig(SAVEDIR / "aupimo-vs-time.pdf", bbox_inches="tight", pad_inches=0.01)
+
+# %%
+
+images_relpaths = [p.split("/datasets/")[-1] for p in images_abspaths]
+
+video_frames = frames.loc["Test006"].reset_index(drop=True).set_index("frame_idx")
+aupimos = video_frames["aupimo"].values
+video_frames_idxs_in_images = [images_relpaths.index(str(p)) for p in video_frames["path"]]
+video_asmaps = asmaps[video_frames_idxs_in_images]
+
+ascore_norm_min, ascore_norm_max = np.percentile(video_asmaps, [5, 95])
+
+selection_frames_idxs = [11, 61, 121, 175]
+assert set(selection_frames_idxs).issubset(video_frames.index.values)
+
+frame_shape = images.shape[:2][::-1]  # [H, W] --> [W, H]
+
+fig_frames, axes = plt.subplots(
+    2, 2, figsize=np.array((8.9, 1)) * np.array(frame_shape) * 8e-3, dpi=150,
+    sharex=False, sharey=False, layout="constrained",
+)
+for frame_idx, ax in zip(selection_frames_idxs, axes.flatten(), strict=False):
+    frame_relpath = str(video_frames.loc[frame_idx, "path"])
+    frame_idx_in_images = images_relpaths.index(frame_relpath)
+    frame = images[frame_idx_in_images]
+    ground_truth = masks[frame_idx_in_images]
+    asmap = asmaps[frame_idx_in_images]
+    vasmap = asmap.copy()
+    vasmap[vasmap <= aupimo_thresh_bounds[-1]] = np.nan
+    local_norm_min, local_norm_max = np.percentile(asmap, [5, 95])
+    img_class = ground_truth.sum() > 0
+    _ = ax.imshow(frame)
+    _ = ax.contour(ground_truth, [0.5], colors="white", linewidths=3)
+    jet_transparent = mpl.cm.get_cmap("jet")
+    jet_transparent.set_bad(alpha=0)
+    _ = ax.imshow(
+        vasmap, cmap=jet_transparent, alpha=0.5,
+        # vmin=ascore_norm_min, vmax=ascore_norm_max,
+        # vmin=local_norm_min, vmax=local_norm_max,
+    )
+    _ = ax.contour(asmap, [aupimo_thresh_bounds[-1]], colors="black", linewidths=1)
+    _ = ax.axis("off")
+
+_ = axes[0, 0].set_xlim(xmin := 100, xmin + 240)
+_ = axes[0, 1].set_xlim(xmin := 0, xmin + 240)
+_ = axes[1, 0].set_xlim(xmin := 100, xmin + 240)
+_ = axes[1, 1].set_xlim(xmin := 0, xmin + 240)
+
+_ = axes[0, 0].set_ylim(240 - 60, 0 + 70)
+_ = axes[0, 1].set_ylim(240 - 50, 0 + 80)
+_ = axes[1, 0].set_ylim(240 - 40, 0 + 90)
+_ = axes[1, 1].set_ylim(240 - 60, 0 + 70)
+
+
+annotate_kwargs = dict(  # noqa: C408
+    xy=(0, 1), xycoords="axes fraction",
+    ha="left", va="top",
+    xytext=(10, -10), textcoords="offset points",
+    fontsize=24, color="k",
+    bbox={"facecolor": "white", "alpha": 1, "edgecolor": "k", "boxstyle": "round,pad=0.2"},
+)
+_ = axes[0, 0].annotate(
+    f"Frame {selection_frames_idxs[0]} (anomalous; missed anomaly)",
+    **annotate_kwargs,
+)
+_ = axes[0, 1].annotate(
+    f"Frame {selection_frames_idxs[1]} (anomalous; partial localization)",
+    **annotate_kwargs,
+)
+_ = axes[1, 0].annotate(
+    f"Frame {selection_frames_idxs[2]} (anomalous; successful localization)",
+    **annotate_kwargs,
+)
+_ = axes[1, 1].annotate(
+    f"Frame {selection_frames_idxs[3]} (normal; near zero false positives)",
+    **annotate_kwargs,
+)
+
+(SAVEDIR := Path("/home/jcasagrandebertoldo/repos/anomalib-workspace/adhoc/4200-gsoc-paper/latex-project/src/img/video")).mkdir(exist_ok=True, parents=True)
+
+fig_frames.savefig(SAVEDIR / "frames-maintext.pdf", bbox_inches="tight", pad_inches=0.01)
+
+# %%
+asmap.shape
+# %%
+from skimage.morphology import label
+
+fig, ax = plt.subplots(
+    1, 1, figsize=(4, 3.3), dpi=150,
+    sharex=True, sharey=True, layout="constrained",
+)
+
+_ = ax.set_ylim(-.01, 1.01)
+_ = ax.set_yticks(np.linspace(0, 1, 5))
+# format the y-axis in %
+_ = ax.yaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1, decimals=0))
+
+_ = ax.set_xlim(0, max_frame_idx)
+_ = ax.set_xticks(np.linspace(0, max_frame_idx + 1, 4).astype(int))
+
+vk = "Test006"
+video_frames = frames.loc[vk].reset_index(drop=True).set_index("image")
+
+_ = ax.plot(
+    video_frames["frame_idx"], video_frames["aupimo"],
+    color="black", linewidth=1, label="AUPIMO",
+)
+
+if vk == "Test006":
+    for frame_idx in selection_frames_idxs:
+        _ = ax.axvline(frame_idx, color="black", linestyle="--", linewidth=1)
+
+num_frames = len(video_frames)
+with_anomaly_segments = label(video_frames["has_anomaly"].values.astype(int))
+without_anomaly_segments = label(~video_frames["has_anomaly"].astype(bool))
+
+for segm_label in pd.unique(without_anomaly_segments):
+    if segm_label == 0:
+        continue
+    frame_selection_mask = without_anomaly_segments == segm_label
+
+    min_idx = np.where(frame_selection_mask)[0].min()
+    max_idx = np.where(frame_selection_mask)[0].max()
+    span_min_frame_idx = video_frames["frame_idx"].values[min_idx]
+    span_max_frame_idx = video_frames["frame_idx"].values[min(max_idx + 1, num_frames - 1)]
+    _ = ax.axvspan(
+        span_min_frame_idx, span_max_frame_idx,
+        color="tab:blue", alpha=0.4,
+        label="Normal",
+    )
+
+for segm_label in pd.unique(with_anomaly_segments):
+    if segm_label == 0:
+        continue
+    frame_selection_mask = with_anomaly_segments == segm_label
+    min_idx = np.where(frame_selection_mask)[0].min()
+    max_idx = np.where(frame_selection_mask)[0].max()
+    span_min_frame_idx = video_frames["frame_idx"].values[min_idx]
+    span_max_frame_idx = video_frames["frame_idx"].values[min(max_idx + 1, num_frames - 1)]
+    _ = ax.axvspan(
+        span_min_frame_idx, span_max_frame_idx,
+        label="Has anomaly",
+        color="tab:red", alpha=0.4,
+    )
+
+video_max_frame_idx = video_frames["frame_idx"].max()
+if video_max_frame_idx < max_frame_idx:
+    _ = ax.axvspan(
+        video_max_frame_idx, max_frame_idx,
+        label="No frame",
+        color="grey", alpha=0.5,
+    )
+
+# _ = ax.set_title(vk)
+_ = ax.set_xlabel("Frame Index")
+_ = ax.set_ylabel("AUPIMO")
+_ = ax.yaxis.grid(True, linestyle="--", linewidth=1, alpha=0.3, zorder=10, color="black")
+
+# # get legend handles and labels from axes[1, 0]
+# # then plot the legend in axes[0, 0]
+# handles, labels = axes[1, 0].get_legend_handles_labels()
+# _ = axes[0, 0].legend(handles, labels, loc="upper left",)
+
+fig.savefig(SAVEDIR / "aupimo-vs-time-maintext.pdf", bbox_inches="tight", pad_inches=0.01)

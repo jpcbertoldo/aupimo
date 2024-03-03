@@ -199,7 +199,7 @@ mpl.rcParams.update(RCPARAMS := {
     "ytick.labelsize": 'large',
 })
 
-fig, ax = plt.subplots(figsize=np.array((5.75, 1.75))*1.2, layout="constrained", dpi=150)
+fig, ax = plt.subplots(figsize=np.array((5.75, 1.8))*1.2, layout="constrained", dpi=150)
 for metric in diff_all_confounded.index.unique():
     _ = ax.hist(
         diff_all_confounded[metric], bins=10, 
@@ -243,7 +243,7 @@ fig.legend(
 
 
 fig.tight_layout()
-fig.savefig(IMG_SAVEDIR / "robustness.pdf", bbox_inches="tight", pad_inches=0.01)
+fig.savefig(IMG_SAVEDIR / "robustness.pdf", bbox_inches="tight", pad_inches=0.001)
 
 # %%
 

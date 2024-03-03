@@ -255,7 +255,7 @@ mpl.rcParams.update(RCPARAMS := {
     "ytick.labelsize": 'large',
 })
 
-figsize = np.array((7, 4)) * 1.15 if args.where == WHERE_SUPPMAT else np.array((7, 3)) * 1.15
+figsize = np.array((5, 4)) * 1.15 if args.where == WHERE_SUPPMAT else np.array((5, 3.5)) * 1.25
 fig_boxplot, ax = plt.subplots(figsize=figsize, dpi=200, layout="constrained")
 
 BoxplotDisplay.plot_horizontal_functional(
@@ -312,7 +312,11 @@ scat = ax.scatter(
 )
 
 
-_ = ax.set_xlabel("AUROC (blue) / AUPRO (30% red, 5% purple) / AUPIMO (boxplot) / IoU (orange)")
+if args.where == WHERE_SUPPMAT:
+    _ = ax.set_xlabel("AUROC (blue) / AUPRO (30% red, 5% purple) / AUPIMO (boxplot) / IoU (orange)")
+else:  # maintext
+    _ = ax.set_xlabel(None)
+    _ = fig_boxplot.supxlabel("AUROC (blue) / AUPRO (30% red, 5% purple) / AUPIMO (boxplot) / IoU (orange)")
 
 fig_boxplot.savefig(
     PERDATASET_SAVEDIR / f"perdataset_{dcidx:03}_boxplot.pdf", 
