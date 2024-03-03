@@ -60,7 +60,8 @@ echo "[debug] python=$(which python)"
 # ==========================================================
 # MAIN
 
-MODELS=( "patchcore_wr50" "patchcore_wr101" "efficientad_wr101_s_ext" "efficientad_wr101_m_ext" "rd++_wr50_ext" "uflow_ext" )
+# MODELS=( "patchcore_wr50" "patchcore_wr101" "efficientad_wr101_s_ext" "efficientad_wr101_m_ext" "rd++_wr50_ext" "uflow_ext" )
+MODELS=( "patchcore_wr50" )
 echo "[debug] MODELS=${MODELS[@]}"
 
 ARG_METRICS="--metrics superpixel_oracle"
@@ -86,8 +87,11 @@ do
     do
         echo "ASMAPS_PT=${ASMAPS_PT}"
 
+        ARGS="${ARG_METRICS} ${ARG_DATASETS_ROOTS} --asmaps ${ASMAPS_PT} --not-debug"
+        echo "ARGS=${ARGS}"
+
         # call with the models as arguments 
         # and forward all other arguments from the command line
-        python eval.py ${ARG_METRICS} ${ARG_DATASETS_ROOTS} --asmaps ${ASMAPS_PT} --not-debug
+        python eval.py ${ARGS}
     done
 done

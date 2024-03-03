@@ -225,4 +225,1050 @@
             "path": "VisA/visa_pytorch/macaroni1/test/bad/017.JPG",
             "iou": 0.5770609318996416,
             "superpixels_selection": [
-                
+                659,
+                660,
+                731
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/018.JPG",
+            "iou": 0.6640835579514824,
+            "superpixels_selection": [
+                2172,
+                2173,
+                2174,
+                2243,
+                2244,
+                2245,
+                2246,
+                2247,
+                2314,
+                2315,
+                2316,
+                2317
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/019.JPG",
+            "iou": 0.6295546558704453,
+            "superpixels_selection": [
+                753,
+                754,
+                824,
+                895
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/020.JPG",
+            "iou": 0.7216344399854068,
+            "superpixels_selection": [
+                2044,
+                2045,
+                2115,
+                2116,
+                2187,
+                2258,
+                2259,
+                2329,
+                2330
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/021.JPG",
+            "iou": 0.41239479724560063,
+            "superpixels_selection": [
+                517,
+                519,
+                588,
+                589,
+                590,
+                660,
+                661,
+                732
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/022.JPG",
+            "iou": 0.40213815789473684,
+            "superpixels_selection": [
+                2080,
+                2151,
+                2365,
+                2436
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/023.JPG",
+            "iou": 0.628428927680798,
+            "superpixels_selection": [
+                943,
+                944
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/024.JPG",
+            "iou": 0.8860759493670886,
+            "superpixels_selection": [
+                972,
+                973
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/025.JPG",
+            "iou": 0.44386694386694386,
+            "superpixels_selection": [
+                1187,
+                1188,
+                1189,
+                1258,
+                1259
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/026.JPG",
+            "iou": 0.2165097755249819,
+            "superpixels_selection": [
+                2223,
+                2293,
+                2294,
+                2365,
+                2366
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/027.JPG",
+            "iou": 0.6336260978670013,
+            "superpixels_selection": [
+                1234,
+                1235,
+                1236,
+                2184
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/028.JPG",
+            "iou": 0.5176991150442478,
+            "superpixels_selection": [
+                1189,
+                2105,
+                2175,
+                2176
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/029.JPG",
+            "iou": 0.8403755868544601,
+            "superpixels_selection": [
+                1183,
+                1184,
+                1185
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/030.JPG",
+            "iou": 0.12788365095285859,
+            "superpixels_selection": [
+                2257,
+                2327,
+                2328,
+                2467
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/031.JPG",
+            "iou": 0.48084054388133496,
+            "superpixels_selection": [
+                1160,
+                1161,
+                1232,
+                2318
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/032.JPG",
+            "iou": 0.443163097199341,
+            "superpixels_selection": [
+                2158,
+                2159,
+                2230
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/033.JPG",
+            "iou": 0.25915290739411345,
+            "superpixels_selection": [
+                2366,
+                2367,
+                2438,
+                2439
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/034.JPG",
+            "iou": 0.8061674008810573,
+            "superpixels_selection": [
+                2458,
+                2459
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/035.JPG",
+            "iou": 0.3314500941619586,
+            "superpixels_selection": [
+                1259,
+                1260,
+                1331
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/036.JPG",
+            "iou": 0.25220883534136546,
+            "superpixels_selection": [
+                968,
+                1090,
+                1091,
+                1092
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/037.JPG",
+            "iou": 0.324876673713883,
+            "superpixels_selection": [
+                2368,
+                2369,
+                2438
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/038.JPG",
+            "iou": 0.6809593023255814,
+            "superpixels_selection": [
+                2462,
+                2533,
+                2534,
+                2605
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/039.JPG",
+            "iou": 0.3339309726580009,
+            "superpixels_selection": [
+                1228,
+                1229,
+                1300,
+                1301,
+                1302
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/040.JPG",
+            "iou": 0.4467297408473879,
+            "superpixels_selection": [
+                1112,
+                1183,
+                1184,
+                1185,
+                1254,
+                1255,
+                1256,
+                1327,
+                1328
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/041.JPG",
+            "iou": 0.3412509897070467,
+            "superpixels_selection": [
+                2367,
+                2368,
+                2370,
+                2439,
+                2440,
+                2441,
+                2442,
+                2509,
+                2512,
+                2513
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/042.JPG",
+            "iou": 0.3317901234567901,
+            "superpixels_selection": [
+                1111,
+                1180,
+                1181,
+                1182,
+                1229,
+                1230,
+                1231,
+                1252,
+                1253,
+                1301,
+                1323,
+                1325
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/043.JPG",
+            "iou": 0.29172977885489243,
+            "superpixels_selection": [
+                2389,
+                2390,
+                2458,
+                2460,
+                2461,
+                2462,
+                2531,
+                2532,
+                2533,
+                2603
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/044.JPG",
+            "iou": 0.5477903391572456,
+            "superpixels_selection": [
+                902,
+                971,
+                972,
+                974,
+                1045
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/045.JPG",
+            "iou": 0.5022068095838588,
+            "superpixels_selection": [
+                1086,
+                1087,
+                1088,
+                1158,
+                1159,
+                1160,
+                1161,
+                1230,
+                1232
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/046.JPG",
+            "iou": 0.41716434417164344,
+            "superpixels_selection": [
+                2295,
+                2297,
+                2368,
+                2369,
+                2370,
+                2371,
+                2439,
+                2440,
+                2441,
+                2442,
+                2510,
+                2511,
+                2581
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/047.JPG",
+            "iou": 0.43885088919288645,
+            "superpixels_selection": [
+                903,
+                904,
+                905,
+                974,
+                975,
+                977,
+                1046,
+                1047,
+                1048,
+                1117,
+                1118
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/048.JPG",
+            "iou": 0.9103313840155945,
+            "superpixels_selection": [
+                2394,
+                2395
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/049.JPG",
+            "iou": 0.6296296296296297,
+            "superpixels_selection": [
+                2149,
+                2219,
+                2291
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/050.JPG",
+            "iou": 0.8004223864836325,
+            "superpixels_selection": [
+                2148,
+                2149,
+                2220
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/051.JPG",
+            "iou": 0.9411196911196911,
+            "superpixels_selection": [
+                824,
+                825,
+                896,
+                897
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/052.JPG",
+            "iou": 0.9205479452054794,
+            "superpixels_selection": [
+                1186,
+                1187,
+                1256,
+                1257
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/053.JPG",
+            "iou": 0.8596899224806202,
+            "superpixels_selection": [
+                727,
+                728,
+                729,
+                730
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/054.JPG",
+            "iou": 0.8627450980392157,
+            "superpixels_selection": [
+                2102,
+                2103,
+                2173,
+                2174,
+                2245
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/055.JPG",
+            "iou": 0.34419431279620855,
+            "superpixels_selection": [
+                762,
+                831,
+                832,
+                833,
+                904,
+                908
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/056.JPG",
+            "iou": 0.9278183292781833,
+            "superpixels_selection": [
+                970,
+                971,
+                972
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/057.JPG",
+            "iou": 0.9324894514767933,
+            "superpixels_selection": [
+                2652,
+                2653
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/058.JPG",
+            "iou": 0.8754820936639118,
+            "superpixels_selection": [
+                2255,
+                2325,
+                2326,
+                2396,
+                2397
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/059.JPG",
+            "iou": 0.8925049309664694,
+            "superpixels_selection": [
+                2256,
+                2326,
+                2327,
+                2397
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/060.JPG",
+            "iou": 0.9110266159695818,
+            "superpixels_selection": [
+                2435,
+                2436,
+                2507,
+                2579,
+                2580
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/061.JPG",
+            "iou": 0.9067796610169492,
+            "superpixels_selection": [
+                2514,
+                2515,
+                2585
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/062.JPG",
+            "iou": 0.8443271767810027,
+            "superpixels_selection": [
+                978,
+                1048,
+                1118
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/063.JPG",
+            "iou": 0.4629080118694362,
+            "superpixels_selection": [
+                1111,
+                1113,
+                1182,
+                1183,
+                1184,
+                1185
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/064.JPG",
+            "iou": 0.7766714082503556,
+            "superpixels_selection": [
+                972,
+                1043
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/065.JPG",
+            "iou": 0.9225563909774436,
+            "superpixels_selection": [
+                2674,
+                2675,
+                2676,
+                2677,
+                2746
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/066.JPG",
+            "iou": 0.9165985282093213,
+            "superpixels_selection": [
+                667,
+                737,
+                738,
+                808,
+                809
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/067.JPG",
+            "iou": 0.5580543933054394,
+            "superpixels_selection": [
+                656,
+                727,
+                739,
+                740,
+                809,
+                1164
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/068.JPG",
+            "iou": 0.9049858889934148,
+            "superpixels_selection": [
+                1116,
+                1185,
+                1186,
+                1187
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/069.JPG",
+            "iou": 0.9029126213592233,
+            "superpixels_selection": [
+                1043,
+                1044,
+                1114,
+                1115
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/070.JPG",
+            "iou": 0.3579136690647482,
+            "superpixels_selection": [
+                656,
+                727
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/071.JPG",
+            "iou": 0.0963855421686747,
+            "superpixels_selection": [
+                2078,
+                2364,
+                2437,
+                2510
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/072.JPG",
+            "iou": 0.09425878320479864,
+            "superpixels_selection": [
+                2149,
+                2162,
+                2302,
+                2363,
+                2372,
+                2508,
+                2579,
+                2581,
+                2582
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/073.JPG",
+            "iou": 0.35609756097560974,
+            "superpixels_selection": [
+                2103,
+                2174,
+                2175,
+                2246,
+                2317
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/074.JPG",
+            "iou": 0.10541149943630214,
+            "superpixels_selection": [
+                2080,
+                2154,
+                2225,
+                2296,
+                2363,
+                2367,
+                2438,
+                2509,
+                2578
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/075.JPG",
+            "iou": 0.07355021216407355,
+            "superpixels_selection": [
+                2173,
+                2315,
+                2386,
+                2457,
+                2528
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/076.JPG",
+            "iou": 0.08139534883720931,
+            "superpixels_selection": [
+                2103,
+                2174,
+                2386,
+                2387
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/077.JPG",
+            "iou": 0.08179723502304148,
+            "superpixels_selection": [
+                2152,
+                2222,
+                2223,
+                2294,
+                2436
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/078.JPG",
+            "iou": 0.09062170706006323,
+            "superpixels_selection": [
+                2111,
+                2255,
+                2326,
+                2387,
+                2389,
+                2390,
+                2395,
+                2538,
+                2609
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/079.JPG",
+            "iou": 0.1111111111111111,
+            "superpixels_selection": [
+                828,
+                899,
+                971,
+                1039,
+                1043,
+                1044,
+                1111,
+                1116,
+                1118,
+                1119,
+                1188,
+                1256,
+                1258
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/080.JPG",
+            "iou": 0.394109396914446,
+            "superpixels_selection": [
+                897,
+                969,
+                1112,
+                1113,
+                1114,
+                1184,
+                1185
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/081.JPG",
+            "iou": 0.07604562737642585,
+            "superpixels_selection": [
+                2160,
+                2301,
+                2442,
+                2512
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/082.JPG",
+            "iou": 0.14655172413793102,
+            "superpixels_selection": [
+                2244,
+                2315,
+                2458,
+                2530,
+                2601
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/083.JPG",
+            "iou": 0.11316397228637413,
+            "superpixels_selection": [
+                2174,
+                2245,
+                2388,
+                2459
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/084.JPG",
+            "iou": 0.07830342577487764,
+            "superpixels_selection": [
+                2512,
+                2513,
+                2582,
+                2648,
+                2650
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/085.JPG",
+            "iou": 0.27367205542725176,
+            "superpixels_selection": [
+                965,
+                967,
+                1037,
+                1038,
+                1039,
+                1109,
+                1110,
+                1111
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/086.JPG",
+            "iou": 0.31534569983136596,
+            "superpixels_selection": [
+                2081,
+                2151,
+                2152,
+                2224,
+                2296,
+                2367,
+                2438,
+                2439
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/087.JPG",
+            "iou": 0.19235668789808918,
+            "superpixels_selection": [
+                1262,
+                1331,
+                1332,
+                1397,
+                1398,
+                1401
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/088.JPG",
+            "iou": 0.29430051813471503,
+            "superpixels_selection": [
+                1327,
+                1328,
+                1396,
+                1397,
+                1467
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/089.JPG",
+            "iou": 0.35374149659863946,
+            "superpixels_selection": [
+                2256,
+                2327,
+                2399
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/090.JPG",
+            "iou": 0.3286924939467312,
+            "superpixels_selection": [
+                1231,
+                1232,
+                1234,
+                1235,
+                1236,
+                1306
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/091.JPG",
+            "iou": 0.14444444444444443,
+            "superpixels_selection": [
+                2535,
+                2537,
+                2603,
+                2605
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/092.JPG",
+            "iou": 0.2721843003412969,
+            "superpixels_selection": [
+                1187,
+                1258,
+                1259,
+                1260,
+                1330,
+                1398,
+                1399,
+                1400
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/093.JPG",
+            "iou": 0.40988106129917656,
+            "superpixels_selection": [
+                1193,
+                1263,
+                1333,
+                1402,
+                1403
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/094.JPG",
+            "iou": 0.20626477541371158,
+            "superpixels_selection": [
+                907,
+                979,
+                1050,
+                1051,
+                1122
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/095.JPG",
+            "iou": 0.4413145539906103,
+            "superpixels_selection": [
+                2223,
+                2291,
+                2292,
+                2293
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/096.JPG",
+            "iou": 0.4015122873345936,
+            "superpixels_selection": [
+                1039,
+                1040,
+                1041,
+                1110,
+                1111,
+                1112,
+                1113,
+                1114
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/097.JPG",
+            "iou": 0.20074580484773152,
+            "superpixels_selection": [
+                2364,
+                2435,
+                2436,
+                2437,
+                2438,
+                2439,
+                2509
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/098.JPG",
+            "iou": 0.20615633859862292,
+            "superpixels_selection": [
+                2184,
+                2324,
+                2325,
+                2465,
+                2466
+            ]
+        },
+        {
+            "path": "VisA/visa_pytorch/macaroni1/test/bad/099.JPG",
+            "iou": 0.40721040189125296,
+            "superpixels_selection": [
+                972,
+                1043,
+                1113,
+                1114,
+                1185,
+                1255,
+                1256,
+                1326,
+                1327,
+                1328,
+                1398
+            ]
+        },
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ]
+}
