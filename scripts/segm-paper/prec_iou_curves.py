@@ -473,7 +473,7 @@ for iteridx, imgidx in enumerate(images_idxs):
     trhesh = threshs_shared[max_thresh_idx]
     maxiou = per_image_iou_values_shared[imgidx][max_thresh_idx]
 
-    _ = ax.scatter(trhesh, maxiou, marker="*", s=150, c=ax.get_legend_handles_labels()[0][iteridx].get_color())
+    _ = ax.scatter(trhesh, maxiou, marker="*", s=100, c=ax.get_legend_handles_labels()[0][iteridx].get_color())
 
     pivot_value = maxiou * 0.90
     pivots_thresh_idxs = np.argsort(np.abs(iou_curve - pivot_value))[:10].numpy()
@@ -482,7 +482,7 @@ for iteridx, imgidx in enumerate(images_idxs):
         threshs_shared[pivots_thresh_idxs],
         iou_curve[pivots_thresh_idxs],
         marker="o",
-        s=150,
+        s=50,
         c=ax.get_legend_handles_labels()[0][iteridx].get_color(),
     )
 
@@ -518,12 +518,27 @@ for iteridx, imgidx in enumerate(images_idxs):
     # _ = ax_imshow.clabel(cs, cs.levels, inline=True, fmt=fmt, fontsize=20)
     # pivots_str = [f"{p:.0%} ({per_image_tpr_values_shared[imgidx, thidx]:.0%})" for p, thidx in zip(iou_values, all_pivots_thresh_idxs)]
     pivots_str = [f"{p:.0%}" for p, thidx in zip(iou_values, all_pivots_thresh_idxs, strict=False)]
-    pivots_str[0] += " [left of max]"
+    pivots_str[0] += " [left]"
     pivots_str[1] += " [max]"
-    pivots_str[-1] += " [right of max]"
+    pivots_str[-1] += " [right]"
     pivots_str = ", ".join(pivots_str)
-    # _ = ax_imshow.set_title(f"Image {imgidx}. Contours at IoU (corresponding recall):\n{pivots_str}")
     _ = ax_imshow.axis("off")
+    _ = ax_imshow.annotate(
+        f"Image {imgidx} contours\nIoU: {pivots_str}",
+        xy=(0.5, 0),
+        xycoords="axes fraction",
+        xytext=(0, 10),
+        textcoords="offset points",
+        ha="center",
+        va="bottom",
+        fontsize=22,
+        bbox=dict(  # noqa: C408
+            facecolor="white",
+            alpha=1,
+            edgecolor="black",
+            boxstyle="round,pad=0.2",
+        ),
+    )
 
     # fig_imshow.savefig(SAVEDIR / f"iou_contours_{imgidx}.pdf", bbox_inches="tight", pad_inches=1e-2)
     if args.savedir is not None:
