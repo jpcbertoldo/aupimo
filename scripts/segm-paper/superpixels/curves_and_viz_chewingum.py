@@ -315,7 +315,7 @@ valid_asmap = valid_asmap[0]
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-fig, ax = plt.subplots(figsize=np.array((6, 4)) * .7)
+fig, ax = plt.subplots(figsize=np.array((6, 4)) * .75)
 _ = ax.plot(
     threshs,
     heuristic_curve_values,
@@ -324,15 +324,15 @@ _ = ax.plot(
 )
 _ = ax.scatter(
     local_minima_threshs, local_minima_values,
-    color="tab:red", label="local minima", marker="o", s=150, zorder=10,
+    color="tab:red",  marker="o", s=150, zorder=10,
 )
-_ = ax.plot(ioucurves.threshs[image_idx], ioucurves.per_image_ious[image_idx], color="black", label="iou")
+_ = ax.plot(ioucurves.threshs[image_idx], ioucurves.per_image_ious[image_idx], color="black", label="IoU")
 _ = ax.scatter(
     local_minima_threshs_bis, local_minima_ious,
-    color="black", label="local minima", marker="o", s=150, zorder=10,
+    color="black",  marker="o", s=150, zorder=10,
 )
-_ = ax.axvline(max_iou_per_image_result.threshs[image_idx], color="black", label="max iou", linestyle="--")
-_ = ax.axvline(min_thresh, color="gray", label="min thresh", linestyle="--")
+_ = ax.axvline(max_iou_per_image_result.threshs[image_idx], color="black", label="Oracle Per-Image Thresh.", linestyle="--")
+_ = ax.axvline(min_thresh, color="gray", label="Val. Thresh.", linestyle="--")
 
 _ = ax.set_ylim(0, 1)
 _ = ax.set_yticks(np.linspace(0, 1, 6))
@@ -344,6 +344,8 @@ _ = ax.set_ylabel("IoU and Heuristic Signal")
 _ = ax.set_xlabel("Thresholds")
 _ = ax.set_xlim(left=0, right=2.5)
 _ = ax.set_xticks(np.linspace(0, 2.5, 6))
+
+leg = ax.legend(loc="upper right", framealpha=1, fontsize="small", ncol=2)
 
 if args.savedir is not None:
     fig.savefig(args.savedir / "chewinggum_00_curves.pdf", bbox_inches="tight", pad_inches=1e-2,)

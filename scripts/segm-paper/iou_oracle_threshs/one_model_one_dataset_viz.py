@@ -57,6 +57,7 @@ _ = parser.add_argument("--mvtec-root", type=Path)
 _ = parser.add_argument("--visa-root", type=Path)
 _ = parser.add_argument("--device", choices=["cpu", "cuda", "gpu"], default="cpu")
 _ = parser.add_argument("--save", action="store_true")
+_ = parser.add_argument("--savedir", type=Path, default=None)
 
 if IS_NOTEBOOK:
     print("argument string")
@@ -64,9 +65,11 @@ if IS_NOTEBOOK:
         argstrs := [
             string
             for arg in [
-                "--rundir ../../../data/experiments/benchmark/patchcore_wr50/mvtec/leather",
+                "--rundir ../../../data/experiments/benchmark/efficientad_wr101_s_ext/mvtec/transistor",
+                # "--rundir ../../../data/experiments/benchmark/patchcore_wr50/mvtec/leather",
                 "--mvtec-root ../../../data/datasets/MVTec",
                 "--visa-root ../../../data/datasets/VisA",
+                "--savedir ../../../../2024-03-segm-paper/src/img",
                 # "--save",
             ]
             for string in arg.split(" ")
@@ -338,7 +341,7 @@ fig, axes = plt.subplots(
     layout="constrained",
 )
 
-for ax, stat in zip(axes.flatten(), diff_stats, strict=True):
+for ax, stat, color in zip(axes.flatten(), diff_stats, ["tab:orange", "tab:purple", "tab:green", "tab:cyan"], strict=True):
     image_idx = stat["image_idx"]
     asmap = asmaps[image_idx]
     mask = masks[image_idx]
@@ -358,33 +361,36 @@ for ax, stat in zip(axes.flatten(), diff_stats, strict=True):
         mask,
         levels=[0.5],
         colors="black",
-        linewidths=(lw := 2.5),
+        linewidths=(lw := 3),
         linestyles="--",
     )
     cs_thresh_min = ax.contour(
         asmap,
         levels=[thresh_min],
-        colors=["white"],
+        colors=["lightgray"],
         linewidths=lw,
+        linestyles="--",
     )
-    clabel_thresh_min = ax.clabel(
-        cs_thresh_min, inline=True, fontsize=20,
-        fmt="min. thresh",
-    )
+    # clabel_thresh_min = ax.clabel(
+    #     cs_thresh_min, inline=True, fontsize=20,
+    #     fmt="Val. Thresh.",
+    # )
     cs_thresh_global = ax.contour(
         asmap,
         levels=[thresh_global],
-        colors=["red"],
+        colors=["white"],
         linewidths=lw,
     )
     cs_thresh_local = ax.contour(
         asmap,
         levels=[thresh_local],
-        colors=["blue"],
+        # colors=["blue"],
+        colors=[color],
         linewidths=lw,
     )
     _ = ax.annotate(
-        f"Image {image_idx}\nGlobal: {iou_at_global:.0%}\nLocal: {iou_at_local:.0%}",
+        f"Image {image_idx}\nGlobal: {iou_at_global:.0%}\nPer-Image: {iou_at_local:.0%}",
+        # f"Oracle Global: {iou_at_global:.0%}\nOracle Per-Image: {iou_at_local:.0%}",
         xy=(0, 1), xycoords="axes fraction",
         xytext=(10, -10), textcoords="offset points",
         ha="left", va="top",
@@ -397,5 +403,8 @@ for ax, stat in zip(axes.flatten(), diff_stats, strict=True):
 for ax in axes.flatten():
     _ = ax.set_xticks([])
     _ = ax.set_yticks([])
+
+if args.savedir is not None:
+    fig.savefig(args.savedir / "avg_and_perimg_iou_viz.pdf", bbox_inches="tight", pad_inches=0.01)
 
 # %%

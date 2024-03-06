@@ -178,7 +178,7 @@ class IOUCurvesResult:
 
     def plot_avg_iou_curve(self, ax: Axes = None) -> None:
         """Plot the average IoU curve."""
-        _ = ax.plot(self.threshs, self.avg_iou_curve, color="black", label="Avg.")
+        _ = ax.plot(self.threshs, self.avg_iou_curve, color="black", label="Avg. IoU")
         _ = ax.fill_between(
             self.threshs,
             self.quantiles_iou_curve(0.05),
@@ -220,7 +220,8 @@ class IOUCurvesResult:
     def plot_iou_curve(self, ax: Axes, image_idx: int, **kwargs) -> None:
         """Plot the IoU curve of a specific image."""
         kwargs = {
-            "label": f"idx={image_idx}",
+            # "label": f"idx={image_idx}",
+            "label": f"Image {image_idx}",
             "alpha": 1,
             **kwargs,
         }

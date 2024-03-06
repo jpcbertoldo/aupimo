@@ -121,7 +121,7 @@ diff_stats = [stat for stat in diff_stats if stat["stat_name"] not in ("mean", "
 # %% avg iou curve
 # fig, ax = plt.subplots(figsize=np.array((6, 5)) * .7)
 
-fig, axrow = plt.subplots(1, 2, figsize=np.array((9, 5)) * .7, sharey=True, sharex=True, layout="constrained")
+fig, axrow = plt.subplots(1, 2, figsize=np.array((9, 5)) * .65, sharey=True, sharex=True, layout="constrained")
 
 ax = axrow[0]
 
@@ -156,17 +156,17 @@ for line in leg.get_lines():
 
 ax = axrow[1]
 
-for bp_stat, color in zip(diff_stats, ["tab:orange", "tab:purple", "tab:brown", "tab:cyan"], strict=True):
+for bp_stat, color in zip(diff_stats, ["tab:orange", "tab:purple", "tab:green", "tab:cyan"], strict=True):
     iou_curve = ioucurves_global.per_image_ious[bp_stat["image_idx"]]
-    _ = ioucurves_global.plot_iou_curve(ax, bp_stat["image_idx"], color=color, label=None)
+    _ = ioucurves_global.plot_iou_curve(ax, bp_stat["image_idx"], color=color)
     _ = ioucurves_global.scatter_local_oracle(
         ax,
         max_ious_result.threshs[bp_stat["image_idx"]],
         max_ious_result.ious[bp_stat["image_idx"]],
         color=color,
     )
-_ = ioucurves_global.axvline_min_thresh(ax, max_avg_iou_min_thresh_result.min_thresh)
-_ = ioucurves_global.axvline_global_oracle(ax, max_avg_iou_min_thresh_result.thresh)
+_ = ioucurves_global.axvline_min_thresh(ax, max_avg_iou_min_thresh_result.min_thresh, label=None)
+_ = ioucurves_global.axvline_global_oracle(ax, max_avg_iou_min_thresh_result.thresh, label=None)
 leg = ax.legend(loc="upper right", framealpha=1, fontsize="small")
 for line in leg.get_lines():
     line.set_linewidth(2.5)
