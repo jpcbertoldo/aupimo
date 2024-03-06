@@ -178,29 +178,29 @@ class IOUCurvesResult:
 
     def plot_avg_iou_curve(self, ax: Axes = None) -> None:
         """Plot the average IoU curve."""
-        _ = ax.plot(self.threshs, self.avg_iou_curve, color="black", label="avg iou")
+        _ = ax.plot(self.threshs, self.avg_iou_curve, color="black", label="Avg.")
         _ = ax.fill_between(
             self.threshs,
             self.quantiles_iou_curve(0.05),
             self.quantiles_iou_curve(0.95),
-            alpha=0.3,
-            color="gray",
+            alpha=0.15,
+            color="tab:blue",
             label="p5-p95",
         )
         _ = ax.fill_between(
             self.threshs,
             self.quantiles_iou_curve(0.25),
             self.quantiles_iou_curve(0.75),
-            alpha=0.3,
-            color="dimgray",
+            alpha=0.15,
+            color="tab:red",
             label="p25-p75",
         )
 
     def axvline_global_oracle(self, ax: Axes, global_oracle_thresh: float, **kwargs) -> None:
         kwargs = {
-            "label": "global oracle",
-            "color": "tab:red",
-            "linestyle": "-",
+            "label": "Oracle Global Thresh.",
+            "color": "black",
+            "linestyle": "--",
             "alpha": 1,
             **kwargs,
         }
@@ -231,8 +231,8 @@ class IOUCurvesResult:
     ) -> None:
         kwargs = {
             "color": "tab:blue",
-            "s": 250,
-            "marker": "*",
+            "s": 150,
+            "marker": "o",
             "ec": "black",
             "zorder": 10,
             **kwargs,
@@ -243,17 +243,18 @@ class IOUCurvesResult:
         _ = ax.set_ylabel("IoU")
 
         _ = ax.set_ylim(0 - (eps := 1e-2), 1 + eps)
-        _ = ax.set_yticks(np.linspace(0, 1, 5))
+        _ = ax.set_yticks(np.linspace(0, 1, 6))
+        _ = ax.set_yticks(np.linspace(0, 1, 11), minor=True)
         _ = ax.yaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1))
-        _ = ax.grid(axis="y")
+        _ = ax.grid(axis="y", linestyle="-", alpha=0.5, which="both")
 
     def ax_cfg_xaxis(self, ax: Axes) -> None:
         _ = ax.set_xlabel("Threshold")
 
     def axvline_min_thresh(self, ax: Axes, min_thresh: float, **kwargs) -> None:
         kwargs = {
-            "label": "min thresh",
-            "color": "black",
+            "label": "Validation Thresh.",
+            "color": "gray",
             "linestyle": "--",
             "alpha": 1,
             **kwargs,

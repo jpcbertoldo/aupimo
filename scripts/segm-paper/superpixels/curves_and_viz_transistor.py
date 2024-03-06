@@ -43,9 +43,6 @@ else:
 
 
 from aupimo._validate_tensor import safe_tensor_to_numpy
-from aupimo.oracles_numpy import (
-    calculate_levelset_mean_dist_to_superpixel_boundaries_curve,
-)
 
 # %%
 # Args
@@ -71,8 +68,8 @@ if IS_NOTEBOOK:
             string
             for arg in [
                 # "--asmaps ../../../data/experiments/benchmark/efficientad_wr101_s_ext/mvtec/capsule/asmaps.pt",
-                # "--asmaps ../../../data/experiments/benchmark/efficientad_wr101_s_ext/mvtec/transistor/asmaps.pt",
-                "--asmaps ../../../data/experiments/benchmark/efficientad_wr101_s_ext/visa/chewinggum/asmaps.pt",
+                "--asmaps ../../../data/experiments/benchmark/efficientad_wr101_s_ext/mvtec/transistor/asmaps.pt",
+                # "--asmaps ../../../data/experiments/benchmark/efficientad_wr101_s_ext/visa/chewinggum/asmaps.pt",
                 # "--asmaps ../../../data/experiments/benchmark/rd++_wr50_ext/mvtec/bottle/asmaps.pt",
                 "--mvtec-root ../../../data/datasets/MVTec",
                 "--visa-root ../../../data/datasets/VisA",
@@ -263,10 +260,6 @@ superpixel_oracle_selection_dir = Path("/".join(rundir.parts[:-3] + ("patchcore_
 
 # %%
 
-from aupimo.oracles_numpy import (
-    open_image,
-    upscale_image_asmap_mask,
-)
 
 ioucurves = IOUCurvesResult.load(iou_oracle_threshs_dir / "ioucurves_local_threshs.pt")
 max_iou_per_image_result = MaxIOUPerImageResult.load(iou_oracle_threshs_dir / "max_iou_per_img_min_thresh.json")
@@ -279,7 +272,7 @@ image_idx = 18  # missing leg, good one
 # image_idx = 21  # broken part, shows limitation of multi-region level set
 
 # chewinggum
-image_idx = 3
+# image_idx = 3
 
 threshs = payload_loaded["threshs_per_image"][image_idx]
 heuristic_curve_values = payload_loaded["levelset_mean_dist_curve_per_image"][image_idx]
@@ -287,7 +280,8 @@ num_levelsets = threshs.shape[0]
 min_thresh = payload_loaded["min_thresh"]
 upscale_factor = payload_loaded["upscale_factor"]
 
-local_minima_idxs = np.array(payload_loaded["local_minima_idxs_per_image"][image_idx][:5])
+# local_minima_idxs = np.array(payload_loaded["local_minima_idxs_per_image"][image_idx][:5])
+local_minima_idxs = np.array(payload_loaded["local_minima_idxs_per_image"][image_idx])
 local_minima_threshs = threshs[local_minima_idxs]
 local_minima_values = heuristic_curve_values[local_minima_idxs]
 
@@ -295,7 +289,8 @@ local_minima_values = heuristic_curve_values[local_minima_idxs]
 local_minima_idxs_bis = np.argmin(np.abs(ioucurves.threshs[image_idx][None, ...] - local_minima_threshs[..., None]), axis=1)
 local_minima_ious = ioucurves.per_image_ious[image_idx][local_minima_idxs_bis]
 local_minima_ious_argsorted = np.argsort(local_minima_ious)
-local_minima_idxs_bis = local_minima_idxs_bis[local_minima_ious_argsorted[[0, 2, 4]]]
+chosen = [0, len(local_minima_ious_argsorted) // 2, len(local_minima_ious_argsorted)-1]
+local_minima_idxs_bis = local_minima_idxs_bis[local_minima_ious_argsorted[chosen]]
 local_minima_ious = ioucurves.per_image_ious[image_idx][local_minima_idxs_bis]
 local_minima_threshs_bis = ioucurves.threshs[image_idx, local_minima_idxs_bis]
 
@@ -320,22 +315,41 @@ valid_asmap = valid_asmap[0]
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=np.array((6, 4)) * .7)
 _ = ax.plot(
     threshs,
     heuristic_curve_values,
-    color="blue",
-    label="levelset mean dist",
+    color="tab:red",
+    label="Heuristic signal",
 )
-_ = ax.scatter(local_minima_threshs, local_minima_values, color="red")
-_ = ax.plot(ioucurves.threshs[image_idx], ioucurves.per_image_ious[image_idx], color="green", label="iou")
 _ = ax.scatter(
-    local_minima_threshs_bis,
-    local_minima_ious,
-    color="red",
+    local_minima_threshs, local_minima_values,
+    color="tab:red", label="local minima", marker="o", s=150, zorder=10,
 )
-_ = ax.axvline(max_iou_per_image_result.threshs[image_idx], color="orange", label="max iou", linestyle="--")
-_ = ax.axvline(min_thresh, color="black", label="min thresh", linestyle="--")
+_ = ax.plot(ioucurves.threshs[image_idx], ioucurves.per_image_ious[image_idx], color="black", label="iou")
+_ = ax.scatter(
+    local_minima_threshs_bis, local_minima_ious,
+    color="black", label="local minima", marker="o", s=150, zorder=10,
+)
+_ = ax.axvline(max_iou_per_image_result.threshs[image_idx], color="black", label="max iou", linestyle="--")
+_ = ax.axvline(min_thresh, color="gray", label="min thresh", linestyle="--")
+
+_ = ax.set_ylim(0, 1)
+_ = ax.set_yticks(np.linspace(0, 1, 6))
+_ = ax.set_yticks(np.linspace(0, 1, 11), minor=True)
+_ = ax.yaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1))
+_ = ax.grid(axis="y", linestyle="-", linewidth=1, alpha=0.5, which="both")
+_ = ax.set_ylabel("IoU and Heuristic Signal")
+
+_ = ax.set_xlabel("Thresholds")
+_ = ax.set_xlim(left=0, right=2.5)
+_ = ax.set_xticks(np.linspace(0, 2.5, 6))
+
+if args.savedir is not None:
+    fig.savefig(args.savedir / "transistor_00_curves.pdf", bbox_inches="tight", pad_inches=1e-2,)
+
+
+# %%
 
 
 def _get_cmap_transparent_bad(cmap_name: str):
@@ -352,42 +366,70 @@ fig, axes = plt.subplots(
     sharey=True,
     constrained_layout=True,
 )
-for ax in axes.flatten():
-    _ = ax.set_xticks([])
-    _ = ax.set_yticks([])
 axrow = axes.flatten()
 
-ax = axrow[0]
-_ = ax.imshow(img)
-_ = ax.imshow(valid_asmap, cmap=_get_cmap_transparent_bad("jet"), alpha=0.6)
-cs_gt = ax.contour(
-    mask,
-    levels=[0.5],
-    colors="black",
-    linewidths=2.5,
-    linestyles="--",
-)
-_ = ax.contour(
-    asmap,
-    levels=[max_iou_per_image_result.threshs[image_idx].item()],
-    colors=["white"],
-    linewidths=2.5,
-)
+def draw0(ax):
+    _ = ax.imshow(img)
+    _ = ax.imshow(valid_asmap, cmap=_get_cmap_transparent_bad("jet"), alpha=0.85)
+    cs_gt = ax.contour(
+        mask,
+        levels=[0.5],
+        colors="black",
+        linewidths=2.5,
+        linestyles="--",
+    )
+    _ = ax.contour(
+        asmap,
+        levels=[max_iou_per_image_result.threshs[image_idx].item()],
+        colors=["white"],
+        linewidths=4.5,
+    )
 
-ax = axrow[1]
-_ = ax.imshow(img)
-_ = ax.contour(
-    asmap,
-    levels=np.sort(local_minima_threshs),
-    linewidths=2.5,
-    cmap="spring",
-)
-cs_gt = ax.contour(
-    mask,
-    levels=[0.5],
-    colors="black",
-    linewidths=2.5,
-    linestyles="--",
-)
+
+def draw1(ax):
+    _ = ax.imshow(img)
+    _ = ax.contour(
+        asmap,
+        levels=np.sort(local_minima_threshs),
+        linewidths=3.5,
+        colors=["yellow", "orange", "red"],
+    )
+    cs_gt = ax.contour(
+        mask,
+        levels=[0.5],
+        colors="black",
+        linewidths=2.5,
+        linestyles="--",
+    )
+
+draw0(axrow[0])
+draw1(axrow[1])
+
+for ax in axrow:
+    _ = ax.set_xticks([])
+    _ = ax.set_yticks([])
+    _ = ax.set_xlim(img.shape[0] * 0.22, img.shape[1] * .78)
+    _ = ax.set_ylim(img.shape[0] * 0.10, img.shape[1] * .90)
+    _ = ax.invert_yaxis()
+
+# %%
+
+fig0, ax = plt.subplots(figsize=(10, 10))
+draw0(ax)
+_ = ax.set_xlim(axrow[0].get_xlim())
+_ = ax.set_ylim(axrow[0].get_ylim())
+_ = ax.set_xticks([])
+_ = ax.set_yticks([])
+
+fig1, ax = plt.subplots(figsize=(10, 10))
+draw1(ax)
+_ = ax.set_xlim(axrow[1].get_xlim())
+_ = ax.set_ylim(axrow[1].get_ylim())
+_ = ax.set_xticks([])
+_ = ax.set_yticks([])
+
+if args.savedir is not None:
+    fig0.savefig(args.savedir / "transistor_00_heatmap_oracle.pdf", bbox_inches="tight", pad_inches=1e-2,)
+    fig1.savefig(args.savedir / "transistor_00_heuristic_choices.pdf", bbox_inches="tight", pad_inches=1e-2,)
 
 # %%

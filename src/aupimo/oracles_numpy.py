@@ -74,10 +74,11 @@ def plot_superpixels_boundaries_vs_gt(
     image: ndarray,
     superpixels: ndarray,
     mask: ndarray,
+    boundaries_color: str = "magenta",
 ) -> tuple[mpl.image.AxesImage, mpl.contour.QuadContourSet]:
     """TODO(jpcbertoldo): write docstring of `plot_superpixels_boundaries_vs_gt`."""
     imshow = ax.imshow(
-        sk.segmentation.mark_boundaries(image, superpixels, color=mpl.colors.to_rgb("magenta")),
+        sk.segmentation.mark_boundaries(image, superpixels, color=mpl.colors.to_rgb(boundaries_color)),
     )
     cs_gt = ax.contour(
         mask,
@@ -360,6 +361,7 @@ def calculate_levelset_mean_dist_to_superpixel_boundaries_curve(
     distance_map_saturation_distance_percentile: int = 100,
     distance_map_distortion_power: int = 1,
     num_levelsets: int = 500,
+    ret_superpixels_original: bool = False,
 ) -> np.ndarray:
     """Calculate the mean distance of the levelset contours of the anomaly map.
 
@@ -377,7 +379,7 @@ def calculate_levelset_mean_dist_to_superpixel_boundaries_curve(
             np.full(num_levelsets, np.nan),
         )
 
-    superpixels = get_superpixels_watershed(
+    superpixels_original = superpixels = get_superpixels_watershed(
         image,
         superpixel_relsize=watershed_superpixel_relsize,
         compactness=watershed_compactness,
@@ -400,4 +402,8 @@ def calculate_levelset_mean_dist_to_superpixel_boundaries_curve(
         levelset_dists = superpixels_boundaries_distance_map[levelset_binmask]
         levelset_mean_dist_curve.append(levelset_dists.mean())
 
+    if ret_superpixels_original:
+        return superpixels, superpixels_boundaries_distance_map, threshs, np.array(levelset_mean_dist_curve), superpixels_original
+
     return superpixels, superpixels_boundaries_distance_map, threshs, np.array(levelset_mean_dist_curve)
+

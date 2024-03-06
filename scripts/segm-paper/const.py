@@ -47,8 +47,8 @@ DATASET_2_LABEL = {
 }
 
 METHOD_2_LABEL = {
-    'global_thresh': "Global Threshold",
-    'local_thresh': "Per-Image Threshold",
-    'local_thresh_min_val': "Per-Image Threshold (with val.)",
-    'heuristic_best': "Heuristic Best Case",
+    'global_thresh': "Oracle Global Thresh.",
+    'local_thresh': "Oracle Per-Image Thresh.",
+    'local_thresh_min_val': "Oracle Per-Image Thresh (with val.)",
+    'heuristic_best': "Heuristic (best)",
 }

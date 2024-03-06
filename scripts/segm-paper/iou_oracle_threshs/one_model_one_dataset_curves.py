@@ -15,9 +15,7 @@ import warnings
 from pathlib import Path
 
 import numpy as np
-import torch
 from matplotlib import pyplot as plt
-from PIL import Image
 
 # is it running as a notebook or as a script?
 if (arg0 := Path(sys.argv[0]).stem) == "ipykernel_launcher":
@@ -56,6 +54,7 @@ _ = parser.add_argument("--rundir", type=Path, required=True)
 _ = parser.add_argument("--mvtec-root", type=Path)
 _ = parser.add_argument("--visa-root", type=Path)
 _ = parser.add_argument("--device", choices=["cpu", "cuda", "gpu"], default="cpu")
+_ = parser.add_argument("--savedir", type=Path, default=None)
 
 if IS_NOTEBOOK:
     print("argument string")
@@ -63,9 +62,10 @@ if IS_NOTEBOOK:
         argstrs := [
             string
             for arg in [
-                "--rundir ../../../data/experiments/benchmark/patchcore_wr50/mvtec/bottle",
+                "--rundir ../../../data/experiments/benchmark/efficientad_wr101_s_ext/mvtec/transistor",
                 "--mvtec-root ../../../data/datasets/MVTec",
                 "--visa-root ../../../data/datasets/VisA",
+                "--savedir ../../../../2024-03-segm-paper/src/img",
             ]
             for string in arg.split(" ")
         ],
@@ -76,6 +76,12 @@ else:
     args = parser.parse_args()
 
 print(f"{args=}")
+
+assert args.rundir.exists(), f"{args.rundir=}"
+
+if args.savedir is not None:
+    assert args.savedir.exists(), f"{args.savedir=}"
+
 
 # %%
 
@@ -113,43 +119,70 @@ diff_stats = per_image_scores_stats(
 diff_stats = [stat for stat in diff_stats if stat["stat_name"] not in ("mean", "med")]
 
 # %% avg iou curve
-fig, ax = plt.subplots(figsize=[6, 4])
+# fig, ax = plt.subplots(figsize=np.array((6, 5)) * .7)
+
+fig, axrow = plt.subplots(1, 2, figsize=np.array((9, 5)) * .7, sharey=True, sharex=True, layout="constrained")
+
+ax = axrow[0]
 
 ioucurves_global.plot_avg_iou_curve(ax)
 ioucurves_global.ax_cfg_xaxis(ax)
 ioucurves_global.ax_cfg_yaxis(ax)
 
-_ = ioucurves_global.axvline_min_thresh(ax, max_avg_iou_min_thresh_result.min_thresh)
-_ = ioucurves_global.axvline_global_oracle(ax, max_avg_iou_min_thresh_result.thresh)
+_ = ioucurves_global.axvline_min_thresh(ax, max_avg_iou_min_thresh_result.min_thresh, color="gray")
+_ = ioucurves_global.axvline_global_oracle(ax, max_avg_iou_min_thresh_result.thresh, color="black", linestyle="--")
 _ = ioucurves_global.scatter_global_oracle(
     ax,
     max_avg_iou_min_thresh_result.thresh,
     max_avg_iou_min_thresh_result.avg_iou,
+    marker='o',
+    color="black",
+    s=150,
 )
+_ = ax.set_xlim(left=0, right=1.5)
+_ = ax.set_ylim(0, 1)
+_ = ax.set_xticks(np.linspace(0, 1.5, 4))
 
-leg = ax.legend(loc="upper left", framealpha=1, fontsize="small")
+leg = ax.legend(loc="upper right", framealpha=1, fontsize="small")
 for line in leg.get_lines():
     line.set_linewidth(2.5)
 
-# %%
+# if args.savedir is not None:
+#     fig.savefig(args.savedir / "avg_iou_curve.svg", bbox_inches="tight", pad_inches=0.01)
+
 # diff stats curves
 
-fig, ax = plt.subplots(figsize=np.array((6, 4)))
+# fig, ax = plt.subplots(figsize=np.array((6, 5)) * .7)
+
+ax = axrow[1]
 
 for bp_stat, color in zip(diff_stats, ["tab:orange", "tab:purple", "tab:brown", "tab:cyan"], strict=True):
     iou_curve = ioucurves_global.per_image_ious[bp_stat["image_idx"]]
-    _ = ioucurves_global.plot_iou_curve(ax, bp_stat["image_idx"], color=color)
+    _ = ioucurves_global.plot_iou_curve(ax, bp_stat["image_idx"], color=color, label=None)
     _ = ioucurves_global.scatter_local_oracle(
         ax,
         max_ious_result.threshs[bp_stat["image_idx"]],
         max_ious_result.ious[bp_stat["image_idx"]],
+        color=color,
     )
 _ = ioucurves_global.axvline_min_thresh(ax, max_avg_iou_min_thresh_result.min_thresh)
 _ = ioucurves_global.axvline_global_oracle(ax, max_avg_iou_min_thresh_result.thresh)
-leg = ax.legend(loc="upper left", framealpha=1, fontsize="small")
+leg = ax.legend(loc="upper right", framealpha=1, fontsize="small")
 for line in leg.get_lines():
     line.set_linewidth(2.5)
 ioucurves_global.ax_cfg_xaxis(ax)
 ioucurves_global.ax_cfg_yaxis(ax)
+_ = ax.set_ylabel(None)
+
+_ = ax.set_xlim(left=0, right=1.5)
+_ = ax.set_ylim(0, 1)
+_ = ax.set_xticks(np.linspace(0, 1.5, 4))
+
+# if args.savedir is not None:
+#     fig.savefig(args.savedir / "perimg_iou_curves.svg", bbox_inches="tight", pad_inches=0.01)
+
+
+if args.savedir is not None:
+    fig.savefig(args.savedir / "avg_and_perimg_iou_curves.pdf", bbox_inches="tight", pad_inches=0.01)
 
 # %%

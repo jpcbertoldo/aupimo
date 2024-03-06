@@ -407,7 +407,7 @@ for collec, ax in zip(collections, axrow, strict=False):
         color="black",
         ls="--",
         zorder=5,
-        label="Optimal Superpixel Selection",
+        label="Oracle Superpixel Selection",
     )
     _ = ax.set_title(const.COLLECTION_2_LABEL[collec])
 
@@ -427,7 +427,7 @@ for ax in axrow:
     _ = ax.set_xticks(np.linspace(0, 0.8, 17), minor=True)
     _ = ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1))
 
-    _ = ax.set_xlabel("Avg. Avg. IoU")
+    _ = ax.set_xlabel("Cros-dataset Avg. of Avg. IoU")
     _ = ax.grid(axis="x", alpha=0.8, zorder=-10)
     _ = ax.grid(axis="x", alpha=0.8, zorder=-10, which="minor", ls="--")
 
@@ -549,5 +549,33 @@ if args.save:
 
 
 # %%
-sub_data
+
+collection, dataset = "visa", "chewinggum"
+heuristic_best_ious = data_best_model.query("dataset == @dataset and collection == @collection and method == 'heuristic_best'").ious.values[0]
+
+local_thresh_ious = data_best_model.query("dataset == @dataset and collection == @collection and method == 'local_thresh'").ious.values[0]
+
+# %%
+argsorted = np.argsort(heuristic_best_ious)[:-np.isnan(heuristic_best_ious).sum()][::-1]
+argsorted
+idx = argsorted[0]
+# idx = 69
+idx
+heuristic_best_ious[idx]
+# %%
+
+# tmp = data_heuristic.loc["efficientad_wr101_s_ext/mvtec/transistor", "heuristic_5choices"]
+tmp = data_heuristic.loc["efficientad_wr101_s_ext/visa/chewinggum", "heuristic_5choices"]
+signal = np.median(np.abs(np.diff(tmp, axis=1)), axis=1)
+signal
+argsorted = np.argsort(signal)
+argsorted
+signal[argsorted]
+sum(np.isnan(signal))
+image_idx = argsorted[-23]
+image_idx
+signal[image_idx]
+tmp[image_idx]
+
+
 # %%

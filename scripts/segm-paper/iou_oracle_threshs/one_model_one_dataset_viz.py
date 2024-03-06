@@ -397,3 +397,5 @@ for ax, stat in zip(axes.flatten(), diff_stats, strict=True):
 for ax in axes.flatten():
     _ = ax.set_xticks([])
     _ = ax.set_yticks([])
+
+# %%

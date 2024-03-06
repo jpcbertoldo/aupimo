@@ -71,8 +71,7 @@ if IS_NOTEBOOK:
             string
             for arg in [
                 # "--asmaps ../../../data/experiments/benchmark/efficientad_wr101_s_ext/mvtec/capsule/asmaps.pt",
-                # "--asmaps ../../../data/experiments/benchmark/efficientad_wr101_s_ext/mvtec/transistor/asmaps.pt",
-                "--asmaps ../../../data/experiments/benchmark/efficientad_wr101_s_ext/visa/chewinggum/asmaps.pt",
+                "--asmaps ../../../data/experiments/benchmark/efficientad_wr101_s_ext/mvtec/transistor/asmaps.pt",
                 # "--asmaps ../../../data/experiments/benchmark/rd++_wr50_ext/mvtec/bottle/asmaps.pt",
                 "--mvtec-root ../../../data/datasets/MVTec",
                 "--visa-root ../../../data/datasets/VisA",
@@ -263,48 +262,28 @@ superpixel_oracle_selection_dir = Path("/".join(rundir.parts[:-3] + ("patchcore_
 
 # %%
 
-from aupimo.oracles_numpy import (
-    open_image,
-    upscale_image_asmap_mask,
-)
-
 ioucurves = IOUCurvesResult.load(iou_oracle_threshs_dir / "ioucurves_local_threshs.pt")
 max_iou_per_image_result = MaxIOUPerImageResult.load(iou_oracle_threshs_dir / "max_iou_per_img_min_thresh.json")
 
 payload_loaded = torch.load(superpixel_bound_dist_heuristic_dir / "superpixel_bound_dist_heuristic.pt")
 
-# transistor
-image_idx = 18  # missing leg, good one
-# image_idx = 94  # upsidedown
-# image_idx = 21  # broken part, shows limitation of multi-region level set
+# capsule
+# image_idx = 95
+# image_idx = 88
 
-# chewinggum
-image_idx = 3
+# transistor
+image_idx = 29
 
 threshs = payload_loaded["threshs_per_image"][image_idx]
-heuristic_curve_values = payload_loaded["levelset_mean_dist_curve_per_image"][image_idx]
 num_levelsets = threshs.shape[0]
 min_thresh = payload_loaded["min_thresh"]
 upscale_factor = payload_loaded["upscale_factor"]
 
-local_minima_idxs = np.array(payload_loaded["local_minima_idxs_per_image"][image_idx][:5])
+local_minima_idxs = payload_loaded["local_minima_idxs_per_image"][image_idx][:5]
 local_minima_threshs = threshs[local_minima_idxs]
-local_minima_values = heuristic_curve_values[local_minima_idxs]
 
-# local_minima_idxs_bis = np.searchsorted(ioucurves.threshs[image_idx], local_minima_threshs)
-local_minima_idxs_bis = np.argmin(np.abs(ioucurves.threshs[image_idx][None, ...] - local_minima_threshs[..., None]), axis=1)
-local_minima_ious = ioucurves.per_image_ious[image_idx][local_minima_idxs_bis]
-local_minima_ious_argsorted = np.argsort(local_minima_ious)
-local_minima_idxs_bis = local_minima_idxs_bis[local_minima_ious_argsorted[[0, 2, 4]]]
-local_minima_ious = ioucurves.per_image_ious[image_idx][local_minima_idxs_bis]
-local_minima_threshs_bis = ioucurves.threshs[image_idx, local_minima_idxs_bis]
-
-local_minima_args = np.argmin(np.abs(local_minima_threshs[None, ...] - local_minima_threshs_bis[..., None]), axis=1)
-local_minima_idxs = local_minima_idxs[local_minima_args]
-local_minima_threshs = threshs[local_minima_idxs]
-local_minima_values = heuristic_curve_values[local_minima_idxs]
-
-# local_minima_idxs = np.sorted(lo)
+watershed_superpixel_relsize = payload_loaded["superpixels_params"]["superpixel_relsize"]
+watershed_compactness = payload_loaded["superpixels_params"]["compactness"]
 
 img = open_image(_convert_path(payload_loaded["paths"][image_idx]))
 mask = safe_tensor_to_numpy(masks[image_idx])
@@ -316,40 +295,61 @@ valid_asmap, _ = valid_anomaly_score_maps(asmap[None, ...], min_thresh, return_m
 valid_asmap = valid_asmap[0]
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+# reproduce the call of where the two above come from
+(
+    superpixels,
+    superpixels_boundaries_distance_map,
+    _, __,
+    superpixels_original,
+ ) = calculate_levelset_mean_dist_to_superpixel_boundaries_curve(
+    img,
+    asmap,
+    min_thresh,
+    watershed_superpixel_relsize,
+    watershed_compactness,
+    num_levelsets=num_levelsets,
+    ret_superpixels_original=True,
+)
 
+# %%
+import json
+
+with (superpixel_oracle_selection_dir / "optimal_iou.json").open("r") as f:
+    superpixel_oracle_selection_payload = json.load(f)
+
+
+assert superpixel_oracle_selection_payload["superpixels_method"] == "watershed"
+
+superpixel_oracle_selection = superpixel_oracle_selection_payload["results"][image_idx]
+
+# %%
+from aupimo.oracles_numpy import find_best_superpixels
+
+history, selected_suppixs, available_suppixs = find_best_superpixels(superpixels_original, mask)
+
+# %%
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-
-fig, ax = plt.subplots()
-_ = ax.plot(
-    threshs,
-    heuristic_curve_values,
-    color="blue",
-    label="levelset mean dist",
-)
-_ = ax.scatter(local_minima_threshs, local_minima_values, color="red")
-_ = ax.plot(ioucurves.threshs[image_idx], ioucurves.per_image_ious[image_idx], color="green", label="iou")
-_ = ax.scatter(
-    local_minima_threshs_bis,
-    local_minima_ious,
-    color="red",
-)
-_ = ax.axvline(max_iou_per_image_result.threshs[image_idx], color="orange", label="max iou", linestyle="--")
-_ = ax.axvline(min_thresh, color="black", label="min thresh", linestyle="--")
+import skimage as sk
 
 
-def _get_cmap_transparent_bad(cmap_name: str):
+def _get_cmap_transparent_bad(cmap_name: str = "jet"):
     cmap = mpl.cm.get_cmap(cmap_name)
     cmap.set_bad((0, 0, 0, 0))
     return cmap
 
 
+def _get_binary_transparent_cmap(color) -> mpl.colors.ListedColormap:
+    cmap = mpl.colors.ListedColormap([(0, 0, 0, 0), color, color, color])
+    return cmap
+
+
 fig, axes = plt.subplots(
-    1,
+    3,
     2,
-    figsize=np.array((12, 6)) * 1,
-    sharex=True,
-    sharey=True,
+    figsize=np.array((12, 18)) * .8,
+    sharex=False,
+    sharey=False,
     constrained_layout=True,
 )
 for ax in axes.flatten():
@@ -357,37 +357,210 @@ for ax in axes.flatten():
     _ = ax.set_yticks([])
 axrow = axes.flatten()
 
-ax = axrow[0]
-_ = ax.imshow(img)
-_ = ax.imshow(valid_asmap, cmap=_get_cmap_transparent_bad("jet"), alpha=0.6)
-cs_gt = ax.contour(
-    mask,
-    levels=[0.5],
-    colors="black",
-    linewidths=2.5,
-    linestyles="--",
-)
-_ = ax.contour(
-    asmap,
-    levels=[max_iou_per_image_result.threshs[image_idx].item()],
-    colors=["white"],
-    linewidths=2.5,
-)
 
-ax = axrow[1]
-_ = ax.imshow(img)
-_ = ax.contour(
-    asmap,
-    levels=np.sort(local_minima_threshs),
-    linewidths=2.5,
-    cmap="spring",
-)
-cs_gt = ax.contour(
-    mask,
-    levels=[0.5],
-    colors="black",
-    linewidths=2.5,
-    linestyles="--",
-)
+def draw0(ax):
+
+    imshow = ax.imshow(
+        sk.segmentation.mark_boundaries(img, superpixels, color=mpl.colors.to_rgb("magenta")),
+    )
+    cs_gt = ax.contour(
+        mask,
+        levels=[0.5],
+        colors="black",
+        linewidths=2.5,
+        linestyles="--",
+    )
+    _ = ax.contour(
+        asmap,
+        levels=[local_minima_threshs[2]],
+        colors=["orange"],
+        linewidths=2.5,
+    )
+    _ = ax.contour(
+        asmap,
+        levels=[local_minima_threshs[0]],
+        colors=["yellow"],
+        linewidths=2.5,
+    )
+    _ = ax.contour(
+        asmap,
+        levels=[local_minima_threshs[4]],
+        colors=["red"],
+        linewidths=2.5,
+    )
+
+def draw1(ax):
+    _ = ax.imshow(img)
+    _ = ax.imshow(valid_asmap, cmap=_get_cmap_transparent_bad("jet"), alpha=0.45)
+    cs_gt = ax.contour(
+        mask,
+        levels=[0.5],
+        colors="black",
+        linewidths=2.5,
+        linestyles="--",
+    )
+    _ = ax.contour(
+        asmap,
+        levels=[max_iou_per_image_result.threshs[image_idx].item()],
+        colors=["w"],
+    )
+
+def draw2(ax):
+    _ = ax.imshow(valid_asmap, cmap=_get_cmap_transparent_bad("jet"), zorder=-10)
+    cs_gt = ax.contour(
+        mask,
+        levels=[0.5],
+        colors="black",
+        linewidths=2.5,
+        linestyles="--",
+    )
+    _ = ax.contour(
+        asmap,
+        levels=[local_minima_threshs[2]],
+        colors=["orange"],
+        linewidths=2.5,
+    )
+    _ = ax.contour(
+        asmap,
+        levels=[local_minima_threshs[0]],
+        colors=["yellow"],
+        linewidths=2.5,
+    )
+    _ = ax.contour(
+        asmap,
+        levels=[local_minima_threshs[4]],
+        colors=["red"],
+        linewidths=2.5,
+    )
+
+def draw3(ax):
+    _ = ax.imshow(superpixels_boundaries_distance_map, cmap="cividis")
+    _ = ax.contour(
+        asmap,
+        levels=[local_minima_threshs[3]],
+        colors=["red"],
+        linewidths=2.5,
+    )
+    cs_gt = ax.contour(
+        mask,
+        levels=[0.5],
+        colors="black",
+        linewidths=2.5,
+        linestyles="--",
+    )
+
+def draw4(ax):
+    _ = ax.imshow(img)
+    boundaries = sk.segmentation.find_boundaries(superpixels_original, mode="outer")
+    _ = ax.imshow(boundaries, cmap=_get_binary_transparent_cmap("magenta"))
+    cs_gt = ax.contour(
+        mask,
+        levels=[0.5],
+        colors="black",
+        linewidths=2.5,
+        linestyles="--",
+    )
+
+    # smt went wrong with the superpixel selection SAVED
+    # superpixel_selection_mask = np.isin(superpixels_original.astype(int), sorted(superpixel_oracle_selection["superpixels_selection"]))
+
+    superpixel_selection_mask = np.isin(superpixels_original.astype(int), sorted(selected_suppixs))
+    # _ = ax.imshow(superpixel_selection_mask, alpha=.3, cmap=_get_binary_transparent_cmap("orange"))
+    _ = ax.contour(
+        superpixel_selection_mask,
+        levels=[0.5],
+        colors="orange",
+        linewidths=1.5,
+        linestyles="-",
+    )
+
+draw0(axrow[0])
+draw1(axrow[1])
+draw2(axrow[2])
+draw3(axrow[3])
+draw4(axrow[4])
+
+for ax in axrow[:2]:
+    _ = ax.set_xlim(2048 * 0.22, 2048 * .78)
+    _ = ax.set_ylim(2048 * 0.10, 2048 * .66)
+for ax in axrow[2:]:
+    _ = ax.set_xlim(2048 * 0.22, 2048 * .78)
+    _ = ax.set_ylim(2048 * 0.12, 2048 * .46)
+for ax in axes.flatten():
+    _ = ax.invert_yaxis()
 
 # %%
+# plot the same as above but in individual figures each plot
+
+fig0, ax = plt.subplots(figsize=(10, 10))
+draw0(ax)
+_ = ax.set_xlim(axrow[0].get_xlim())
+_ = ax.set_ylim(axrow[0].get_ylim())
+_ = ax.axis("off")
+
+fig1, ax = plt.subplots(figsize=(10, 10))
+draw1(ax)
+_ = ax.set_xlim(axrow[1].get_xlim())
+_ = ax.set_ylim(axrow[1].get_ylim())
+_ = ax.axis("off")
+
+fig2, ax = plt.subplots(figsize=(10, 10))
+draw2(ax)
+_ = ax.set_xlim(axrow[2].get_xlim())
+_ = ax.set_ylim(axrow[2].get_ylim())
+_ = ax.axis("off")
+
+fig3, ax = plt.subplots(figsize=(10, 10))
+draw3(ax)
+_ = ax.set_xlim(axrow[3].get_xlim())
+_ = ax.set_ylim(axrow[3].get_ylim())
+_ = ax.axis("off")
+
+fig4, ax = plt.subplots(figsize=(10, 10))
+draw4(ax)
+_ = ax.set_xlim(axrow[4].get_xlim())
+_ = ax.set_ylim(axrow[4].get_ylim())
+_ = ax.axis("off")
+
+if args.savedir is not None:
+    fig0.savefig(
+        args.savedir / "image_gt_superpixels_3best_heuristic_segm.pdf", bbox_inches="tight", pad_inches=1e-2,
+    )
+    fig1.savefig(
+        args.savedir / "image_gt_asmap_oracle_segm.pdf", bbox_inches="tight", pad_inches=1e-2,
+    )
+    fig2.savefig(
+        args.savedir / "gt_asmap_3best_heuristic_segm.pdf", bbox_inches="tight", pad_inches=1e-2,
+    )
+    fig3.savefig(
+        args.savedir / "superpixel_bound_dist_1best_heuristic_segm.pdf", bbox_inches="tight", pad_inches=1e-2,
+    )
+    fig4.savefig(
+        args.savedir / "image_gt_superpixels_original_oracle_superpixel_selection.pdf", bbox_inches="tight", pad_inches=1e-2,
+    )
+
+# %%
+
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# NEXT
+# annotate iou and contour distance
