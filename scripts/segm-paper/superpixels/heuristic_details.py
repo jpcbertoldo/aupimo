@@ -258,7 +258,9 @@ else:
 
 iou_oracle_threshs_dir = rundir / "iou_oracle_threshs"
 superpixel_bound_dist_heuristic_dir = rundir / "superpixel_bound_dist_heuristic"
-superpixel_oracle_selection_dir = Path("/".join(rundir.parts[:-3] + ("patchcore_wr50", ) + rundir.parts[-2:] + ("superpixel_oracle_selection",) ))
+superpixel_oracle_selection_dir = Path(
+    "/".join(rundir.parts[:-3] + ("patchcore_wr50",) + rundir.parts[-2:] + ("superpixel_oracle_selection",)),
+)
 
 # %%
 
@@ -281,6 +283,9 @@ upscale_factor = payload_loaded["upscale_factor"]
 
 local_minima_idxs = payload_loaded["local_minima_idxs_per_image"][image_idx][:5]
 local_minima_threshs = threshs[local_minima_idxs]
+local_minima_ious = ioucurves.per_image_ious[image_idx][
+    np.argmin(np.abs(local_minima_threshs[None, ...] - ioucurves.threshs[image_idx][..., None]), axis=0)
+]
 
 watershed_superpixel_relsize = payload_loaded["superpixels_params"]["superpixel_relsize"]
 watershed_compactness = payload_loaded["superpixels_params"]["compactness"]
@@ -299,9 +304,10 @@ valid_asmap = valid_asmap[0]
 (
     superpixels,
     superpixels_boundaries_distance_map,
-    _, __,
+    _,
+    __,
     superpixels_original,
- ) = calculate_levelset_mean_dist_to_superpixel_boundaries_curve(
+) = calculate_levelset_mean_dist_to_superpixel_boundaries_curve(
     img,
     asmap,
     min_thresh,
@@ -347,7 +353,7 @@ def _get_binary_transparent_cmap(color) -> mpl.colors.ListedColormap:
 fig, axes = plt.subplots(
     3,
     2,
-    figsize=np.array((12, 18)) * .8,
+    figsize=np.array((20, 30)),
     sharex=False,
     sharey=False,
     constrained_layout=True,
@@ -359,7 +365,6 @@ axrow = axes.flatten()
 
 
 def draw0(ax):
-
     imshow = ax.imshow(
         sk.segmentation.mark_boundaries(img, superpixels, color=mpl.colors.to_rgb("magenta")),
     )
@@ -367,27 +372,44 @@ def draw0(ax):
         mask,
         levels=[0.5],
         colors="black",
-        linewidths=2.5,
+        linewidths=3.5,
         linestyles="--",
     )
     _ = ax.contour(
         asmap,
         levels=[local_minima_threshs[2]],
         colors=["orange"],
-        linewidths=2.5,
+        linewidths=3.5,
     )
     _ = ax.contour(
         asmap,
         levels=[local_minima_threshs[0]],
         colors=["yellow"],
-        linewidths=2.5,
+        linewidths=3.5,
     )
     _ = ax.contour(
         asmap,
         levels=[local_minima_threshs[4]],
         colors=["red"],
-        linewidths=2.5,
+        linewidths=3.5,
     )
+    _ = ax.annotate(
+        f"IoU: {local_minima_ious[0]:.0%} {local_minima_ious[1]:.0%} {local_minima_ious[2]:.0%}\n(yellow, orange, red)",
+        xy=(1, 0),
+        xycoords="axes fraction",
+        xytext=(-10, 10),
+        textcoords="offset points",
+        ha="right",
+        va="bottom",
+        fontsize=40,
+        bbox=dict(  # noqa: C408
+            facecolor="white",
+            alpha=1,
+            edgecolor="black",
+            boxstyle="round,pad=0.2",
+        ),
+    )
+
 
 def draw1(ax):
     _ = ax.imshow(img)
@@ -396,14 +418,33 @@ def draw1(ax):
         mask,
         levels=[0.5],
         colors="black",
-        linewidths=2.5,
+        linewidths=3.5,
         linestyles="--",
     )
     _ = ax.contour(
         asmap,
         levels=[max_iou_per_image_result.threshs[image_idx].item()],
+        linewidths=3.5,
         colors=["w"],
     )
+    _ = ax.annotate(
+        f"IoU: {max_iou_per_image_result.ious[image_idx].item():.0%}",
+        xy=(1, 0),
+        xycoords="axes fraction",
+        xytext=(-10, 10),
+        textcoords="offset points",
+        ha="right",
+        va="bottom",
+        fontsize=40,
+        bbox=dict(  # noqa: C408
+            facecolor="white",
+            alpha=1,
+            edgecolor="black",
+            boxstyle="round,pad=0.2",
+        ),
+    )
+
+
 
 def draw2(ax):
     _ = ax.imshow(valid_asmap, cmap=_get_cmap_transparent_bad("jet"), zorder=-10)
@@ -411,27 +452,28 @@ def draw2(ax):
         mask,
         levels=[0.5],
         colors="black",
-        linewidths=2.5,
+        linewidths=3.5,
         linestyles="--",
     )
     _ = ax.contour(
         asmap,
         levels=[local_minima_threshs[2]],
         colors=["orange"],
-        linewidths=2.5,
+        linewidths=3.5,
     )
     _ = ax.contour(
         asmap,
         levels=[local_minima_threshs[0]],
         colors=["yellow"],
-        linewidths=2.5,
+        linewidths=3.5,
     )
     _ = ax.contour(
         asmap,
         levels=[local_minima_threshs[4]],
         colors=["red"],
-        linewidths=2.5,
+        linewidths=3.5,
     )
+
 
 def draw3(ax):
     _ = ax.imshow(superpixels_boundaries_distance_map, cmap="cividis")
@@ -439,15 +481,33 @@ def draw3(ax):
         asmap,
         levels=[local_minima_threshs[3]],
         colors=["red"],
-        linewidths=2.5,
+        linewidths=3.5,
     )
     cs_gt = ax.contour(
         mask,
         levels=[0.5],
         colors="black",
-        linewidths=2.5,
+        linewidths=3.5,
         linestyles="--",
     )
+    _ = ax.annotate(
+        f"IoU: {local_minima_ious[2]:.0%}",
+        xy=(1, 0),
+        xycoords="axes fraction",
+        xytext=(-10, 10),
+        textcoords="offset points",
+        ha="right",
+        va="bottom",
+        fontsize=40,
+        bbox=dict(  # noqa: C408
+            facecolor="white",
+            alpha=1,
+            edgecolor="black",
+            boxstyle="round,pad=0.2",
+        ),
+    )
+
+
 
 def draw4(ax):
     _ = ax.imshow(img)
@@ -457,7 +517,7 @@ def draw4(ax):
         mask,
         levels=[0.5],
         colors="black",
-        linewidths=2.5,
+        linewidths=3.5,
         linestyles="--",
     )
 
@@ -473,6 +533,24 @@ def draw4(ax):
         linewidths=1.5,
         linestyles="-",
     )
+    _ = ax.annotate(
+        f"IoU: {superpixel_oracle_selection['iou']:.0%}",
+        xy=(1, 0),
+        xycoords="axes fraction",
+        xytext=(-10, 10),
+        textcoords="offset points",
+        ha="right",
+        va="bottom",
+        fontsize=40,
+        bbox=dict(  # noqa: C408
+            facecolor="white",
+            alpha=1,
+            edgecolor="black",
+            boxstyle="round,pad=0.2",
+        ),
+    )
+
+
 
 draw0(axrow[0])
 draw1(axrow[1])
@@ -481,11 +559,11 @@ draw3(axrow[3])
 draw4(axrow[4])
 
 for ax in axrow[:2]:
-    _ = ax.set_xlim(2048 * 0.22, 2048 * .78)
-    _ = ax.set_ylim(2048 * 0.10, 2048 * .66)
+    _ = ax.set_xlim(2048 * 0.22, 2048 * 0.78)
+    _ = ax.set_ylim(2048 * 0.10, 2048 * 0.66)
 for ax in axrow[2:]:
-    _ = ax.set_xlim(2048 * 0.22, 2048 * .78)
-    _ = ax.set_ylim(2048 * 0.12, 2048 * .46)
+    _ = ax.set_xlim(2048 * 0.22, 2048 * 0.78)
+    _ = ax.set_ylim(2048 * 0.12, 2048 * 0.46)
 for ax in axes.flatten():
     _ = ax.invert_yaxis()
 
@@ -524,19 +602,29 @@ _ = ax.axis("off")
 
 if args.savedir is not None:
     fig0.savefig(
-        args.savedir / "image_gt_superpixels_3best_heuristic_segm.pdf", bbox_inches="tight", pad_inches=1e-2,
+        args.savedir / "image_gt_superpixels_3best_heuristic_segm.pdf",
+        bbox_inches="tight",
+        pad_inches=1e-2,
     )
     fig1.savefig(
-        args.savedir / "image_gt_asmap_oracle_segm.pdf", bbox_inches="tight", pad_inches=1e-2,
+        args.savedir / "image_gt_asmap_oracle_segm.pdf",
+        bbox_inches="tight",
+        pad_inches=1e-2,
     )
     fig2.savefig(
-        args.savedir / "gt_asmap_3best_heuristic_segm.pdf", bbox_inches="tight", pad_inches=1e-2,
+        args.savedir / "gt_asmap_3best_heuristic_segm.pdf",
+        bbox_inches="tight",
+        pad_inches=1e-2,
     )
     fig3.savefig(
-        args.savedir / "superpixel_bound_dist_1best_heuristic_segm.pdf", bbox_inches="tight", pad_inches=1e-2,
+        args.savedir / "superpixel_bound_dist_1best_heuristic_segm.pdf",
+        bbox_inches="tight",
+        pad_inches=1e-2,
     )
     fig4.savefig(
-        args.savedir / "image_gt_superpixels_original_oracle_superpixel_selection.pdf", bbox_inches="tight", pad_inches=1e-2,
+        args.savedir / "image_gt_superpixels_original_oracle_superpixel_selection.pdf",
+        bbox_inches="tight",
+        pad_inches=1e-2,
     )
 
 # %%

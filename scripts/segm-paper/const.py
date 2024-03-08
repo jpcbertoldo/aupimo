@@ -48,7 +48,7 @@ DATASET_2_LABEL = {
 
 METHOD_2_LABEL = {
     'global_thresh': "Oracle Global Thresh.",
-    'local_thresh': "Oracle Per-Image Thresh.",
-    'local_thresh_min_val': "Oracle Per-Image Thresh (with val.)",
+    'local_thresh': "Oracle Thresh.",
+    'local_thresh_min_val': "Oracle Thresh (with val.)",
     'heuristic_best': "Heuristic (best)",
 }

@@ -449,7 +449,9 @@ for ax in axrow:
 
 if args.save:
     fig.savefig(
-        "../../../../2024-03-segm-paper/src/img/avg_avg_iou_per_model.pdf", bbox_inches="tight", pad_inches=1e-2,
+        "../../../../2024-03-segm-paper/src/img/avg_avg_iou_per_model.pdf",
+        bbox_inches="tight",
+        pad_inches=1e-2,
     )
 
 # %%
@@ -462,7 +464,7 @@ data_best_model["collection_dataset"] = data_best_model["collection"] + "_" + da
 fig, axes = plt.subplots(
     4,
     7,
-    figsize=np.array((10, 3.5)) * 1.4,
+    figsize=np.array((11, 3.5)) * 1.4,
     layout="constrained",
 )
 axrow = axes.flatten()
@@ -473,6 +475,7 @@ data_best_model_box = data_best_model.drop(columns=["collection", "dataset", "av
 # METHODS = ["local_thresh_min_val", "heuristic_best"]
 METHODS = ["local_thresh", "heuristic_best"]
 METHODS_LABELS = {
+    "sporacle": "SP Sel.",
     "local_thresh": "Oracle",
     "heuristic_best": "Heuristic",
 }
@@ -498,10 +501,16 @@ for axidx, (collection_dataset, sub_data) in enumerate(data_best_model_box.group
     ax = axrow[axidx]
     sub_data = sub_data.set_index("method")
 
+    collection, dataset = collection_dataset.split("_", 1)
+    sub_data_superpixel_oracle = data_superpixel_oracle.query(
+        "collection == @collection and dataset == @dataset",
+    )
+    ious_superpixel_oracle = sub_data_superpixel_oracle.iou.dropna().values.astype(float)
+
     boxplots_vs = ax.boxplot(
-        [(x := sub_data.loc[method, "ious"])[~np.isnan(x)] for method in METHODS],
-        labels=METHODS,
-        positions=[0.25, .75],
+        [ious_superpixel_oracle] + [(x := sub_data.loc[method, "ious"])[~np.isnan(x)] for method in METHODS],
+        labels=["sporacle"] + METHODS,
+        positions=np.linspace(0, 1, 7)[1::2],
         **(
             bp_kwargs_vs := dict(  # noqa: C408
                 vert=True,
@@ -516,11 +525,12 @@ for axidx, (collection_dataset, sub_data) in enumerate(data_best_model_box.group
         ),
     )
 
-    color_code_boxplot(boxplots_vs, 0, "darkblue")
-    color_code_boxplot(boxplots_vs, 1, "tab:green")
+    color_code_boxplot(boxplots_vs, 0, "black")
+    color_code_boxplot(boxplots_vs, 1, "darkblue")
+    color_code_boxplot(boxplots_vs, 2, "tab:green")
 
     if axidx in tuple(range(21, 28)):
-        _ = ax.set_xticklabels([METHODS_LABELS.get(label, label) for label in METHODS])
+        _ = ax.set_xticklabels([METHODS_LABELS["sporacle"]] + [METHODS_LABELS.get(label, label) for label in METHODS])
     else:
         _ = ax.set_xticks([])
 
@@ -544,19 +554,27 @@ for ax in [axes[0, -1]]:
 
 if args.save:
     fig.savefig(
-        "../../../../2024-03-segm-paper/src/img/iou_distrib_efficientad.pdf", bbox_inches="tight", pad_inches=1e-2,
+        "../../../../2024-03-segm-paper/src/img/iou_distrib_efficientad.pdf",
+        bbox_inches="tight",
+        pad_inches=1e-2,
     )
 
 
 # %%
 
-collection, dataset = "visa", "chewinggum"
-heuristic_best_ious = data_best_model.query("dataset == @dataset and collection == @collection and method == 'heuristic_best'").ious.values[0]
+# collection, dataset = "visa", "chewinggum"
+collection, dataset = "mvtec", "hazelnut"
+heuristic_best_ious = data_best_model.query(
+    "dataset == @dataset and collection == @collection and method == 'heuristic_best'",
+).ious.values[0]
 
-local_thresh_ious = data_best_model.query("dataset == @dataset and collection == @collection and method == 'local_thresh'").ious.values[0]
+local_thresh_ious = data_best_model.query(
+    "dataset == @dataset and collection == @collection and method == 'local_thresh'",
+).ious.values[0]
 
 # %%
-argsorted = np.argsort(heuristic_best_ious)[:-np.isnan(heuristic_best_ious).sum()][::-1]
+signal = asmaps.flatten(1).median(dim=-1)[0]
+argsorted = np.argsort(signal)[: -np.isnan(heuristic_best_ious).sum()][::-1]
 argsorted
 idx = argsorted[0]
 # idx = 69

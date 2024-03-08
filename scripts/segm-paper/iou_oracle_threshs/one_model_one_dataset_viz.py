@@ -65,8 +65,8 @@ if IS_NOTEBOOK:
         argstrs := [
             string
             for arg in [
-                "--rundir ../../../data/experiments/benchmark/efficientad_wr101_s_ext/mvtec/transistor",
-                # "--rundir ../../../data/experiments/benchmark/patchcore_wr50/mvtec/leather",
+                # "--rundir ../../../data/experiments/benchmark/efficientad_wr101_s_ext/mvtec/transistor",
+                "--rundir ../../../data/experiments/benchmark/patchcore_wr50/mvtec/screw",
                 "--mvtec-root ../../../data/datasets/MVTec",
                 "--visa-root ../../../data/datasets/VisA",
                 "--savedir ../../../../2024-03-segm-paper/src/img",
@@ -390,7 +390,7 @@ for ax, stat, color in zip(axes.flatten(), diff_stats, ["tab:orange", "tab:purpl
     )
     _ = ax.annotate(
         f"Image {image_idx}\nGlobal: {iou_at_global:.0%}\nPer-Image: {iou_at_local:.0%}",
-        # f"Oracle Global: {iou_at_global:.0%}\nOracle Per-Image: {iou_at_local:.0%}",
+        f"Image {image_idx}: cross-image normalization",
         xy=(0, 1), xycoords="axes fraction",
         xytext=(10, -10), textcoords="offset points",
         ha="left", va="top",
@@ -407,4 +407,80 @@ for ax in axes.flatten():
 if args.savedir is not None:
     fig.savefig(args.savedir / "avg_and_perimg_iou_viz.pdf", bbox_inches="tight", pad_inches=0.01)
 
+# %%
+
+from aupimo.oracles_numpy import open_image
+from aupimo.utils import valid_anomaly_score_maps
+
+# sel_image_idxs = [10, 57, 96]
+# sel_image_idxs = [7, 20, 56]
+# sel_image_idxs = [42, 56]
+
+sel_image_idxs = [144, 39]
+sel_asmaps = asmaps[sel_image_idxs]
+sel_masks = masks[sel_image_idxs]
+sel_images_abspaths = [images_abspaths[i] for i in sel_image_idxs]
+sel_imgs = [open_image(p) for p in sel_images_abspaths]
+
+sel_asmin, sel_asmax = sel_asmaps.min(), sel_asmaps.max()
+
+# %%
+fig, axes = plt.subplots(
+    2,
+    2,
+    figsize=np.array((20, 20)),
+    sharex=True,
+    sharey=True,
+    layout="constrained",
+)
+for axrowidx, axrow in enumerate(axes):
+    image_idx = sel_image_idxs[axrowidx]
+    asmap = sel_asmaps[axrowidx]
+    mask = sel_masks[axrowidx]
+    img = sel_imgs[axrowidx]
+    ax = axrow[0]
+    _ = ax.imshow(img)
+    vmin, vmax = asmap.min(), asmap.max()
+    _ = ax.imshow(asmap, alpha=0.6, cmap="jet", vmin=vmin, vmax=vmax)
+    img_class_str = "anomalous" if mask.any() else "normal"
+    _ = ax.annotate(
+        f"Image {image_idx} ({img_class_str})\nIn-image min-max norm.",
+        xy=(0, 1), xycoords="axes fraction",
+        xytext=(20, -20), textcoords="offset points",
+        ha="left", va="top",
+        fontsize=40,
+        bbox=dict(  # noqa: C408
+            facecolor="white", alpha=1, edgecolor="black", boxstyle="round,pad=0.2",
+        ),
+    )
+    ax = axrow[1]
+    _ = ax.imshow(img)
+    _ = ax.imshow(asmap, alpha=0.6, cmap="jet", vmin=sel_asmin, vmax=sel_asmax)
+    _ = ax.annotate(
+        f"Image {image_idx} ({img_class_str})\nCross-image min-max norm.",
+        xy=(0, 1), xycoords="axes fraction",
+        xytext=(20, -20), textcoords="offset points",
+        ha="left", va="top",
+        fontsize=40,
+        bbox=dict(  # noqa: C408
+            facecolor="white", alpha=1, edgecolor="black", boxstyle="round,pad=0.2",
+        ),
+    )
+
+for ax in axes.flatten():
+    _ = ax.set_xticks([])
+    _ = ax.set_yticks([])
+
+if args.savedir is not None:
+    fig.savefig(args.savedir / "inimg_vs_crossimg_norm.pdf", bbox_inches="tight", pad_inches=0.01)
+
+# %%
+# signal = asmaps.flatten(1).median(dim=-1)[0]
+signal = asmaps.flatten(1).mean(dim=-1)
+image_class = (masks == 0).flatten(1).all(dim=-1)
+argsort_signal = torch.argsort(signal, descending=True)
+# only anomalous
+# argsort_signal = torch.tensor([arg for arg in argsort_signal if image_class[arg]])
+idxs = torch.linspace(0, len(argsort_signal) - 1, 3, dtype=torch.int64)
+argsort_signal[idxs]
 # %%

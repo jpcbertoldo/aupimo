@@ -331,7 +331,7 @@ _ = ax.scatter(
     local_minima_threshs_bis, local_minima_ious,
     color="black",  marker="o", s=150, zorder=10,
 )
-_ = ax.axvline(max_iou_per_image_result.threshs[image_idx], color="black", label="Oracle Per-Image Thresh.", linestyle="--")
+_ = ax.axvline(max_iou_per_image_result.threshs[image_idx], color="black", label="Oracle Thresh.", linestyle="--")
 _ = ax.axvline(min_thresh, color="gray", label="Val. Thresh.", linestyle="--")
 
 _ = ax.set_ylim(0, 1)
