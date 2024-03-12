@@ -428,7 +428,7 @@ sel_asmin, sel_asmax = sel_asmaps.min(), sel_asmaps.max()
 fig, axes = plt.subplots(
     2,
     2,
-    figsize=np.array((20, 20)),
+    figsize=np.array((10, 10)),
     sharex=True,
     sharey=True,
     layout="constrained",
@@ -448,7 +448,7 @@ for axrowidx, axrow in enumerate(axes):
         xy=(0, 1), xycoords="axes fraction",
         xytext=(20, -20), textcoords="offset points",
         ha="left", va="top",
-        fontsize=40,
+        fontsize=20,
         bbox=dict(  # noqa: C408
             facecolor="white", alpha=1, edgecolor="black", boxstyle="round,pad=0.2",
         ),
@@ -461,7 +461,7 @@ for axrowidx, axrow in enumerate(axes):
         xy=(0, 1), xycoords="axes fraction",
         xytext=(20, -20), textcoords="offset points",
         ha="left", va="top",
-        fontsize=40,
+        fontsize=20,
         bbox=dict(  # noqa: C408
             facecolor="white", alpha=1, edgecolor="black", boxstyle="round,pad=0.2",
         ),

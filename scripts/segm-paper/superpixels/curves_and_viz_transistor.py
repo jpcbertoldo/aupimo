@@ -416,14 +416,14 @@ for ax in axrow:
 
 # %%
 
-fig0, ax = plt.subplots(figsize=(10, 10))
+fig0, ax = plt.subplots(figsize=(8, 8))
 draw0(ax)
 _ = ax.set_xlim(axrow[0].get_xlim())
 _ = ax.set_ylim(axrow[0].get_ylim())
 _ = ax.set_xticks([])
 _ = ax.set_yticks([])
 
-fig1, ax = plt.subplots(figsize=(10, 10))
+fig1, ax = plt.subplots(figsize=(8, 8))
 draw1(ax)
 _ = ax.set_xlim(axrow[1].get_xlim())
 _ = ax.set_ylim(axrow[1].get_ylim())
