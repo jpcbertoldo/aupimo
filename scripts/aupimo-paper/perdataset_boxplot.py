@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
 
 # %%
 # Setup (pre args)
@@ -11,13 +10,12 @@ import json
 import sys
 import warnings
 from pathlib import Path
-from progressbar import progressbar
-import json
+
+import matplotlib as mpl
 import numpy as np
 import pandas as pd
-import matplotlib as mpl
-
 from matplotlib import pyplot as plt
+from progressbar import progressbar
 
 # is it running as a notebook or as a script?
 if (arg0 := Path(sys.argv[0]).stem) == "ipykernel_launcher":
@@ -44,10 +42,10 @@ else:
     IS_NOTEBOOK = False
 
 
-from aupimo import AUPIMOResult
 import constants
 from boxplot_display import BoxplotDisplay
 
+from aupimo import AUPIMOResult
 
 # %%
 # Args
@@ -72,7 +70,7 @@ if IS_NOTEBOOK:
                 "--category zipper",
                 "--mvtec-root ../data/datasets/MVTec",
                 "--visa-root ../data/datasets/VisA",
-                "--where maintext"
+                "--where maintext",
             ]
             for string in arg.split(" ")
         ],
@@ -101,7 +99,7 @@ assert (PERDATASET_CSVS_DIR := Path(IMG_SAVEDIR / "perdataset_csvs")).exists()
 
 if args.where == WHERE_SUPPMAT:
     assert (PERDATASET_SAVEDIR := Path(IMG_SAVEDIR / "perdataset")).exists()
-    
+
 elif args.where == WHERE_MAINTEXT:
     assert (PERDATASET_SAVEDIR := Path(IMG_SAVEDIR / "perdataset_maintext")).exists()
 
@@ -129,17 +127,17 @@ records = [
 print(f"{len(records)=}")
 
 for record in progressbar(records):
-
     d = Path(record["dir"])
 
     for m in [
-        "auroc", "aupro",
+        "auroc",
+        "aupro",
         # "aupr",
         "aupro_05",
         "ious",
     ]:
         try:
-            record[m] = json.loads((d / f"{m}.json").read_text())['value']
+            record[m] = json.loads((d / f"{m}.json").read_text())["value"]
         except FileNotFoundError:
             record[m] = None
 
@@ -176,11 +174,11 @@ table = pd.read_csv(PERDATASET_CSVS_DIR / f"perdataset_{dcidx:03}_table.csv", in
 
 if args.where == WHERE_SUPPMAT:
     print("using all models")
-    
+
 elif args.where == WHERE_MAINTEXT:
     print("using only main text models")
     data = data.query("model in @constants.MAINTEXT_MODELS")
-    
+
     # table
     row_is_metric = table.index.isin(constants.METRICS_LABELS)
     row_is_model_maintext = table.index.isin(constants.MAINTEXT_MODELS)
@@ -194,11 +192,11 @@ elif args.where == WHERE_MAINTEXT:
 is_anomalous_mask = ~np.isnan(data["aupimo"].iloc[0])
 
 data["avg_aupimo"] = data["aupimo"].apply(
-    lambda x: np.mean(x[is_anomalous_mask])
+    lambda x: np.mean(x[is_anomalous_mask]),
 )
 
 data["avg_iou"] = data["iou"].apply(
-    lambda x: np.mean(x[is_anomalous_mask])
+    lambda x: np.mean(x[is_anomalous_mask]),
 )
 
 # best to worst (lowest to highest rank)
@@ -215,7 +213,9 @@ df_aupimo_modelgb = df_aupimo_modelgb.loc[models_ordered]  # should be "model", 
 
 models_labels_mapping = constants.MODELS_LABELS_MAINTEXT if args.where == WHERE_MAINTEXT else constants.MODELS_LABELS
 models_labels_ordered = [models_labels_mapping[name] for name in models_ordered]
-df_aupimo_modelgb = df_aupimo_modelgb.reset_index("model").replace({"model": models_labels_mapping}).set_index("model")["aupimo"]
+df_aupimo_modelgb = (
+    df_aupimo_modelgb.reset_index("model").replace({"model": models_labels_mapping}).set_index("model")["aupimo"]
+)
 
 # %%
 # PER-METRIC DFS
@@ -241,28 +241,36 @@ if args.where == WHERE_SUPPMAT:
     aupimo_csv["aupimo"] = aupimo_csv["aupimo"].apply(lambda x: x[1])
     aupimo_csv = aupimo_csv.reset_index()[cols_sorted := ["model", "imgidx", "aupimo"]]
     aupimo_csv = aupimo_csv.sort_values(cols_sorted).reset_index(drop=True)
-    aupimo_csv.to_csv(csv_fp := PERDATASET_CSVS_DIR / f"perdataset_{dcidx:03}_aupimo.csv", index=False, float_format="%.4f")
+    aupimo_csv.to_csv(
+        csv_fp := PERDATASET_CSVS_DIR / f"perdataset_{dcidx:03}_aupimo.csv",
+        index=False,
+        float_format="%.4f",
+    )
     pd.read_csv(csv_fp)
 
 # %%
 # BOXPLOTS
 
-mpl.rcParams.update(RCPARAMS := {
-    "font.family": "sans-serif",
-    "axes.titlesize": "xx-large",
-    "axes.labelsize": 'large',
-    "xtick.labelsize": 'large',
-    "ytick.labelsize": 'large',
-})
+mpl.rcParams.update(
+    RCPARAMS := {
+        "font.family": "sans-serif",
+        "axes.titlesize": "xx-large",
+        "axes.labelsize": "large",
+        "xtick.labelsize": "large",
+        "ytick.labelsize": "large",
+    },
+)
 
 figsize = np.array((5, 4)) * 1.15 if args.where == WHERE_SUPPMAT else np.array((5, 3.5)) * 1.25
 fig_boxplot, ax = plt.subplots(figsize=figsize, dpi=200, layout="constrained")
 
 BoxplotDisplay.plot_horizontal_functional(
-    ax, df_aupimo_modelgb, models_labels_ordered,
+    ax,
+    df_aupimo_modelgb,
+    models_labels_ordered,
     medianprops=dict(),
     meanprops=dict(),
-    flierprops=dict(markersize=10,),
+    flierprops=dict(markersize=10),
     widths=0.25,
 )
 
@@ -299,17 +307,16 @@ scat = ax.scatter(
     label="AUROC",
 )
 
-
-scat = ax.scatter(
-    avg_iou,
-    np.arange(1, len(avg_iou) + 1),
-    marker="|",
-    color=constants.METRICS_COLORS["avg_iou"],
-    linewidths=3,
-    zorder=5,  # between boxplot (10) and grid (-10)
-    s=200,
-    label="IoU",
-)
+# scat = ax.scatter(
+#     avg_iou,
+#     np.arange(1, len(avg_iou) + 1),
+#     marker="|",
+#     color=constants.METRICS_COLORS["avg_iou"],
+#     linewidths=3,
+#     zorder=5,  # between boxplot (10) and grid (-10)
+#     s=200,
+#     label="IoU",
+# )
 
 
 if args.where == WHERE_SUPPMAT:
@@ -319,9 +326,11 @@ else:  # maintext
     _ = fig_boxplot.supxlabel("AUROC (blue) / AUPRO (30% red, 5% purple) / AUPIMO (boxplot) / IoU (orange)")
 
 fig_boxplot.savefig(
-    PERDATASET_SAVEDIR / f"perdataset_{dcidx:03}_boxplot.pdf", 
+    PERDATASET_SAVEDIR / f"perdataset_{dcidx:03}_boxplot.pdf",
     bbox_inches="tight",
     pad_inches=0,
 )
+
+# %%
 
 # %%

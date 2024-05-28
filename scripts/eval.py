@@ -1,8 +1,6 @@
 """Evaluate the anomaly score maps (asmaps) of a model on a dataset.
 
 Important: overwritting output files is the default behavior.
-
-author: jpcbertoldo
 """
 #!/usr/bin/env python
 
