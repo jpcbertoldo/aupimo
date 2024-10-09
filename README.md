@@ -1,20 +1,16 @@
 # AUPIMO
 
-AUPIMO stands for **A**rea **U**nder the **P**er-**IM**age **O**verlap curve (pronounced a-u-pee-mo).
+AUPIMO stands for **A**rea **U**nder the **P**er-**IM**age **O**verlap curve (pronounced _a-u-pee-mo_).
 
-Official implementation of the paper **AUPIMO: Redefining Visual Anomaly Detection Benchmarks with High Speed and Low Tolerance**.
+Official implementation of the paper [**AUPIMO: Redefining Visual Anomaly Detection Benchmarks with High Speed and Low Tolerance**](https://arxiv.org/abs/2401.01984) (accepted to BMVC 2024, coming up in November 2024).
 
-arXiv: <https://arxiv.org/abs/2401.01984>
+Integration in [`anomalib`](https://github.com/openvinotoolkit/anomalib) available! 
 
-Medium post: <https://medium.com/p/c653ac30e802>
+Tutorials in [`anomalib/notebooks/700_metrics`](https://github.com/openvinotoolkit/anomalib/tree/main/notebooks/700_metrics).
 
-Papers With Code: <https://paperswithcode.com/paper/aupimo-redefining-visual-anomaly-detection>
-
-This research has been conducted during Google Summer of Code 2023 (GSoC 2023) at OpenVINO (Intel).
-
-GSoC 2023 page: <https://summerofcode.withgoogle.com/archive/2023/projects/SPMopugd>
-
-Integration with [`anomalib`](https://github.com/openvinotoolkit/anomalib) is COMING UP: https://github.com/openvinotoolkit/anomalib/pull/1726
+> Warning: `anomalib`'s version does not include the following features available here:
+> - `numpy`-only API (only `torch` and `torchmetrics`-based API)
+> - `numba` accelaration (makes it considerably slower)
 
 ## Installation
 
@@ -28,11 +24,7 @@ pip install .
 
 You can add it to your `requirements.txt` file as `aupimo @ git+https://github.com/jpcbertoldo/aupimo`.
 
-> PYPI package coming up
-
-## Tutorials
-
-COMING UP
+> PYPI package COMING UP
 
 ## Reproducing and extending paper results
 
@@ -45,13 +37,15 @@ pip install -e .  # `-e` is for 'editable' mode
 pip install -r requirements/aupimo-paper.txt
 ```
 
-> **Important:** it is recommended to use a virtual environment to install the dependencies and run the tests. We recommend using `conda`, and an enviroment file `dev-env.yml` is provided at the root of the repository. Install it with `conda env create -f dev-env.yml` and activate it with `conda activate aupimo-dev`.
+> **Important:** it is recommended to use a virtual environment to install the dependencies and run the tests.
+> We recommend using `conda`, and an enviroment file `dev-env.yml` is provided at the root of the repository.
+> Install it with `conda env create -f dev-env.yml` and activate it with `conda activate aupimo-dev`.
 
 ### Data setup
 
 In order to recompute the metrics reported in the paper you can use the script `scripts/eval.py`.
 
-You will need to first setup the data, the anomly score maps and images with their masks from the public datasets.
+You will need to first setup the data, the anomaly score maps and images with their masks from the public datasets.
 
 #### Anomaly score maps (`asmaps`)
 
@@ -84,12 +78,11 @@ Run the tests in `tests/` locally with `pytest` before opening a Pull Request:
 pytest tests/
 ```
 
-> **Important:** it is recommended to use a virtual environment to install the dependencies and run the tests. We recommend using `conda`, and an enviroment file `dev-env.yml` is provided at the root of the repository. Install it with `conda env create -f dev-env.yml` and activate it with `conda activate aupimo-dev`.
+> **Important:** it is recommended to use a virtual environment to install the dependencies and run the tests.
+> We recommend using `conda`, and an enviroment file `dev-env.yml` is provided at the root of the repository.
+> Install it with `conda env create -f dev-env.yml` and activate it with `conda activate aupimo-dev`.
 
-
-## Reference
-
-Please cite us as
+## Cite Us
 
 ```tex
 
@@ -107,4 +100,12 @@ Please cite us as
 }
 ```
 
-arXiv: <https://arxiv.org/abs/2401.01984>
+arXiv: <https://arxiv.org/abs/2401.01984> (accepted to BMVC 2024, coming up in November 2024)
+
+Medium post: <https://medium.com/p/c653ac30e802>
+
+Papers With Code: <https://paperswithcode.com/paper/aupimo-redefining-visual-anomaly-detection>
+
+This research has been conducted during Google Summer of Code 2023 (GSoC 2023) at OpenVINO (Intel).
+
+GSoC 2023 page: <https://summerofcode.withgoogle.com/archive/2023/projects/SPMopugd>
