@@ -4,13 +4,22 @@ AUPIMO stands for **A**rea **U**nder the **P**er-**IM**age **O**verlap curve (pr
 
 Official implementation of the paper [**AUPIMO: Redefining Visual Anomaly Detection Benchmarks with High Speed and Low Tolerance**](https://arxiv.org/abs/2401.01984) (accepted to BMVC 2024, coming up in November 2024).
 
-Integration in [`anomalib`](https://github.com/openvinotoolkit/anomalib) available! 
+Interpretation of an AUPIMO score 
+
+> “An AUPIMO score is the [cross-threshold] average segmentation recall in an image given that the model (nearly) does not yield FP
+regions in normal images”.
+
+![AUROC vs. AUPRO vs. AUPIMO](roc_pro_pimo.svg)
+
+## Integration in `anomalib`
+
+AUPIMO is available in [`anomalib`](https://github.com/openvinotoolkit/anomalib)! 
 
 Tutorials in [`anomalib/notebooks/700_metrics`](https://github.com/openvinotoolkit/anomalib/tree/main/notebooks/700_metrics).
 
-> Warning: this version includes the following features available (`anomalib`'s version does not):
-> - `numpy`-only API (only `torch` and `torchmetrics`-based API)
-> - `numba` accelaration (makes it considerably slower)
+Warning: this version includes the following features available (**not** available in `anomalib`):
+- `numpy`-only API (only `torch` and `torchmetrics`-based API)
+- `numba` accelaration (makes it considerably slower)
 
 ## Installation
 
