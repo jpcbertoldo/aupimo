@@ -6,10 +6,11 @@ Official implementation of the paper [**AUPIMO: Redefining Visual Anomaly Detect
 
 Interpretation of an AUPIMO score 
 
-> “An AUPIMO score is the [cross-threshold] average segmentation recall in an image given that the model (nearly) does not yield FP
-regions in normal images”.
+> “An AUPIMO score is the [cross-threshold] average segmentation recall in an image given that the model (nearly) does not yield false positive regions in normal images”.
 
 ![AUROC vs. AUPRO vs. AUPIMO](roc_pro_pimo.svg)
+
+See the references in the end for details.
 
 ## Integration in `anomalib`
 
