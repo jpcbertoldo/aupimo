@@ -106,11 +106,12 @@ pytest tests/
 arXiv: <https://arxiv.org/abs/2401.01984> (accepted to BMVC 2024)
 
 AUPIMO was developed during Google Summer of Code 2023 (GSoC 2023) with the anomalib team from Intel's OpenVINO Toolkit.
+
+Other media:
+- BMVC 2024 poster: <https://tinyurl.com/aupimo-poster>
 - GSoC 2023 page: <https://summerofcode.withgoogle.com/archive/2023/projects/SPMopugd>
 - Medium post: <https://medium.com/p/c653ac30e802>
-
-Presentation at Mines Paris - PSL University in 2024-10, Paris, France:
-- PDF: <https://cloud.minesparis.psl.eu/index.php/s/aVZrWbpye4DQgWA>
-- online slides: <https://docs.google.com/presentation/d/e/2PACX-1vRlmzAsufLSwJK0rYUUqRvJ6cpVMzY99GhRE4EHgC8LF0IzG5A_Wod5SeQsxiNYOHp0U6LWUeoerw_X/pub?start=false&loop=false&delayms=3000>
-
-Papers With Code: <https://paperswithcode.com/paper/aupimo-redefining-visual-anomaly-detection>
+- Slides from the presentation at Mines Paris - PSL University in 2024-10, Paris, France:
+  - PDF: <https://cloud.minesparis.psl.eu/index.php/s/aVZrWbpye4DQgWA>
+  - Online: <https://docs.google.com/presentation/d/e/2PACX-1vRlmzAsufLSwJK0rYUUqRvJ6cpVMzY99GhRE4EHgC8LF0IzG5A_Wod5SeQsxiNYOHp0U6LWUeoerw_X/pub?start=false&loop=false&delayms=3000>
+- Papers With Code: <https://paperswithcode.com/paper/aupimo-redefining-visual-anomaly-detection>
