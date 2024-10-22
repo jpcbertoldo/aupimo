@@ -108,7 +108,9 @@ arXiv: <https://arxiv.org/abs/2401.01984> (accepted to BMVC 2024)
 AUPIMO was developed during Google Summer of Code 2023 (GSoC 2023) with the anomalib team from Intel's OpenVINO Toolkit.
 
 Other media:
-- BMVC 2024 poster: <https://tinyurl.com/aupimo-poster>
+- BMVC 2024 poster:
+  - <https://tinyurl.com/aupimo-poster-pdf>
+  - <https://tinyurl.com/aupimo-poster>
 - GSoC 2023 page: <https://summerofcode.withgoogle.com/archive/2023/projects/SPMopugd>
 - Medium post: <https://medium.com/p/c653ac30e802>
 - Slides from the presentation at Mines Paris - PSL University in 2024-10, Paris, France:
