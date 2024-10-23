@@ -519,7 +519,7 @@ if video_max_frame_idx < max_frame_idx:
         color="grey", alpha=0.5,
     )
 
-# _ = ax.set_title(vk)
+_ = ax.set_title(f"UCSD Pedestrian {vk}")
 _ = ax.set_xlabel("Frame Index")
 _ = ax.set_ylabel("AUPIMO")
 _ = ax.yaxis.grid(True, linestyle="--", linewidth=1, alpha=0.3, zorder=10, color="black")

@@ -268,6 +268,6 @@ with mpl.rc_context(rc=RCPARAMS):
         fig_boxplot_fpath = PERMODEL_DIR / f"best_boxplot.pdf"
     else:
         fig_boxplot_fpath = PERMODEL_DIR / f"{args.model}_boxplot.pdf"
-    _ = fig_boxplot.savefig(fig_boxplot_fpath, bbox_inches="tight")
+    # _ = fig_boxplot.savefig(fig_boxplot_fpath, bbox_inches="tight")
 
 # %%

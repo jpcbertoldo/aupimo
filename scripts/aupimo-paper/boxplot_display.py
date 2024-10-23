@@ -120,7 +120,8 @@ class BoxplotDisplay:
     @staticmethod
     def plot_horizontal_functional(
         ax, df_gb_model, models_names,
-        medianprops=None, meanprops=None, flierprops=None, widths=None,
+        medianprops=None, meanprops=None, flierprops=None, widths=None, 
+        boxprops=None, whiskerprops=None, capprops=None,
     ):
         BoxplotDisplay.validate_args_nobars(df_gb_model, models_names)
         
@@ -141,6 +142,12 @@ class BoxplotDisplay:
                 "zorder": 10, 
                 **(flierprops or {})
             },
+            boxprops={
+                "color": "black",
+                **(boxprops or {})
+            },
+            whiskerprops={**(whiskerprops or {})},
+            capprops={**(capprops or {})},
             widths=widths or 0.5,
             vert=False,
             zorder=10,
